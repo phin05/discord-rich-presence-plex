@@ -17,3 +17,7 @@ You will have to change the following variables in `discordRichPresencePlex.py`:
 * Line 84: `plexPasswordOrToken` - Password or a X-Plex-Token associated with the above account
 * Line 85: `usingToken` - Set this to `True` if the above is a X-Plex-Token
 * Line 86: `listenForUser` - Your username, leave blank if it's the same as `plexUsername`
+
+## License
+
+This probject is licensed under the MIT License. See the [LICENSE](https://github.com/phin05/discord-rich-presence-plex/blob/master/LICENSE) file for details.
