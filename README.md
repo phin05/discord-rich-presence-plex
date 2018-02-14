@@ -14,9 +14,9 @@ You will have to change the following variables in `discordRichPresencePlex.py`:
 
 * Line 82: `plexServerName` - Name of the Plex Media Server to connect to
 * Line 83: `plexUsername` - Username of the account the server is signed in as
-* Line 84: `plexPasswordOrToken` - Password or a X-Plex-Token associated with the above account
+* Line 84: `plexPasswordOrToken` - Password or a [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account
 * Line 85: `usingToken` - Set this to `True` if the above is a X-Plex-Token
-* Line 86: `listenForUser` - Your username, leave blank if it's the same as `plexUsername`
+* Line 86: `listenForUser` - Your username, leave it blank if it's the same as `plexUsername`
 
 ## License
 
