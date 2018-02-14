@@ -93,7 +93,7 @@ class discordRichPresencePlex(discordRichPresence):
 	stopTimer = None
 
 	def __init__(self):
-		super().__init__("")
+		super().__init__("413407336082833418")
 
 	def run(self):
 		if (self.usingToken):
@@ -152,7 +152,7 @@ class discordRichPresencePlex(discordRichPresence):
 					extra = extra + " · " + ", ".join([genre.tag for genre in metadata.genres[:3]])
 				elif (mediaType == "episode"):
 					title = metadata.grandparentTitle
-					extra = "S" + metadata.parentIndex + " · E" + metadata.index + " - " + metadata.title
+					extra = "S" + str(metadata.parentIndex) + " · E" + str(metadata.index) + " - " + metadata.title
 				elif (mediaType == "track"):
 					title = metadata.title
 					extra = metadata.grandparentTitle + " · " + metadata.parentTitle
