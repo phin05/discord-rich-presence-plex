@@ -20,4 +20,4 @@ You will have to change the following variables in `discordRichPresencePlex.py`:
 
 ## License
 
-This probject is licensed under the MIT License. See the [LICENSE](https://github.com/Phineas05/discord-rich-presence-plex/blob/master/LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/Phineas05/discord-rich-presence-plex/blob/master/LICENSE) file for details.
