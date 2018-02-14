@@ -163,7 +163,7 @@ class discordRichPresencePlex(discordRichPresence):
 					"state": extra,
 					"assets": {
 						"large_text": "Plex",
-						"large_image": "plex_logo",
+						"large_image": "plexLogo",
 						"small_text": state.capitalize(),
 						"small_image": state
 					},
