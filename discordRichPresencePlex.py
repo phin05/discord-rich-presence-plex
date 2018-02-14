@@ -26,11 +26,17 @@ class discordRichPresence:
 		self.pipeWriter = None
 		self.process = None
 		self.running = False
+		self.lastActivity = None
+		self.resetNext = False
 
 	async def read(self):
-		print("\nReading:")
-		data = await self.pipeReader.read(1024)
-		print(json.loads(data[8:].decode("utf-8")))
+		try:
+			print("\nReading:")
+			data = await self.pipeReader.read(1024)
+			print(json.loads(data[8:].decode("utf-8")))
+		except Exception as e:
+			print("Error: " + str(e))
+			self.resetNext = True
 
 	def write(self, op, payload):
 		print("\nWriting:")
@@ -66,6 +72,7 @@ class discordRichPresence:
 		self.running = False
 
 	def send(self, activity):
+		self.lastActivity = activity
 		payload = {
 			"cmd": "SET_ACTIVITY",
 			"args": {
@@ -170,11 +177,16 @@ class discordRichPresencePlex(discordRichPresence):
 				}
 				if (state == "playing"):
 					activity["timestamps"] = {"start": int(time.time()) - (viewOffset / 1000)}
+				if (self.resetNext):
+					self.resetNext = False
+					self.stop()
 				if (not self.running):
 					self.start()
 				self.send(activity)
 		except Exception as e:
 			print("Error: " + str(e))
+			if (self.process):
+				self.process.kill()
 
 discordRichPresencePlexInstance = discordRichPresencePlex()
 try:
