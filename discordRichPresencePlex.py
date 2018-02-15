@@ -157,19 +157,22 @@ class discordRichPresencePlex(discordRichPresence):
 					else:
 						extra = str(time.strftime("%Hh%Mm", time.gmtime(metadata.duration / 1000)))
 					extra = extra + " · " + ", ".join([genre.tag for genre in metadata.genres[:3]])
+					largeText = "Watching a Movie"
 				elif (mediaType == "episode"):
 					title = metadata.grandparentTitle
 					extra = "S" + str(metadata.parentIndex) + " · E" + str(metadata.index) + " - " + metadata.title
+					largeText = "Watching a TV Show"
 				elif (mediaType == "track"):
 					title = metadata.title
 					extra = metadata.grandparentTitle + " · " + metadata.parentTitle
+					largeText = "Listening to Music"
 				else:
 					return
 				activity = {
 					"details": title,
 					"state": extra,
 					"assets": {
-						"large_text": "Plex",
+						"large_text": largeText,
 						"large_image": "logo",
 						"small_text": state.capitalize(),
 						"small_image": state
