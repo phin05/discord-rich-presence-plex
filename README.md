@@ -12,11 +12,12 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 
 You will have to change the following variables in `discordRichPresencePlex.py`:
 
-* Line 18: `plexServerName` - Name of the Plex Media Server to connect to
-* Line 19: `plexUsername` - Username of the account the server is signed in as
-* Line 20: `plexPasswordOrToken` - Password or a [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account
-* Line 21: `usingToken` - Set this to `True` if the above is a X-Plex-Token
-* Line 22: `listenForUser` - Your username, leave it blank if it's the same as `plexUsername`
+* Line 14: `plexServerName` - Name of the Plex Media Server to connect to
+* Line 15: `plexUsername` - Username of the account the server is signed in as
+* Line 16: `plexPasswordOrToken` - Password or a [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account
+* Line 17: `usingToken` - Set this to `True` if the above is a X-Plex-Token
+* Line 18: `listenForUser` - Your username, leave it blank if it's the same as `plexUsername`
+* Line 19: `extraLogging` - Set this to `True` if you want the program to output more information
 
 ## License
 
