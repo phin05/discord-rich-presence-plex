@@ -1,7 +1,6 @@
 import asyncio
 import json
 import os
-import plexapi
 import plexapi.myplex
 import struct
 import subprocess
@@ -12,10 +11,15 @@ import time
 
 isLinux = sys.platform in ["linux", "darwin"]
 
-if (isLinux):
-	os.system("clear")
-else:
-	os.system("cls")
+os.system("clear" if isLinux else "cls")
+
+class plexConfig:
+
+	plexServerName = ""
+	plexUsername = ""
+	plexPasswordOrToken = ""
+	usingToken = False
+	listenForUser = ""
 
 class discordRichPresence:
 
@@ -26,7 +30,6 @@ class discordRichPresence:
 		self.pipeWriter = None
 		self.process = None
 		self.running = False
-		self.lastActivity = None
 		self.resetNext = False
 
 	async def read(self):
@@ -72,7 +75,6 @@ class discordRichPresence:
 		self.running = False
 
 	def send(self, activity):
-		self.lastActivity = activity
 		payload = {
 			"cmd": "SET_ACTIVITY",
 			"args": {
@@ -86,11 +88,11 @@ class discordRichPresence:
 
 class discordRichPresencePlex(discordRichPresence):
 
-	plexServerName = ""
-	plexUsername = ""
-	plexPasswordOrToken = ""
-	usingToken = False
-	listenForUser = ""
+	plexServerName = plexConfig.plexServerName
+	plexUsername = plexConfig.plexUsername
+	plexPasswordOrToken = plexConfig.plexPasswordOrToken
+	usingToken = plexConfig.usingToken
+	listenForUser = plexConfig.listenForUser
 	listenForUser = plexUsername if listenForUser == "" else listenForUser
 
 	productName = "Plex Media Server"
@@ -164,7 +166,10 @@ class discordRichPresencePlex(discordRichPresence):
 					largeText = "Watching a TV Show"
 				elif (mediaType == "track"):
 					title = metadata.title
-					extra = metadata.grandparentTitle + " · " + metadata.parentTitle
+					artist = metadata.originalTitle
+					if (not artist):
+						artist = metadata.grandparentTitle
+					extra = artist + " · " + metadata.parentTitle
 					largeText = "Listening to Music"
 				else:
 					return
@@ -179,7 +184,8 @@ class discordRichPresencePlex(discordRichPresence):
 					},
 				}
 				if (state == "playing"):
-					activity["timestamps"] = {"start": int(time.time()) - (viewOffset / 1000)}
+					currentTimestamp = int(time.time())
+					activity["timestamps"] = {"start": currentTimestamp - (viewOffset / 1000)} # "end": currentTimestamp + ((metadata.duration - viewOffset) / 1000)
 				if (self.resetNext):
 					self.resetNext = False
 					self.stop()
@@ -196,7 +202,6 @@ try:
 	discordRichPresencePlexInstance.run()
 	while True:
 		time.sleep(60)
-		continue
 except KeyboardInterrupt:
 	if (discordRichPresencePlexInstance.running):
 		discordRichPresencePlexInstance.stop()
