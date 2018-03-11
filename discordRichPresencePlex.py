@@ -9,10 +9,6 @@ import tempfile
 import threading
 import time
 
-isLinux = sys.platform in ["linux", "darwin"]
-
-os.system("clear" if isLinux else "cls")
-
 class plexConfig:
 
 	plexServerName = ""
@@ -20,6 +16,7 @@ class plexConfig:
 	plexPasswordOrToken = ""
 	usingToken = False
 	listenForUser = ""
+	extraLogging = False
 
 class discordRichPresence:
 
@@ -130,11 +127,22 @@ class discordRichPresencePlex(discordRichPresence):
 				sessionKey = int(sessionData["sessionKey"])
 				ratingKey = int(sessionData["ratingKey"])
 				viewOffset = int(sessionData["viewOffset"])
+				if (plexConfig.extraLogging):
+					print("\nReceived Update: " + colourText(sessionData, "yellow").replace("'", "\""))
+					print("Checking Sessions for Session Key " + colourText(sessionKey, "yellow") + ":")
 				for session in self.plexServer.sessions():
+					if (plexConfig.extraLogging):
+						print(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""))
 					if (session.sessionKey == sessionKey):
+						if (plexConfig.extraLogging):
+							colourPrint("Found Session", "green")
 						if (session.usernames[0].lower() == self.listenForUser.lower()):
+							if (plexConfig.extraLogging):
+								colourPrint("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.listenForUser.lower() + "\", continuing", "green")
 							break
 						else:
+							if (plexConfig.extraLogging):
+								colourPrint("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.listenForUser.lower() + "\", ignoring", "red")
 							return
 				if (self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey):
 					if (self.lastState == state):
@@ -197,6 +205,30 @@ class discordRichPresencePlex(discordRichPresence):
 			if (self.process):
 				self.process.kill()
 
+isLinux = sys.platform in ["linux", "darwin"]
+
+colours = {
+	"red": "91",
+	"green": "92",
+	"yellow": "93",
+	"blue": "94",
+	"magenta": "96",
+	"cyan": "97"
+}
+
+def colourText(text, colour = ""):
+	prefix = ""
+	suffix = ""
+	colour = colour.lower()
+	if (colour in colours):
+		prefix = "\033[" + colours[colour] + "m"
+		suffix = "\033[0m"
+	return prefix + str(text) + suffix
+
+def colourPrint(text, colour = ""):
+	print(colourText(text, colour))
+
+os.system("clear" if isLinux else "cls")
 discordRichPresencePlexInstance = discordRichPresencePlex()
 try:
 	discordRichPresencePlexInstance.run()
