@@ -60,7 +60,7 @@ class discordRichPresence:
 		if (not os.path.exists(emptyProcessFilePath)):
 			with open(emptyProcessFilePath, "w") as emptyProcessFile:
 				emptyProcessFile.write("import time\n\ntry:\n\twhile (True):\n\t\ttime.sleep(60)\nexcept:\n\tpass")
-		self.process = subprocess.Popen(["pythonw", emptyProcessFilePath])
+		self.process = subprocess.Popen(["python3" if isLinux else "pythonw", emptyProcessFilePath])
 		self.loop = asyncio.get_event_loop() if isLinux else asyncio.ProactorEventLoop()
 		self.loop.run_until_complete(self.handshake())
 
@@ -97,6 +97,9 @@ class discordRichPresencePlex(discordRichPresence):
 	lastSessionKey = None
 	lastRatingKey = None
 	stopTimer = None
+	stopTimerInterval = 5
+	stopTimer2 = None
+	stopTimer2Interval = 35
 
 	def __init__(self):
 		super().__init__("413407336082833418")
@@ -127,33 +130,45 @@ class discordRichPresencePlex(discordRichPresence):
 				sessionKey = int(sessionData["sessionKey"])
 				ratingKey = int(sessionData["ratingKey"])
 				viewOffset = int(sessionData["viewOffset"])
-				if (plexConfig.extraLogging):
-					print("\nReceived Update: " + colourText(sessionData, "yellow").replace("'", "\""))
-					print("Checking Sessions for Session Key " + colourText(sessionKey, "yellow") + ":")
-				for session in self.plexServer.sessions():
-					if (plexConfig.extraLogging):
-						print(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""))
-					if (session.sessionKey == sessionKey):
-						if (plexConfig.extraLogging):
-							colourPrint("Found Session", "green")
-						if (session.usernames[0].lower() == self.listenForUser.lower()):
-							if (plexConfig.extraLogging):
-								colourPrint("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.listenForUser.lower() + "\", continuing", "green")
-							break
-						else:
-							if (plexConfig.extraLogging):
-								colourPrint("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.listenForUser.lower() + "\", ignoring", "red")
-							return
+				printExtraLog("\nReceived Update: " + colourText(sessionData, "yellow").replace("'", "\""))
 				if (self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey):
+					if (self.stopTimer2):
+						self.stopTimer2.cancel()
+						self.stopTimer2 = None
 					if (self.lastState == state):
+						printExtraLog("Nothing changed, ignoring", "yellow")
+						self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
+						self.stopTimer2.start()
 						return
 					elif (state == "stopped"):
 						self.lastState, self.lastSessionKey, self.lastRatingKey = None, None, None
-						self.stopTimer = threading.Timer(5, self.stop)
+						self.stopTimer = threading.Timer(self.stopTimerInterval, self.stop)
 						self.stopTimer.start()
+						printExtraLog("Started stopTimer", "green")
 						return
 				elif (state == "stopped"):
+					printExtraLog("\"stopped\" state update from unknown session key, ignoring", "yellow")
 					return
+				printExtraLog("Checking Sessions for Session Key " + colourText(sessionKey, "yellow") + ":")
+				plexServerSessions = self.plexServer.sessions()
+				if (len(plexServerSessions) < 1):
+					printExtraLog("Empty session list, ignoring", "red")
+					return
+				else:
+					for session in plexServerSessions:
+						printExtraLog(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""))
+						if (session.sessionKey == sessionKey):
+							printExtraLog("Found Session", "green")
+							if (session.usernames[0].lower() == self.listenForUser.lower()):
+								printExtraLog("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.listenForUser.lower() + "\", continuing", "green")
+								break
+							else:
+								printExtraLog("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.listenForUser.lower() + "\", ignoring", "red")
+								return
+				if (self.stopTimer2):
+					self.stopTimer2.cancel()
+				self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
+				self.stopTimer2.start()
 				if (self.stopTimer):
 					self.stopTimer.cancel()
 					self.stopTimer = None
@@ -180,6 +195,7 @@ class discordRichPresencePlex(discordRichPresence):
 					extra = artist + " · " + metadata.parentTitle
 					largeText = "Listening to Music"
 				else:
+					printExtraLog("Unsupported media type \"" + mediaType + "\", ignoring", "red")
 					return
 				activity = {
 					"details": title,
@@ -205,6 +221,11 @@ class discordRichPresencePlex(discordRichPresence):
 			if (self.process):
 				self.process.kill()
 
+	def stopOnNoUpdate(self):
+		printExtraLog("\nNo updates from session key " + str(self.lastSessionKey) + ", stopping", "red")
+		self.lastState, self.lastSessionKey, self.lastRatingKey = None, None, None
+		self.stop()
+
 isLinux = sys.platform in ["linux", "darwin"]
 
 colours = {
@@ -226,9 +247,17 @@ def colourText(text, colour = ""):
 	return prefix + str(text) + suffix
 
 def colourPrint(text, colour = ""):
-	print(colourText(text, colour))
+	if (colour):
+		print(colourText(text, colour))
+	else:
+		print(text)
+
+def printExtraLog(text, colour = ""):
+	if (plexConfig.extraLogging):
+		colourPrint(text, colour)
 
 os.system("clear" if isLinux else "cls")
+
 discordRichPresencePlexInstance = discordRichPresencePlex()
 try:
 	discordRichPresencePlexInstance.run()
