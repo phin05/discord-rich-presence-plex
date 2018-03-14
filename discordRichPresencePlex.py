@@ -154,17 +154,21 @@ class discordRichPresencePlex(discordRichPresence):
 				if (len(plexServerSessions) < 1):
 					printExtraLog("Empty session list, ignoring", "red")
 					return
-				else:
-					for session in plexServerSessions:
-						printExtraLog(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""))
-						if (session.sessionKey == sessionKey):
-							printExtraLog("Found Session", "green")
-							if (session.usernames[0].lower() == self.listenForUser.lower()):
-								printExtraLog("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.listenForUser.lower() + "\", continuing", "green")
-								break
-							else:
-								printExtraLog("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.listenForUser.lower() + "\", ignoring", "red")
-								return
+				for session in plexServerSessions:
+					printExtraLog(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""))
+					sessionFound = False
+					if (session.sessionKey == sessionKey):
+						sessionFound = True
+						printExtraLog("Session found", "green")
+						if (session.usernames[0].lower() == self.listenForUser.lower()):
+							printExtraLog("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.listenForUser.lower() + "\", continuing", "green")
+							break
+						else:
+							printExtraLog("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.listenForUser.lower() + "\", ignoring", "red")
+							return
+				if (not sessionFound):
+					printExtraLog("No matching session found", "red")
+					return
 				if (self.stopTimer2):
 					self.stopTimer2.cancel()
 				self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
