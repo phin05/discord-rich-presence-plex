@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import os
 import plexapi.myplex
@@ -11,16 +12,22 @@ import time
 
 class plexConfig:
 
-	plexServerName = ""
-	plexUsername = ""
-	plexPasswordOrToken = ""
-	usingToken = False
-	listenForUser = ""
-	extraLogging = False
+	extraLogging = True
+
+	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = ""):
+		self.serverName = serverName
+		self.username = username
+		self.password = password
+		self.token = token
+		self.listenForUser = (username if listenForUser == "" else listenForUser).lower()
+
+plexConfigs = [
+	# plexConfig(serverName = "", username = "", password = "", token = "", listenForUser = "")
+]
 
 class discordRichPresence:
 
-	def __init__(self, clientID):
+	def __init__(self, clientID, child):
 		self.IPCPipe = ((os.environ.get("XDG_RUNTIME_DIR", None) or os.environ.get("TMPDIR", None) or os.environ.get("TMP", None) or os.environ.get("TEMP", None) or "/tmp") + "/discord-ipc-0") if isLinux else "\\\\?\\pipe\\discord-ipc-0"
 		self.clientID = clientID
 		self.pipeReader = None
@@ -28,20 +35,19 @@ class discordRichPresence:
 		self.process = None
 		self.running = False
 		self.resetNext = False
+		self.child = child
 
 	async def read(self):
 		try:
-			print("\nReading:")
 			data = await self.pipeReader.read(1024)
-			print(json.loads(data[8:].decode("utf-8")))
+			self.child.log("[READ] " + str(json.loads(data[8:].decode("utf-8"))))
 		except Exception as e:
-			print("Error: " + str(e))
+			self.child.log("Error: " + str(e))
 			self.resetNext = True
 
 	def write(self, op, payload):
-		print("\nWriting:")
 		payload = json.dumps(payload)
-		print(payload)
+		self.child.log("[WRITE] " + str(payload))
 		data = self.pipeWriter.write(struct.pack("<ii", op, len(payload)) + payload.encode("utf-8"))
 
 	async def handshake(self):
@@ -55,17 +61,17 @@ class discordRichPresence:
 		self.running = True
 
 	def start(self):
-		print("\nOpening Discord IPC Pipe")
+		self.child.log("Opening Discord IPC Pipe")
 		emptyProcessFilePath = tempfile.gettempdir() + "\\discordRichPresencePlex-emptyProcess.py"
 		if (not os.path.exists(emptyProcessFilePath)):
 			with open(emptyProcessFilePath, "w") as emptyProcessFile:
-				emptyProcessFile.write("import time\n\ntry:\n\twhile (True):\n\t\ttime.sleep(60)\nexcept:\n\tpass")
+				emptyProcessFile.write("import timetry:\twhile (True):\t\ttime.sleep(60)except:\tpass")
 		self.process = subprocess.Popen(["python3" if isLinux else "pythonw", emptyProcessFilePath])
 		self.loop = asyncio.get_event_loop() if isLinux else asyncio.ProactorEventLoop()
 		self.loop.run_until_complete(self.handshake())
 
 	def stop(self):
-		print("\nClosing Discord IPC Pipe")
+		self.child.log("Closing Discord IPC Pipe")
 		self.process.kill()
 		self.pipeWriter.close()
 		self.loop.close()
@@ -85,13 +91,6 @@ class discordRichPresence:
 
 class discordRichPresencePlex(discordRichPresence):
 
-	plexServerName = plexConfig.plexServerName
-	plexUsername = plexConfig.plexUsername
-	plexPasswordOrToken = plexConfig.plexPasswordOrToken
-	usingToken = plexConfig.usingToken
-	listenForUser = plexConfig.listenForUser
-	listenForUser = plexUsername if listenForUser == "" else listenForUser
-
 	productName = "Plex Media Server"
 	lastState = None
 	lastSessionKey = None
@@ -100,27 +99,65 @@ class discordRichPresencePlex(discordRichPresence):
 	stopTimerInterval = 5
 	stopTimer2 = None
 	stopTimer2Interval = 35
+	checkConnectionTimer = None
+	checkConnectionTimerInterval = 60
 
-	def __init__(self):
-		super().__init__("413407336082833418")
+	def __init__(self, plexConfig):
+		self.plexConfig = plexConfig
+		self.instanceID = hashlib.md5(str(id(self)).encode("UTF-8")).hexdigest()[:5]
+		super().__init__("413407336082833418", self)
 
 	def run(self):
-		if (self.usingToken):
-			self.plexAccount = plexapi.myplex.MyPlexAccount(self.plexUsername, token = self.plexPasswordOrToken)
+		try:
+			if (self.plexConfig.token):
+				self.plexAccount = plexapi.myplex.MyPlexAccount(self.plexConfig.username, token = self.plexConfig.token)
+			else:
+				self.plexAccount = plexapi.myplex.MyPlexAccount(self.plexConfig.username, self.plexConfig.password)
+			self.log("Logged in as Plex User \"" + self.plexAccount.username + "\"")
+			self.plexServer = None
+			for resource in self.plexAccount.resources():
+				if (resource.product == self.productName and resource.name == self.plexConfig.serverName):
+					self.plexServer = resource.connect()
+					self.plexServer.startAlertListener(self.onPlexServerAlert)
+					self.log("Connected to " + self.productName + " \"" + self.plexConfig.serverName + "\"")
+					self.log("Listening for PlaySessionStateNotification alerts from user \"" + self.plexConfig.listenForUser + "\"")
+					if (self.checkConnectionTimer):
+						self.checkConnectionTimer.cancel()
+					self.checkConnectionTimer = threading.Timer(self.checkConnectionTimerInterval, self.checkConnection)
+					self.checkConnectionTimer.start()
+					break
+			if (not self.plexServer):
+				self.log(self.productName + " \"" + self.plexConfig.serverName + "\" not found")
+		except Exception as e:
+			self.log("Failed to connect to Plex: " + str(e))
+			self.log("Reconnecting in 5 seconds")
+			time.sleep(5)
+			self.run()
+
+	def checkConnection(self):
+		try:
+			self.plexAccount.users()
+			self.checkConnectionTimer = threading.Timer(self.checkConnectionTimerInterval, self.checkConnection)
+			self.checkConnectionTimer.start()
+		except:
+			if (self.stopTimer):
+				self.stopTimer.cancel()
+			if (self.stopTimer2):
+				self.stopTimer2.cancel()
+			if (self.running):
+				self.stop()
+			self.log("Connection to Plex lost, reconnecting")
+			self.run()
+
+	def log(self, text, colour = "", extra = False):
+		prefix = "[" + self.plexConfig.serverName + "/" + self.instanceID + "] "
+		lock.acquire()
+		if (extra):
+			if (plexConfig.extraLogging):
+				print(prefix + colourText(str(text), colour))
 		else:
-			self.plexAccount = plexapi.myplex.MyPlexAccount(self.plexUsername, self.plexPasswordOrToken)
-		print("Logged in as Plex User \"" + self.plexAccount.username + "\"")
-		self.plexServer = None
-		for resource in self.plexAccount.resources():
-			if (resource.product == self.productName and resource.name == self.plexServerName):
-				self.plexServer = resource.connect()
-				self.plexServer.startAlertListener(self.onPlexServerAlert)
-				print("Connected to " + self.productName + " \"" + self.plexServerName + "\"")
-				print("Listening for PlaySessionStateNotification alerts from user \"" + self.listenForUser + "\"")
-				break
-		if (not self.plexServer):
-			print(self.productName + " \"" + self.plexServerName + "\" not found")
-			sys.exit(0)
+			print(prefix + colourText(str(text), colour))
+		lock.release()
 
 	def onPlexServerAlert(self, data):
 		try:
@@ -130,13 +167,13 @@ class discordRichPresencePlex(discordRichPresence):
 				sessionKey = int(sessionData["sessionKey"])
 				ratingKey = int(sessionData["ratingKey"])
 				viewOffset = int(sessionData["viewOffset"])
-				printExtraLog("\nReceived Update: " + colourText(sessionData, "yellow").replace("'", "\""))
+				self.log("Received Update: " + colourText(sessionData, "yellow").replace("'", "\""), extra = True)
 				if (self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey):
 					if (self.stopTimer2):
 						self.stopTimer2.cancel()
 						self.stopTimer2 = None
 					if (self.lastState == state):
-						printExtraLog("Nothing changed, ignoring", "yellow")
+						self.log("Nothing changed, ignoring", "yellow", extra = True)
 						self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
 						self.stopTimer2.start()
 						return
@@ -144,38 +181,38 @@ class discordRichPresencePlex(discordRichPresence):
 						self.lastState, self.lastSessionKey, self.lastRatingKey = None, None, None
 						self.stopTimer = threading.Timer(self.stopTimerInterval, self.stop)
 						self.stopTimer.start()
-						printExtraLog("Started stopTimer", "green")
+						self.log("Started stopTimer", "yellow", True)
 						return
 				elif (state == "stopped"):
-					printExtraLog("\"stopped\" state update from unknown session key, ignoring", "yellow")
+					self.log("\"stopped\" state update from unknown session key, ignoring", "yellow", True)
 					return
-				printExtraLog("Checking Sessions for Session Key " + colourText(sessionKey, "yellow") + ":")
+				self.log("Checking Sessions for Session Key " + colourText(sessionKey, "yellow"), extra = True)
 				plexServerSessions = self.plexServer.sessions()
 				if (len(plexServerSessions) < 1):
-					printExtraLog("Empty session list, ignoring", "red")
+					self.log("Empty session list, ignoring", "red", True)
 					return
 				for session in plexServerSessions:
-					printExtraLog(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""))
+					self.log(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""), extra = True)
 					sessionFound = False
 					if (session.sessionKey == sessionKey):
 						sessionFound = True
-						printExtraLog("Session found", "green")
-						if (session.usernames[0].lower() == self.listenForUser.lower()):
-							printExtraLog("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.listenForUser.lower() + "\", continuing", "green")
+						self.log("Session found", "green", True)
+						if (session.usernames[0].lower() == self.plexConfig.listenForUser):
+							self.log("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.plexConfig.listenForUser + "\", continuing", "green", True)
 							break
 						else:
-							printExtraLog("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.listenForUser.lower() + "\", ignoring", "red")
+							self.log("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.plexConfig.listenForUser + "\", ignoring", "red", True)
 							return
 				if (not sessionFound):
-					printExtraLog("No matching session found", "red")
+					self.log("No matching session found", "red", True)
 					return
+				if (self.stopTimer):
+					self.stopTimer.cancel()
+					self.stopTimer = None
 				if (self.stopTimer2):
 					self.stopTimer2.cancel()
 				self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
 				self.stopTimer2.start()
-				if (self.stopTimer):
-					self.stopTimer.cancel()
-					self.stopTimer = None
 				self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
 				metadata = self.plexServer.fetchItem(ratingKey)
 				mediaType = metadata.type
@@ -199,7 +236,7 @@ class discordRichPresencePlex(discordRichPresence):
 					extra = artist + " · " + metadata.parentTitle
 					largeText = "Listening to Music"
 				else:
-					printExtraLog("Unsupported media type \"" + mediaType + "\", ignoring", "red")
+					self.log("Unsupported media type \"" + mediaType + "\", ignoring", "red", True)
 					return
 				activity = {
 					"details": title,
@@ -221,16 +258,23 @@ class discordRichPresencePlex(discordRichPresence):
 					self.start()
 				self.send(activity)
 		except Exception as e:
-			print("Error: " + str(e))
+			self.log("Error: " + str(e))
 			if (self.process):
 				self.process.kill()
 
 	def stopOnNoUpdate(self):
-		printExtraLog("\nNo updates from session key " + str(self.lastSessionKey) + ", stopping", "red")
+		self.log("No updates from session key " + str(self.lastSessionKey) + ", stopping", "red", True)
 		self.lastState, self.lastSessionKey, self.lastRatingKey = None, None, None
 		self.stop()
 
 isLinux = sys.platform in ["linux", "darwin"]
+lock = threading.Semaphore(value = 1)
+
+os.system("clear" if isLinux else "cls")
+
+if (len(plexConfigs) == 0):
+	print("Error: plexConfigs list is empty")
+	sys.exit()
 
 colours = {
 	"red": "91",
@@ -250,25 +294,19 @@ def colourText(text, colour = ""):
 		suffix = "\033[0m"
 	return prefix + str(text) + suffix
 
-def colourPrint(text, colour = ""):
-	if (colour):
-		print(colourText(text, colour))
-	else:
-		print(text)
-
-def printExtraLog(text, colour = ""):
-	if (plexConfig.extraLogging):
-		colourPrint(text, colour)
-
-os.system("clear" if isLinux else "cls")
-
-discordRichPresencePlexInstance = discordRichPresencePlex()
+discordRichPresencePlexInstances = []
+for config in plexConfigs:
+	discordRichPresencePlexInstances.append(discordRichPresencePlex(config))
 try:
-	discordRichPresencePlexInstance.run()
+	for discordRichPresencePlexInstance in discordRichPresencePlexInstances:
+		discordRichPresencePlexInstance.run()
 	while True:
-		time.sleep(60)
+		time.sleep(3600)
 except KeyboardInterrupt:
-	if (discordRichPresencePlexInstance.running):
-		discordRichPresencePlexInstance.stop()
+	for discordRichPresencePlexInstance in discordRichPresencePlexInstances:
+		if (discordRichPresencePlexInstance.running):
+			discordRichPresencePlexInstance.stop()
+		if (discordRichPresencePlexInstance.checkConnectionTimer):
+			discordRichPresencePlexInstance.checkConnectionTimer.cancel()
 except Exception as e:
 	print("Error: " + str(e))
