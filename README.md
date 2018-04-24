@@ -12,7 +12,7 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 
 Add your configuration(s) into the `plexConfigs` list on line 24.
 
-### Example
+#### Example
 
 ```python
 plexConfigs = [
@@ -21,7 +21,7 @@ plexConfigs = [
 ]
 ```
 
-### Valid Parameters
+#### Parameters
 
 * `serverName` - Name of the Plex Media Server to connect to
 * `username` - Username of the account the server is signed in as
