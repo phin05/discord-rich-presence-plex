@@ -12,7 +12,7 @@ import time
 
 class plexConfig:
 
-	extraLogging = True
+	extraLogging = False
 
 	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = ""):
 		self.serverName = serverName
@@ -123,6 +123,7 @@ class discordRichPresencePlex(discordRichPresence):
 					self.log("Listening for PlaySessionStateNotification alerts from user \"" + self.plexConfig.listenForUser + "\"")
 					if (self.checkConnectionTimer):
 						self.checkConnectionTimer.cancel()
+						self.checkConnectionTimer = None
 					self.checkConnectionTimer = threading.Timer(self.checkConnectionTimerInterval, self.checkConnection)
 					self.checkConnectionTimer.start()
 					break
@@ -142,8 +143,10 @@ class discordRichPresencePlex(discordRichPresence):
 		except:
 			if (self.stopTimer):
 				self.stopTimer.cancel()
+				self.stopTimer = None
 			if (self.stopTimer2):
 				self.stopTimer2.cancel()
+				self.stopTimer2 = None
 			if (self.running):
 				self.stop()
 			self.log("Connection to Plex lost, reconnecting")
@@ -153,7 +156,7 @@ class discordRichPresencePlex(discordRichPresence):
 		prefix = "[" + self.plexConfig.serverName + "/" + self.instanceID + "] "
 		lock.acquire()
 		if (extra):
-			if (plexConfig.extraLogging):
+			if (self.plexConfig.extraLogging):
 				print(prefix + colourText(str(text), colour))
 		else:
 			print(prefix + colourText(str(text), colour))
