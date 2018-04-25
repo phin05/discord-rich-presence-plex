@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import hashlib
 import json
 import os
@@ -12,7 +13,7 @@ import time
 
 class plexConfig:
 
-	extraLogging = False
+	extraLogging = True
 
 	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = ""):
 		self.serverName = serverName
@@ -65,7 +66,7 @@ class discordRichPresence:
 		emptyProcessFilePath = tempfile.gettempdir() + "\\discordRichPresencePlex-emptyProcess.py"
 		if (not os.path.exists(emptyProcessFilePath)):
 			with open(emptyProcessFilePath, "w") as emptyProcessFile:
-				emptyProcessFile.write("import time\n\ntry:\n\twhile (True):\n\t\ttime.sleep(60)\nexcept:\n\tpass")
+				emptyProcessFile.write("import time\n\ntry:\n\twhile (True):\n\t\ttime.sleep(3600)\nexcept:\n\tpass")
 		self.process = subprocess.Popen(["python3" if isLinux else "pythonw", emptyProcessFilePath])
 		self.loop = asyncio.get_event_loop() if isLinux else asyncio.ProactorEventLoop()
 		self.loop.run_until_complete(self.handshake())
@@ -92,6 +93,8 @@ class discordRichPresence:
 class discordRichPresencePlex(discordRichPresence):
 
 	productName = "Plex Media Server"
+	plexAccount = None
+	plexServer = None
 	lastState = None
 	lastSessionKey = None
 	lastRatingKey = None
@@ -137,10 +140,12 @@ class discordRichPresencePlex(discordRichPresence):
 
 	def checkConnection(self):
 		try:
-			self.plexAccount.users()
+			self.log("Request for server sessions list to check connection: " + str(self.plexServer.sessions()), extra = True)
 			self.checkConnectionTimer = threading.Timer(self.checkConnectionTimerInterval, self.checkConnection)
 			self.checkConnectionTimer.start()
-		except:
+		except Exception as e:
+			self.plexAccount = None
+			self.plexServer = None
 			if (self.stopTimer):
 				self.stopTimer.cancel()
 				self.stopTimer = None
@@ -149,11 +154,13 @@ class discordRichPresencePlex(discordRichPresence):
 				self.stopTimer2 = None
 			if (self.running):
 				self.stop()
-			self.log("Connection to Plex lost, reconnecting")
+			self.log("Connection to Plex lost: " + str(e))
+			self.log("Reconnecting")
 			self.run()
 
 	def log(self, text, colour = "", extra = False):
-		prefix = "[" + self.plexConfig.serverName + "/" + self.instanceID + "] "
+		timestamp = datetime.datetime.now().strftime("%I:%M:%S %p")
+		prefix = "[" + timestamp + "] [" + self.plexConfig.serverName + "/" + self.instanceID + "] "
 		lock.acquire()
 		if (extra):
 			if (self.plexConfig.extraLogging):
@@ -164,6 +171,8 @@ class discordRichPresencePlex(discordRichPresence):
 
 	def onPlexServerAlert(self, data):
 		try:
+			if (not self.plexServer):
+				return
 			if (data["type"] == "playing" and "PlaySessionStateNotification" in data):
 				sessionData = data["PlaySessionStateNotification"][0]
 				state = sessionData["state"]
@@ -261,7 +270,7 @@ class discordRichPresencePlex(discordRichPresence):
 					self.start()
 				self.send(activity)
 		except Exception as e:
-			self.log("Error: " + str(e))
+			self.log("onPlexServerAlert Error: " + str(e))
 			if (self.process):
 				self.process.kill()
 
