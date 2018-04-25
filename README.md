@@ -31,7 +31,7 @@ plexConfigs = [
 
 ### Other Variables
 
-* Line 15: `extraLogging` - Set this to `True` if you want the program to output more information
+* Line 15: `extraLogging` - The program outputs more information if this is set to `True`
 
 ## License
 
