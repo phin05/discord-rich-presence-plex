@@ -65,7 +65,7 @@ class discordRichPresence:
 		emptyProcessFilePath = tempfile.gettempdir() + "\\discordRichPresencePlex-emptyProcess.py"
 		if (not os.path.exists(emptyProcessFilePath)):
 			with open(emptyProcessFilePath, "w") as emptyProcessFile:
-				emptyProcessFile.write("import timetry:\twhile (True):\t\ttime.sleep(60)except:\tpass")
+				emptyProcessFile.write("import time\n\ntry:\n\twhile (True):\n\t\ttime.sleep(60)\nexcept:\n\tpass")
 		self.process = subprocess.Popen(["python3" if isLinux else "pythonw", emptyProcessFilePath])
 		self.loop = asyncio.get_event_loop() if isLinux else asyncio.ProactorEventLoop()
 		self.loop.run_until_complete(self.handshake())
