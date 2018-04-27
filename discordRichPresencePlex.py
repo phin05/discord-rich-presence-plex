@@ -35,7 +35,6 @@ class discordRichPresence:
 		self.pipeWriter = None
 		self.process = None
 		self.running = False
-		self.resetNext = False
 		self.child = child
 
 	async def read(self):
@@ -43,8 +42,8 @@ class discordRichPresence:
 			data = await self.pipeReader.read(1024)
 			self.child.log("[READ] " + str(json.loads(data[8:].decode("utf-8"))))
 		except Exception as e:
-			self.child.log("Error: " + str(e))
-			self.resetNext = True
+			self.child.log("[READ] " + str(e))
+			self.stop()
 
 	def write(self, op, payload):
 		payload = json.dumps(payload)
@@ -52,14 +51,17 @@ class discordRichPresence:
 		data = self.pipeWriter.write(struct.pack("<ii", op, len(payload)) + payload.encode("utf-8"))
 
 	async def handshake(self):
-		if (isLinux):
-			self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(self.IPCPipe, loop = self.loop)
-		else:
-			self.pipeReader = asyncio.StreamReader(loop = self.loop)
-			self.pipeWriter, _ = await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader, loop = self.loop), self.IPCPipe)
-		self.write(0, {"v": 1, "client_id": self.clientID})
-		await self.read()
-		self.running = True
+		try:
+			if (isLinux):
+				self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(self.IPCPipe, loop = self.loop)
+			else:
+				self.pipeReader = asyncio.StreamReader(loop = self.loop)
+				self.pipeWriter, _ = await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader, loop = self.loop), self.IPCPipe)
+			self.write(0, {"v": 1, "client_id": self.clientID})
+			await self.read()
+			self.running = True
+		except Exception as e:
+			self.child.log("[HANDSHAKE] " + str(e))
 
 	def start(self):
 		self.child.log("Opening Discord IPC Pipe")
@@ -73,9 +75,13 @@ class discordRichPresence:
 
 	def stop(self):
 		self.child.log("Closing Discord IPC Pipe")
+		self.child.lastState, self.child.lastSessionKey, self.child.lastRatingKey = None, None, None
 		self.process.kill()
-		self.pipeWriter.close()
-		self.loop.close()
+		try:
+			self.pipeWriter.close()
+			self.loop.close()
+		except:
+			pass
 		self.running = False
 
 	def send(self, activity):
@@ -95,6 +101,7 @@ class discordRichPresencePlex(discordRichPresence):
 	productName = "Plex Media Server"
 	plexAccount = None
 	plexServer = None
+	plexAlertListener = None
 	lastState = None
 	lastSessionKey = None
 	lastRatingKey = None
@@ -111,32 +118,56 @@ class discordRichPresencePlex(discordRichPresence):
 		super().__init__("413407336082833418", self)
 
 	def run(self):
-		try:
-			if (self.plexConfig.token):
-				self.plexAccount = plexapi.myplex.MyPlexAccount(self.plexConfig.username, token = self.plexConfig.token)
-			else:
-				self.plexAccount = plexapi.myplex.MyPlexAccount(self.plexConfig.username, self.plexConfig.password)
-			self.log("Logged in as Plex User \"" + self.plexAccount.username + "\"")
-			self.plexServer = None
-			for resource in self.plexAccount.resources():
-				if (resource.product == self.productName and resource.name == self.plexConfig.serverName):
-					self.plexServer = resource.connect()
-					self.plexServer.startAlertListener(self.onPlexServerAlert)
-					self.log("Connected to " + self.productName + " \"" + self.plexConfig.serverName + "\"")
-					self.log("Listening for PlaySessionStateNotification alerts from user \"" + self.plexConfig.listenForUser + "\"")
-					if (self.checkConnectionTimer):
-						self.checkConnectionTimer.cancel()
-						self.checkConnectionTimer = None
-					self.checkConnectionTimer = threading.Timer(self.checkConnectionTimerInterval, self.checkConnection)
-					self.checkConnectionTimer.start()
+		self.reset()
+		connected = False
+		while (not connected):
+			try:
+				if (self.plexConfig.token):
+					self.plexAccount = plexapi.myplex.MyPlexAccount(self.plexConfig.username, token = self.plexConfig.token)
+				else:
+					self.plexAccount = plexapi.myplex.MyPlexAccount(self.plexConfig.username, self.plexConfig.password)
+				self.log("Logged in as Plex User \"" + self.plexAccount.username + "\"")
+				self.plexServer = None
+				for resource in self.plexAccount.resources():
+					if (resource.product == self.productName and resource.name == self.plexConfig.serverName):
+						self.plexServer = resource.connect()
+						self.log("Connected to " + self.productName + " \"" + self.plexConfig.serverName + "\"")
+						self.plexAlertListener = self.plexServer.startAlertListener(self.onPlexServerAlert)
+						self.log("Listening for PlaySessionStateNotification alerts from user \"" + self.plexConfig.listenForUser + "\"")
+						if (self.checkConnectionTimer):
+							self.checkConnectionTimer.cancel()
+							self.checkConnectionTimer = None
+						self.checkConnectionTimer = threading.Timer(self.checkConnectionTimerInterval, self.checkConnection)
+						self.checkConnectionTimer.start()
+						connected = True
+						break
+				if (not self.plexServer):
+					self.log(self.productName + " \"" + self.plexConfig.serverName + "\" not found")
 					break
-			if (not self.plexServer):
-				self.log(self.productName + " \"" + self.plexConfig.serverName + "\" not found")
-		except Exception as e:
-			self.log("Failed to connect to Plex: " + str(e))
-			self.log("Reconnecting in 5 seconds")
-			time.sleep(5)
-			self.run()
+			except Exception as e:
+				self.log("Failed to connect to Plex: " + str(e))
+				self.log("Reconnecting in 10 seconds")
+				time.sleep(10)
+
+	def reset(self):
+		if (self.running):
+			self.stop()
+		self.plexAccount, self.plexServer = None, None
+		if (self.plexAlertListener):
+			try:
+				self.plexAlertListener.stop()
+			except:
+				pass
+			self.plexAlertListener = None
+		if (self.stopTimer):
+			self.stopTimer.cancel()
+			self.stopTimer = None
+		if (self.stopTimer2):
+			self.stopTimer2.cancel()
+			self.stopTimer2 = None
+		if (self.checkConnectionTimer):
+			self.checkConnectionTimer.cancel()
+			self.checkConnectionTimer = None
 
 	def checkConnection(self):
 		try:
@@ -144,16 +175,6 @@ class discordRichPresencePlex(discordRichPresence):
 			self.checkConnectionTimer = threading.Timer(self.checkConnectionTimerInterval, self.checkConnection)
 			self.checkConnectionTimer.start()
 		except Exception as e:
-			self.plexAccount = None
-			self.plexServer = None
-			if (self.stopTimer):
-				self.stopTimer.cancel()
-				self.stopTimer = None
-			if (self.stopTimer2):
-				self.stopTimer2.cancel()
-				self.stopTimer2 = None
-			if (self.running):
-				self.stop()
 			self.log("Connection to Plex lost: " + str(e))
 			self.log("Reconnecting")
 			self.run()
@@ -170,9 +191,9 @@ class discordRichPresencePlex(discordRichPresence):
 		lock.release()
 
 	def onPlexServerAlert(self, data):
+		if (not self.plexServer):
+			return
 		try:
-			if (not self.plexServer):
-				return
 			if (data["type"] == "playing" and "PlaySessionStateNotification" in data):
 				sessionData = data["PlaySessionStateNotification"][0]
 				state = sessionData["state"]
@@ -263,20 +284,17 @@ class discordRichPresencePlex(discordRichPresence):
 				if (state == "playing"):
 					currentTimestamp = int(time.time())
 					activity["timestamps"] = {"start": currentTimestamp - (viewOffset / 1000)} # "end": currentTimestamp + ((metadata.duration - viewOffset) / 1000)
-				if (self.resetNext):
-					self.resetNext = False
-					self.stop()
 				if (not self.running):
 					self.start()
-				self.send(activity)
+				if (self.running):
+					self.send(activity)
+				else:
+					self.stop()
 		except Exception as e:
 			self.log("onPlexServerAlert Error: " + str(e))
-			if (self.process):
-				self.process.kill()
 
 	def stopOnNoUpdate(self):
 		self.log("No updates from session key " + str(self.lastSessionKey) + ", stopping", "red", True)
-		self.lastState, self.lastSessionKey, self.lastRatingKey = None, None, None
 		self.stop()
 
 isLinux = sys.platform in ["linux", "darwin"]
@@ -316,9 +334,6 @@ try:
 		time.sleep(3600)
 except KeyboardInterrupt:
 	for discordRichPresencePlexInstance in discordRichPresencePlexInstances:
-		if (discordRichPresencePlexInstance.running):
-			discordRichPresencePlexInstance.stop()
-		if (discordRichPresencePlexInstance.checkConnectionTimer):
-			discordRichPresencePlexInstance.checkConnectionTimer.cancel()
+		discordRichPresencePlexInstance.reset()
 except Exception as e:
 	print("Error: " + str(e))
