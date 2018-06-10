@@ -79,6 +79,13 @@ class discordRichPresence:
 		self.process.kill()
 		try:
 			self.pipeWriter.close()
+		except:
+			pass
+		try:
+			self.loop.run_until_complete(self.pipeReader.read(1024))
+		except:
+			pass
+		try:
 			self.loop.close()
 		except:
 			pass
