@@ -70,7 +70,7 @@ class discordRichPresence:
 			with open(emptyProcessFilePath, "w") as emptyProcessFile:
 				emptyProcessFile.write("import time\n\ntry:\n\twhile (True):\n\t\ttime.sleep(3600)\nexcept:\n\tpass")
 		self.process = subprocess.Popen(["python3" if isLinux else "pythonw", emptyProcessFilePath])
-		self.loop = asyncio.get_event_loop() if isLinux else asyncio.ProactorEventLoop()
+		self.loop = asyncio.new_event_loop() if isLinux else asyncio.ProactorEventLoop()
 		self.loop.run_until_complete(self.handshake())
 
 	def stop(self):
@@ -100,7 +100,7 @@ class discordRichPresence:
 			},
 			"nonce": "{0:.20f}".format(time.time())
 		}
-		sent = self.write(1, payload)
+		self.write(1, payload)
 		self.loop.run_until_complete(self.read())
 
 class discordRichPresencePlex(discordRichPresence):
