@@ -10,7 +10,7 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 
 ## Configuration
 
-Add your configuration(s) into the `plexConfigs` list on line 24.
+Add your configuration(s) into the `plexConfigs` list on line 25.
 
 #### Example
 
