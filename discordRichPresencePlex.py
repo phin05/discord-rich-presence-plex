@@ -77,18 +77,26 @@ class discordRichPresence:
 		self.child.log("Closing Discord IPC Pipe")
 		self.child.lastState, self.child.lastSessionKey, self.child.lastRatingKey = None, None, None
 		self.process.kill()
-		try:
-			self.pipeWriter.close()
-		except:
-			pass
-		try:
-			self.loop.run_until_complete(self.pipeReader.read(1024))
-		except:
-			pass
+		if (self.pipeWriter):
+			try:
+				self.pipeWriter.close()
+			except:
+				pass
+			try:
+				self.loop.run_until_complete(self.pipeReader.read(1024))
+			except:
+				pass
+			self.pipeWriter, self.pipeReader = None, None
 		try:
 			self.loop.close()
 		except:
 			pass
+		if (self.child.stopTimer):
+			self.child.stopTimer.cancel()
+			self.child.stopTimer = None
+		if (self.child.stopTimer2):
+			self.child.stopTimer2.cancel()
+			self.child.stopTimer2 = None
 		self.running = False
 
 	def send(self, activity):
@@ -106,23 +114,25 @@ class discordRichPresence:
 class discordRichPresencePlex(discordRichPresence):
 
 	productName = "Plex Media Server"
-	plexAccount = None
-	plexServer = None
-	plexAlertListener = None
-	lastState = None
-	lastSessionKey = None
-	lastRatingKey = None
-	stopTimer = None
 	stopTimerInterval = 5
-	stopTimer2 = None
 	stopTimer2Interval = 35
-	checkConnectionTimer = None
 	checkConnectionTimerInterval = 60
+	maximumIgnores = 3
 
 	def __init__(self, plexConfig):
 		self.plexConfig = plexConfig
 		self.instanceID = hashlib.md5(str(id(self)).encode("UTF-8")).hexdigest()[:5]
 		super().__init__("413407336082833418", self)
+		self.plexAccount = None
+		self.plexServer = None
+		self.plexAlertListener = None
+		self.lastState = None
+		self.lastSessionKey = None
+		self.lastRatingKey = None
+		self.stopTimer = None
+		self.stopTimer2 = None
+		self.checkConnectionTimer = None
+		self.ignoreCount = 0
 
 	def run(self):
 		self.reset()
@@ -213,10 +223,14 @@ class discordRichPresencePlex(discordRichPresence):
 						self.stopTimer2.cancel()
 						self.stopTimer2 = None
 					if (self.lastState == state):
-						self.log("Nothing changed, ignoring", "yellow", extra = True)
-						self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
-						self.stopTimer2.start()
-						return
+						if (self.ignoreCount == self.maximumIgnores):
+							self.ignoreCount = 0
+						else:
+							self.log("Nothing changed, ignoring", "yellow", extra = True)
+							self.ignoreCount += 1
+							self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
+							self.stopTimer2.start()
+							return
 					elif (state == "stopped"):
 						self.lastState, self.lastSessionKey, self.lastRatingKey = None, None, None
 						self.stopTimer = threading.Timer(self.stopTimerInterval, self.stop)
