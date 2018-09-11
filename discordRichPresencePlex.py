@@ -77,26 +77,28 @@ class discordRichPresence:
 		self.child.log("Closing Discord IPC Pipe")
 		self.child.lastState, self.child.lastSessionKey, self.child.lastRatingKey = None, None, None
 		self.process.kill()
-		if (self.pipeWriter):
-			try:
-				self.pipeWriter.close()
-			except:
-				pass
-			try:
-				self.loop.run_until_complete(self.pipeReader.read(1024))
-			except:
-				pass
-			self.pipeWriter, self.pipeReader = None, None
-		try:
-			self.loop.close()
-		except:
-			pass
 		if (self.child.stopTimer):
 			self.child.stopTimer.cancel()
 			self.child.stopTimer = None
 		if (self.child.stopTimer2):
 			self.child.stopTimer2.cancel()
 			self.child.stopTimer2 = None
+		if (self.pipeWriter):
+			try:
+				self.pipeWriter.close()
+			except:
+				pass
+			self.pipeWriter = None
+		if (self.pipeReader):
+			try:
+				self.loop.run_until_complete(self.pipeReader.read(1024))
+			except:
+				pass
+			self.pipeReader = None
+		try:
+			self.loop.close()
+		except:
+			pass
 		self.running = False
 
 	def send(self, activity):
