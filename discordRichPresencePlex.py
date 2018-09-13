@@ -15,12 +15,13 @@ class plexConfig:
 
 	extraLogging = True
 
-	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = ""):
+	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = "", clientID = "413407336082833418"):
 		self.serverName = serverName
 		self.username = username
 		self.password = password
 		self.token = token
 		self.listenForUser = (username if listenForUser == "" else listenForUser).lower()
+		self.clientID = clientID
 
 plexConfigs = [
 	# plexConfig(serverName = "", username = "", password = "", token = "", listenForUser = "")
@@ -124,7 +125,7 @@ class discordRichPresencePlex(discordRichPresence):
 	def __init__(self, plexConfig):
 		self.plexConfig = plexConfig
 		self.instanceID = hashlib.md5(str(id(self)).encode("UTF-8")).hexdigest()[:5]
-		super().__init__("413407336082833418", self)
+		super().__init__(plexConfig.clientID, self)
 		self.plexAccount = None
 		self.plexServer = None
 		self.plexAlertListener = None
