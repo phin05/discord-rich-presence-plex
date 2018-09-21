@@ -10,7 +10,7 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 
 ## Configuration
 
-Add your configuration(s) into the `plexConfigs` list on line 25.
+Add your configuration(s) into the `plexConfigs` list on line 26.
 
 #### Example
 
@@ -31,7 +31,7 @@ plexConfigs = [
 
 ### Other Variables
 
-* Line 15: `extraLogging` - The program outputs more information if this is set to `True`
+* Line 16: `extraLogging` - The program outputs more information if this is set to `True`
 
 ## License
 
