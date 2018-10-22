@@ -6,7 +6,8 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 
 * [Python 3.6.4+](https://www.python.org/downloads)
 * [plexapi](https://github.com/pkkid/python-plexapi)
-* [websocket-client 0.48.0](https://github.com/websocket-client/websocket-client)
+* [websocket-client](https://github.com/websocket-client/websocket-client)
+	* Use version 0.48.0 (`pip install websocket-client==0.48.0`) as an issue with newer versions of websocket-client breaks the plexapi module's alert listener
 * The script must be running on the same machine as the Discord client.
 
 ## Configuration
@@ -25,7 +26,7 @@ plexConfigs = [
 #### Parameters
 
 * `serverName` - Name of the Plex Media Server to connect to
-* `username` - Username of the account the server is signed in as
+* `username` - Username of the account the above server is signed in as
 * `password` - Password associated with the above account
 * `token` - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account, ignores `password` if set
 * `listenForUser` - Your username, defaults to `username` if not set
