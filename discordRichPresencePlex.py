@@ -128,6 +128,7 @@ class discordRichPresencePlex(discordRichPresence):
 		super().__init__(plexConfig.clientID, self)
 		self.plexAccount = None
 		self.plexServer = None
+		self.isServerOwner = False
 		self.plexAlertListener = None
 		self.lastState = None
 		self.lastSessionKey = None
@@ -155,7 +156,7 @@ class discordRichPresencePlex(discordRichPresence):
 							self.plexServer.account()
 							self.isServerOwner = True
 						except:
-							self.isServerOwner = False
+							pass
 						self.log("Connected to " + self.productName + " \"" + self.plexConfig.serverName + "\"")
 						self.plexAlertListener = self.plexServer.startAlertListener(self.onPlexServerAlert)
 						self.log("Listening for PlaySessionStateNotification alerts from user \"" + self.plexConfig.listenForUser + "\"")
@@ -168,7 +169,7 @@ class discordRichPresencePlex(discordRichPresence):
 						break
 				if (not self.plexServer):
 					self.log(self.productName + " \"" + self.plexConfig.serverName + "\" not found")
-					break				
+					break
 			except Exception as e:
 				self.log("Failed to connect to Plex: " + str(e))
 				self.log("Reconnecting in 10 seconds")
