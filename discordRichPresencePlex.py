@@ -151,6 +151,11 @@ class discordRichPresencePlex(discordRichPresence):
 				for resource in self.plexAccount.resources():
 					if (resource.product == self.productName and resource.name == self.plexConfig.serverName):
 						self.plexServer = resource.connect()
+						try:
+							self.plexServer.account()
+							self.isServerOwner = True
+						except:
+							self.isServerOwner = False
 						self.log("Connected to " + self.productName + " \"" + self.plexConfig.serverName + "\"")
 						self.plexAlertListener = self.plexServer.startAlertListener(self.onPlexServerAlert)
 						self.log("Listening for PlaySessionStateNotification alerts from user \"" + self.plexConfig.listenForUser + "\"")
@@ -163,7 +168,7 @@ class discordRichPresencePlex(discordRichPresence):
 						break
 				if (not self.plexServer):
 					self.log(self.productName + " \"" + self.plexConfig.serverName + "\" not found")
-					break
+					break				
 			except Exception as e:
 				self.log("Failed to connect to Plex: " + str(e))
 				self.log("Reconnecting in 10 seconds")
@@ -191,7 +196,7 @@ class discordRichPresencePlex(discordRichPresence):
 
 	def checkConnection(self):
 		try:
-			self.log("Request for server sessions list to check connection: " + str(self.plexServer.sessions()), extra = True)
+			self.log("Request for clients list to check connection: " + str(self.plexServer.clients()), extra = True)
 			self.checkConnectionTimer = threading.Timer(self.checkConnectionTimerInterval, self.checkConnection)
 			self.checkConnectionTimer.start()
 		except Exception as e:
@@ -243,26 +248,27 @@ class discordRichPresencePlex(discordRichPresence):
 				elif (state == "stopped"):
 					self.log("\"stopped\" state update from unknown session key, ignoring", "yellow", True)
 					return
-				self.log("Checking Sessions for Session Key " + colourText(sessionKey, "yellow"), extra = True)
-				plexServerSessions = self.plexServer.sessions()
-				if (len(plexServerSessions) < 1):
-					self.log("Empty session list, ignoring", "red", True)
-					return
-				for session in plexServerSessions:
-					self.log(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""), extra = True)
-					sessionFound = False
-					if (session.sessionKey == sessionKey):
-						sessionFound = True
-						self.log("Session found", "green", True)
-						if (session.usernames[0].lower() == self.plexConfig.listenForUser):
-							self.log("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.plexConfig.listenForUser + "\", continuing", "green", True)
-							break
-						else:
-							self.log("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.plexConfig.listenForUser + "\", ignoring", "red", True)
-							return
-				if (not sessionFound):
-					self.log("No matching session found", "red", True)
-					return
+				if (self.isServerOwner):
+					self.log("Checking Sessions for Session Key " + colourText(sessionKey, "yellow"), extra = True)
+					plexServerSessions = self.plexServer.sessions()
+					if (len(plexServerSessions) < 1):
+						self.log("Empty session list, ignoring", "red", True)
+						return
+					for session in plexServerSessions:
+						self.log(str(session) + ", Session Key: " + colourText(session.sessionKey, "yellow") + ", Users: " + colourText(session.usernames, "yellow").replace("'", "\""), extra = True)
+						sessionFound = False
+						if (session.sessionKey == sessionKey):
+							sessionFound = True
+							self.log("Session found", "green", True)
+							if (session.usernames[0].lower() == self.plexConfig.listenForUser):
+								self.log("Username \"" + session.usernames[0].lower() + "\" matches \"" + self.plexConfig.listenForUser + "\", continuing", "green", True)
+								break
+							else:
+								self.log("Username \"" + session.usernames[0].lower() + "\" doesn't match \"" + self.plexConfig.listenForUser + "\", ignoring", "red", True)
+								return
+					if (not sessionFound):
+						self.log("No matching session found", "red", True)
+						return
 				if (self.stopTimer):
 					self.stopTimer.cancel()
 					self.stopTimer = None
