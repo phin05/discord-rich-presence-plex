@@ -26,13 +26,13 @@ plexConfigs = [
 
 * `serverName` - Name of the Plex Media Server to connect to.
 * `username` - Your account's username or e-mail.
-* `password` - The password associated with the above account.
-* `token` (optional) - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account. In some cases, `myPlexAccessToken` from Plex Web App's HTML5 Local Storage must be used. To retrieve this token in Google Chrome, open Plex Web App, press F12, go to "Application", expand "Local Storage" and select the relevant entry. Ignores `password` if set.
+* `password` (not required if `token` is set) - The password associated with the above account.
+* `token` (not required if `password` is set) - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account. In some cases, `myPlexAccessToken` from Plex Web App's HTML5 Local Storage must be used. To retrieve this token in Google Chrome, open Plex Web App, press F12, go to "Application", expand "Local Storage" and select the relevant entry. Ignores `password` if set.
 * `listenForUser` - The script will respond to alerts originating only from this username. Defaults to `username` if not set.
 
 ### Other Variables
 
-* Line 16: `extraLogging` - The script outputs more information if this is set to `True`
+* Line 16: `extraLogging` - The script outputs more information if this is set to `True`.
 
 ## License
 
