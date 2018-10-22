@@ -27,7 +27,7 @@ plexConfigs = [
 * `serverName` - Name of the Plex Media Server to connect to
 * `username` - Username of the account the above server is signed in as
 * `password` - Password associated with the above account
-* `token` - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account, ignores `password` if set
+* `token` - Optional, ignores `password` if set. A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account. In some cases, `myPlexAccessToken` from Plex Web App's HTML5 Local Storage must be used. To retrieve this token in Google Chrome, open Plex Web App, press F12, go to "Application", expand "Local Storage" and click on the relevant entry.
 * `listenForUser` - Your username, defaults to `username` if not set
 
 ### Other Variables
