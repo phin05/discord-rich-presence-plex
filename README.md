@@ -6,6 +6,7 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 
 * [Python 3.6.4+](https://www.python.org/downloads)
 * [plexapi](https://github.com/pkkid/python-plexapi)
+* [websocket-client 0.48.0](https://github.com/websocket-client/websocket-client)
 * The script must be running on the same machine as the Discord client.
 
 ## Configuration
