@@ -14,7 +14,7 @@ import time
 class plexConfig:
 
 	extraLogging = True
-	timeRemaining = False
+	timeRemaining = True
 
 	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = "", clientID = "413407336082833418"):
 		self.serverName = serverName
@@ -284,7 +284,7 @@ class discordRichPresencePlex(discordRichPresence):
 				if (mediaType == "movie"):
 					title = metadata.title + " (" + str(metadata.year) + ")"
 					if (state != "playing"):
-						extra = secondsToText(viewOffset / 1000, 2) + "/" + secondsToText(metadata.duration / 1000, 2)
+						extra = secondsToText(viewOffset / 1000, ":") + "/" + secondsToText(metadata.duration / 1000, ":")
 					else:
 						extra = secondsToText(metadata.duration / 1000)
 					extra = extra + " · " + ", ".join([genre.tag for genre in metadata.genres[:3]])
@@ -292,7 +292,7 @@ class discordRichPresencePlex(discordRichPresence):
 				elif (mediaType == "episode"):
 					title = metadata.grandparentTitle
 					if (state != "playing"):
-						extra = secondsToText(viewOffset / 1000, 2) + "/" + secondsToText(metadata.duration / 1000, 2)
+						extra = secondsToText(viewOffset / 1000, ":") + "/" + secondsToText(metadata.duration / 1000, ":")
 					else:
 						extra = secondsToText(metadata.duration / 1000)
 					extra = extra + " · S" + str(metadata.parentIndex) + " · E" + str(metadata.index) + " - " + metadata.title
@@ -320,9 +320,9 @@ class discordRichPresencePlex(discordRichPresence):
 				if (state == "playing"):
 					currentTimestamp = int(time.time())
 					if (self.plexConfig.timeRemaining):
-						activity["timestamps"] = {"end": currentTimestamp + ((metadata.duration - viewOffset) / 1000)}
+						activity["timestamps"] = {"end": round(currentTimestamp + ((metadata.duration - viewOffset) / 1000))}
 					else:
-						activity["timestamps"] = {"start": currentTimestamp - (viewOffset / 1000)}
+						activity["timestamps"] = {"start": round(currentTimestamp - (viewOffset / 1000))}
 				if (not self.running):
 					self.start()
 				if (self.running):
@@ -363,14 +363,14 @@ def colourText(text, colour = ""):
 		suffix = "\033[0m"
 	return prefix + str(text) + suffix
 
-def secondsToText(seconds, formatting = 1):
+def secondsToText(seconds, joiner = ""):
 	seconds = round(seconds)
 	text = {"h": seconds // 3600, "m": seconds // 60 % 60, "s": seconds % 60}
-	if (formatting == 1):
+	if (joiner == ""):
 		text = [str(v) + k for k, v in text.items() if v > 0]
-		return "".join(text)
 	else:
-		return ":".join(list(str(v).rjust(2, "0") for k, v in text.items()))
+		text = [str(v).rjust(2, "0") for k, v in text.items()]
+	return joiner.join(text)
 
 discordRichPresencePlexInstances = []
 for config in plexConfigs:
