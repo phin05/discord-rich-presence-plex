@@ -11,7 +11,7 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 
 ## Configuration
 
-Add your configuration(s) into the `plexConfigs` list on line 26.
+Add your configuration(s) into the `plexConfigs` list on line 27.
 
 #### Example
 
@@ -33,6 +33,7 @@ plexConfigs = [
 ### Other Variables
 
 * Line 16: `extraLogging` - The script outputs more information if this is set to `True`.
+* Line 17: `timeRemaining` - Set this to `True` to display time remaining instead of time elapsed while media is playing.
 
 ## License
 
