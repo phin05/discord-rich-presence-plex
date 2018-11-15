@@ -14,7 +14,7 @@ import time
 class plexConfig:
 
 	extraLogging = True
-	timeRemaining = True
+	timeRemaining = False
 
 	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = "", clientID = "413407336082833418"):
 		self.serverName = serverName
