@@ -11,14 +11,15 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 
 ## Configuration
 
-Add your configuration(s) into the `plexConfigs` list on line 27.
+Add your configuration(s) into the `plexConfigs` list on line 30.
 
 #### Example
 
 ```python
 plexConfigs = [
 	plexConfig(serverName = "ABC", username = "xyz", password = "0tYD4UIC4Tb8X0nt"),
-	plexConfig(serverName = "DEF", username = "pqr@pqr.pqr", token = "70iU3GZrI54S76Tn", listenForUser = "xyz")
+	plexConfig(serverName = "DEF", username = "pqr@pqr.pqr", token = "70iU3GZrI54S76Tn", listenForUser = "xyz"),
+	plexConfig(serverName = "GHI", username = "xyz", password = "0tYD4UIC4Tb8X0nt", blacklistedLibraries = ["TV Shows", "Music"])
 ]
 ```
 
@@ -28,7 +29,9 @@ plexConfigs = [
 * `username` - Your account's username or e-mail.
 * `password` (not required if `token` is set) - The password associated with the above account.
 * `token` (not required if `password` is set) - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account. In some cases, `myPlexAccessToken` from Plex Web App's HTML5 Local Storage must be used. To retrieve this token in Google Chrome, open Plex Web App, press F12, go to "Application", expand "Local Storage" and select the relevant entry. Ignores `password` if set.
-* `listenForUser` - The script will respond to alerts originating only from this username. Defaults to `username` if not set.
+* `listenForUser` (optional) - The script will respond to alerts originating only from this username. Defaults to `username` if not set.
+* `blacklistedLibraries` (list, optional) - Alerts originating from blacklisted libraries are ignored.
+* `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in the whitelist are ignored.
 
 ### Other Variables
 
