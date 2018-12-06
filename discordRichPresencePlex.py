@@ -16,16 +16,18 @@ class plexConfig:
 	extraLogging = True
 	timeRemaining = False
 
-	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = "", clientID = "413407336082833418"):
+	def __init__(self, serverName = "", username = "", password = "", token = "", listenForUser = "", blacklistedLibraries = None, whitelistedLibraries = None, clientID = "413407336082833418"):
 		self.serverName = serverName
 		self.username = username
 		self.password = password
 		self.token = token
 		self.listenForUser = (username if listenForUser == "" else listenForUser).lower()
+		self.blacklistedLibraries = blacklistedLibraries
+		self.whitelistedLibraries = whitelistedLibraries
 		self.clientID = clientID
 
 plexConfigs = [
-	# plexConfig(serverName = "", username = "", password = "", token = "", listenForUser = "")
+	# plexConfig(serverName = "", username = "", password = "", token = "")
 ]
 
 class discordRichPresence:
@@ -228,6 +230,16 @@ class discordRichPresencePlex(discordRichPresence):
 				ratingKey = int(sessionData["ratingKey"])
 				viewOffset = int(sessionData["viewOffset"])
 				self.log("Received Update: " + colourText(sessionData, "yellow").replace("'", "\""), extra = True)
+				metadata = self.plexServer.fetchItem(ratingKey)
+				libraryName = metadata.section().title
+				if (isinstance(self.plexConfig.blacklistedLibraries, list)):
+					if (libraryName in self.plexConfig.blacklistedLibraries):
+						self.log("Library \"" + libraryName + "\" is blacklisted, ignoring", "yellow", True)
+						return
+				if (isinstance(self.plexConfig.whitelistedLibraries, list)):
+					if (libraryName not in self.plexConfig.whitelistedLibraries):
+						self.log("Library \"" + libraryName + "\" is not whitelisted, ignoring", "yellow", True)
+						return
 				if (self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey):
 					if (self.stopTimer2):
 						self.stopTimer2.cancel()
@@ -236,7 +248,7 @@ class discordRichPresencePlex(discordRichPresence):
 						if (self.ignoreCount == self.maximumIgnores):
 							self.ignoreCount = 0
 						else:
-							self.log("Nothing changed, ignoring", "yellow", extra = True)
+							self.log("Nothing changed, ignoring", "yellow", True)
 							self.ignoreCount += 1
 							self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
 							self.stopTimer2.start()
@@ -279,22 +291,17 @@ class discordRichPresencePlex(discordRichPresence):
 				self.stopTimer2 = threading.Timer(self.stopTimer2Interval, self.stopOnNoUpdate)
 				self.stopTimer2.start()
 				self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
-				metadata = self.plexServer.fetchItem(ratingKey)
 				mediaType = metadata.type
+				if (state != "playing"):
+					extra = secondsToText(viewOffset / 1000, ":") + "/" + secondsToText(metadata.duration / 1000, ":")
+				else:
+					extra = secondsToText(metadata.duration / 1000)
 				if (mediaType == "movie"):
 					title = metadata.title + " (" + str(metadata.year) + ")"
-					if (state != "playing"):
-						extra = secondsToText(viewOffset / 1000, ":") + "/" + secondsToText(metadata.duration / 1000, ":")
-					else:
-						extra = secondsToText(metadata.duration / 1000)
 					extra = extra + " · " + ", ".join([genre.tag for genre in metadata.genres[:3]])
 					largeText = "Watching a Movie"
 				elif (mediaType == "episode"):
 					title = metadata.grandparentTitle
-					if (state != "playing"):
-						extra = secondsToText(viewOffset / 1000, ":") + "/" + secondsToText(metadata.duration / 1000, ":")
-					else:
-						extra = secondsToText(metadata.duration / 1000)
 					extra = extra + " · S" + str(metadata.parentIndex) + " · E" + str(metadata.index) + " - " + metadata.title
 					largeText = "Watching a TV Show"
 				elif (mediaType == "track"):
@@ -378,7 +385,7 @@ for config in plexConfigs:
 try:
 	for discordRichPresencePlexInstance in discordRichPresencePlexInstances:
 		discordRichPresencePlexInstance.run()
-	while True:
+	while (True):
 		time.sleep(3600)
 except KeyboardInterrupt:
 	for discordRichPresencePlexInstance in discordRichPresencePlexInstances:
