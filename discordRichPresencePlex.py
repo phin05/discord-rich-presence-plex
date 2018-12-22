@@ -376,6 +376,8 @@ def secondsToText(seconds, joiner = ""):
 	if (joiner == ""):
 		text = [str(v) + k for k, v in text.items() if v > 0]
 	else:
+		if (text["h"] == 0):
+			del text["h"]
 		text = [str(v).rjust(2, "0") for k, v in text.items()]
 	return joiner.join(text)
 
