@@ -69,7 +69,7 @@ class discordRichPresence:
 
 	def start(self):
 		self.child.log("Opening Discord IPC Pipe")
-		emptyProcessFilePath = tempfile.gettempdir() + "\\discordRichPresencePlex-emptyProcess.py"
+		emptyProcessFilePath = tempfile.gettempdir() + ("/" if isLinux else "\\") + "discordRichPresencePlex-emptyProcess.py"
 		if (not os.path.exists(emptyProcessFilePath)):
 			with open(emptyProcessFilePath, "w") as emptyProcessFile:
 				emptyProcessFile.write("import time\n\ntry:\n\twhile (True):\n\t\ttime.sleep(3600)\nexcept:\n\tpass")
