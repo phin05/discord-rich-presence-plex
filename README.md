@@ -38,6 +38,16 @@ plexConfigs = [
 * Line 16: `extraLogging` - The script outputs more information if this is set to `True`.
 * Line 17: `timeRemaining` - Set this to `True` to display time remaining instead of time elapsed while media is playing.
 
+### Auto-start function for Windows
+
+This auto-start function edits the Windows Registry from within the Python script. Make sure to back up your machine prior to enabling this script, editing the Windows Registry can break OS-level functions and cause you to lose your data. Proceed at your own risk. 
+
+In order to use the autostart function for Windows you'll need to create a shortcut to your **plex_discord_rpc.py** file in `C:\Users\`**your_username**`\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\`. From there you'll need to edit the following parameter within the .py file itself. 
+
+## Parameter
+
+* `__file__` = the raw file path to your **plex_discord_rpc.py** file. 
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/Phineas05/discord-rich-presence-plex/blob/master/LICENSE) file for details.
