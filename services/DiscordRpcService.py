@@ -20,6 +20,9 @@ class DiscordRpcService:
 		self.connected = False
 
 	def connect(self):
+		if self.connected:
+			logger.debug("Attempt to connect Discord IPC Pipe while already connected")
+			return
 		logger.info("Connecting Discord IPC Pipe")
 		self.loop = asyncio.new_event_loop() if isUnix else asyncio.ProactorEventLoop()
 		self.loop.run_until_complete(self.handshake())
@@ -45,7 +48,7 @@ class DiscordRpcService:
 			return data
 		except:
 			logger.exception("An unexpected error occured during a RPC read operation")
-			self.disconnect()
+			self.connected = False
 
 	def write(self, op, payload):
 		try:
@@ -54,22 +57,21 @@ class DiscordRpcService:
 			self.pipeWriter.write(struct.pack("<ii", op, len(payload)) + payload.encode("utf-8"))
 		except:
 			logger.exception("An unexpected error occured during a RPC write operation")
-			self.disconnect()
+			self.connected = False
 
 	def disconnect(self):
+		if not self.connected:
+			logger.debug("Attempt to disconnect Discord IPC Pipe while not connected")
+			return
 		logger.info("Disconnecting Discord IPC Pipe")
-		if (self.pipeWriter):
-			try:
-				self.pipeWriter.close()
-			except:
-				logger.exception("An unexpected error occured while closing an IPC pipe writer")
-			self.pipeWriter = None
-		if (self.pipeReader):
-			try:
-				self.loop.run_until_complete(self.pipeReader.read())
-			except:
-				logger.exception("An unexpected error occured while closing an IPC pipe reader")
-			self.pipeReader = None
+		try:
+			self.pipeWriter.close()
+		except:
+			logger.exception("An unexpected error occured while closing an IPC pipe writer")
+		try:
+			self.loop.run_until_complete(self.pipeReader.read())
+		except:
+			logger.exception("An unexpected error occured while closing an IPC pipe reader")
 		try:
 			self.loop.close()
 		except:
@@ -84,7 +86,7 @@ class DiscordRpcService:
 				"pid": processID,
 				"activity": activity,
 			},
-			"nonce": "{0:.20f}".format(time.time())
+			"nonce": "{0:.2f}".format(time.time()),
 		}
 		self.write(1, payload)
 		self.loop.run_until_complete(self.read())
