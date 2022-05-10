@@ -11,7 +11,6 @@ import time
 class PlexAlertListener:
 
 	productName = "Plex Media Server"
-	stopTimeoutTimerInterval = 5
 	updateTimeoutTimerInterval = 35
 	connectionTimeoutTimerInterval = 60
 	maximumIgnores = 3
@@ -23,7 +22,6 @@ class PlexAlertListener:
 		self.serverConfig = serverConfig
 		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}/{hashlib.md5(str(id(self)).encode('UTF-8')).hexdigest()[:5].upper()}] ")
 		self.discordRpcService = DiscordRpcService()
-		self.stopTimeoutTimer = None
 		self.updateTimeoutTimer = None
 		self.connectionTimeoutTimer = None
 		self.reset()
@@ -86,9 +84,6 @@ class PlexAlertListener:
 			self.discordRpcService.disconnect()
 
 	def cancelTimers(self):
-		if (self.stopTimeoutTimer):
-			self.stopTimeoutTimer.cancel()
-			self.stopTimeoutTimer = None
 		if (self.updateTimeoutTimer):
 			self.updateTimeoutTimer.cancel()
 			self.updateTimeoutTimer = None
@@ -96,13 +91,10 @@ class PlexAlertListener:
 			self.connectionTimeoutTimer.cancel()
 			self.connectionTimeoutTimer = None
 
-	def stopTimeout(self):
-		self.disconnectRpc()
-		self.cancelTimers()
-
 	def updateTimeout(self):
 		self.logger.debug("No recent updates from session key %s", self.lastSessionKey)
-		self.stopTimeout()
+		self.disconnectRpc()
+		self.cancelTimers()
 
 	def connectionTimeout(self):
 		try:
@@ -147,10 +139,8 @@ class PlexAlertListener:
 						self.ignoreCount = 0
 						if (state == "stopped"):
 							self.lastState, self.lastSessionKey, self.lastRatingKey = None, None, None
-							self.stopTimeout()
-							self.stopTimeoutTimer = threading.Timer(self.stopTimeoutTimerInterval, self.stopTimeout)
-							self.stopTimeoutTimer.start()
-							self.logger.debug("Started stopTimeoutTimer")
+							self.disconnectRpc()
+							self.cancelTimers()
 							return
 				elif (state == "stopped"):
 					self.logger.debug("Received \"stopped\" state alert from unknown session key, ignoring")
@@ -175,9 +165,6 @@ class PlexAlertListener:
 					else:
 						self.logger.debug("No matching session found, ignoring")
 						return
-				if (self.stopTimeoutTimer):
-					self.stopTimeoutTimer.cancel()
-					self.stopTimeoutTimer = None
 				if (self.updateTimeoutTimer):
 					self.updateTimeoutTimer.cancel()
 				self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
@@ -190,7 +177,8 @@ class PlexAlertListener:
 					stateText = formatSeconds(metadata.duration / 1000)
 				if (mediaType == "movie"):
 					title = f"{metadata.title} ({metadata.year})"
-					stateText += f" · {', '.join(genre.tag for genre in metadata.genres[:3])}"
+					if len(metadata.genres) > 0:
+						stateText += f" · {', '.join(genre.tag for genre in metadata.genres[:3])}"
 					largeText = "Watching a movie"
 				elif (mediaType == "episode"):
 					title = metadata.grandparentTitle
