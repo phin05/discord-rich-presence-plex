@@ -1,8 +1,8 @@
-from datetime import datetime
 from models.config import Config
 from utils.logs import logger
 import json
 import os
+import time
 
 class ConfigService:
 
@@ -15,7 +15,7 @@ class ConfigService:
 				with open(self.configFilePath, "r", encoding = "UTF-8") as configFile:
 					self.config = json.load(configFile)
 			except:
-				os.rename(configFilePath, configFilePath.replace(".json", f"-{datetime.now().timestamp():.0f}.json"))
+				os.rename(configFilePath, configFilePath.replace(".json", f"-{time.time():.0f}.json"))
 				logger.exception("Failed to parse the application's config file. A new one will be created.")
 				self.resetConfig()
 		else:
@@ -24,12 +24,12 @@ class ConfigService:
 	def resetConfig(self) -> None:
 		self.config = {
 			"logging": {
-				"debug": True
+				"debug": True,
 			},
 			"display": {
-				"useRemainingTime": False
+				"useRemainingTime": False,
 			},
-			"users": []
+			"users": [],
 		}
 		self.saveConfig()
 

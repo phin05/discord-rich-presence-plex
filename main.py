@@ -15,7 +15,7 @@ if config["logging"]["debug"]:
 PlexAlertListener.useRemainingTime = config["display"]["useRemainingTime"]
 
 if len(config["users"]) == 0:
-	logger.info("No users in config. Initiating authorisation flow. ! TBD !") # TODO
+	logger.info("No users found in the config file. Initiating authorisation flow. ! TBD !") # TODO
 	exit()
 
 plexAlertListeners: list[PlexAlertListener] = []
