@@ -1,43 +1,71 @@
 # Discord Rich Presence for Plex
 
-A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discordapp.com) using [Rich Presence](https://discordapp.com/developers/docs/rich-presence/how-to).
+A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discord.com) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-## Requirements
+## Getting Started
 
-* [Python 3.6.7](https://www.python.org/downloads/release/python-367/)
-* [plexapi](https://github.com/pkkid/python-plexapi)
-* Use [websocket-client](https://github.com/websocket-client/websocket-client) version 0.48.0 (`pip install websocket-client==0.48.0`) as an issue with newer versions breaks the plexapi module's alert listener.
-* The script must be running on the same machine as your Discord client.
+1. Install [Python 3.10](https://www.python.org/downloads/)
+2. [Download](archive/refs/heads/master.zip) the ZIP file containing the files in this repository
+3. Extract the contents of the above ZIP file into a new directory
+4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) to the above directory
+5. Install the required Python modules by running `python -m pip install -r requirements.txt`
+6. Start the script by running `python main.py`
 
-## Configuration
+When the script runs for the first time, a `config.json` file will be created in the working directory and you will be prompted to complete the authentication flow to allow the script to retrieve your username and an access token.
 
-Add your configuration(s) into the `plexConfigs` list on line 30.
+The script must be running on the same machine as your Discord client.
 
-#### Example
+## Configuration - `config.json`
 
-```python
-plexConfigs = [
-	plexConfig(serverName = "ABC", username = "xyz", password = "0tYD4UIC4Tb8X0nt"),
-	plexConfig(serverName = "DEF", username = "pqr@pqr.pqr", token = "70iU3GZrI54S76Tn", listenForUser = "xyz"),
-	plexConfig(serverName = "GHI", username = "xyz", password = "0tYD4UIC4Tb8X0nt", blacklistedLibraries = ["TV Shows", "Music"])
-]
+### Reference
+
+* `logging`
+  * `debug` - Output more information to the console
+* `display`
+  * `useRemainingTime` - Display remaining time in your Rich Presence instead of elapsed time
+* `users` (list)
+  * `username` - Username or e-mail
+  * `token` - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token)
+  * `servers` (list)
+    * `name` - Friendly name of the Plex Media Server you wish to connect to.
+    * `blacklistedLibraries` (optional list) - Alerts originating from libraries in this list are ignored.
+    * `whitelistedLibraries` (optional list) - If set, alerts originating from libraries that are not in this list are ignored.
+
+### Example
+
+```json
+{
+  "logging": {
+    "debug": true
+  },
+  "display": {
+    "useRemainingTime": false
+  },
+  "users": [
+    {
+      "username": "bob",
+      "token": "HPbrz2NhfLRjU888Rrdt",
+      "servers": [
+        {
+          "name": "Bob's Home Media Server",
+        },
+        {
+          "name": "A Friend's Server",
+          "whitelistedLibraries": ["Movies"]
+        }
+      ]
+    }
+  ]
+}
 ```
-
-#### Parameters
-
-* `serverName` - Name of the Plex Media Server to connect to.
-* `username` - Your account's username or e-mail.
-* `password` (not required if `token` is set) - The password associated with the above account.
-* `token` (not required if `password` is set) - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token) associated with the above account. In some cases, `myPlexAccessToken` from Plex Web App's HTML5 Local Storage must be used. To retrieve this token in Google Chrome, open Plex Web App, press F12, go to "Application", expand "Local Storage" and select the relevant entry. Ignores `password` if set.
-* `listenForUser` (optional) - The script will respond to alerts originating only from this username. Defaults to `username` if not set.
-* `blacklistedLibraries` (list, optional) - Alerts originating from blacklisted libraries are ignored.
-* `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in the whitelist are ignored.
-
-### Other Variables
-
-* Line 16: `extraLogging` - The script outputs more information if this is set to `True`.
-* Line 17: `timeRemaining` - Set this to `True` to display time remaining instead of time elapsed while media is playing.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/Phineas05/discord-rich-presence-plex/blob/master/LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Credits
+
+* [Discord](https://discord.com)
+* [Plex](https://www.plex.tv)
+* [plexapi](https://github.com/pkkid/python-plexapi)
+* [websocket-client](https://github.com/websocket-client/websocket-client)
