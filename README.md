@@ -2,10 +2,12 @@
 
 A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discord.com) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
+Current Version: 2.0.2
+
 ## Getting Started
 
 1. Install [Python 3.10](https://www.python.org/downloads/)
-2. [Download](archive/refs/heads/master.zip) the ZIP file containing the files in this repository
+2. [Download](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip) the ZIP file containing the files in this repository
 3. Extract the contents of the above ZIP file into a new directory
 4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) to the above directory
 5. Install the required Python modules by running `python -m pip install -r requirements.txt`

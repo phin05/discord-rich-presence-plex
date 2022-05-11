@@ -42,7 +42,7 @@ class PlexAlertListener:
 		while not connected:
 			try:
 				self.plexAccount = MyPlexAccount(token = self.token)
-				self.logger.info("Logged in as Plex User \"%s\"", self.plexAccount.username)
+				self.logger.info("Signed in as Plex User \"%s\"", self.plexAccount.username)
 				self.plexServer = None
 				for resource in self.plexAccount.resources():
 					if resource.product == self.productName and resource.name.lower() == self.serverConfig["name"].lower():
