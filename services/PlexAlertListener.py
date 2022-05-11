@@ -156,13 +156,12 @@ class PlexAlertListener:
 						self.logger.debug("%s, Session Key: %s, Usernames: %s", session, session.sessionKey, session.usernames)
 						if session.sessionKey == sessionKey:
 							self.logger.debug("Session found")
-							sessionUsername = session.usernames[0].lower()
-							if sessionUsername == self.listenForUser:
+							sessionUsername = session.usernames[0]
+							if sessionUsername.lower() == self.listenForUser.lower():
 								self.logger.debug("Username \"%s\" matches \"%s\", continuing", sessionUsername, self.listenForUser)
 								break
-							else:
-								self.logger.debug("Username \"%s\" doesn't match \"%s\", ignoring", sessionUsername, self.listenForUser)
-								return
+							self.logger.debug("Username \"%s\" doesn't match \"%s\", ignoring", sessionUsername, self.listenForUser)
+							return
 					else:
 						self.logger.debug("No matching session found, ignoring")
 						return
