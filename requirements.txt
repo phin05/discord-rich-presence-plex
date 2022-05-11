@@ -1,3 +1,3 @@
-plexapi
-requests
-websocket-client
+PlexAPI==4.10.1
+requests==2.26.0
+websocket-client==1.3.2
