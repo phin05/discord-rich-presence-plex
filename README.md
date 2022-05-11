@@ -2,7 +2,7 @@
 
 A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discord.com) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.0.3
+Current Version: 2.1.0
 
 ## Getting Started
 
@@ -29,6 +29,7 @@ The script must be running on the same machine as your Discord client.
   * `token` - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)
     * `name` - Name of the Plex Media Server you wish to connect to.
+    * `listenForUser` (optional) - The script will respond to alerts originating only from this username. Defaults to the parent user's username if not set.
     * `blacklistedLibraries` (optional list) - Alerts originating from libraries in this list are ignored.
     * `whitelistedLibraries` (optional list) - If set, alerts originating from libraries that are not in this list are ignored.
 
@@ -51,6 +52,7 @@ The script must be running on the same machine as your Discord client.
         },
         {
           "name": "A Friend's Server",
+          "listenForUser": "xyz",
           "whitelistedLibraries": ["Movies"]
         }
       ]

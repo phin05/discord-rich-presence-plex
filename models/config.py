@@ -8,6 +8,7 @@ class Display(TypedDict):
 
 class Server(TypedDict, total = False):
 	name: str
+	listenForUser: str
 	blacklistedLibraries: list[str]
 	whitelistedLibraries: list[str]
 
