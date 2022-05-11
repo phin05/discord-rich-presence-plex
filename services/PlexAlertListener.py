@@ -29,6 +29,7 @@ class PlexAlertListener:
 
 	def reset(self):
 		self.plexAccount = None
+		self.listenForUser = ""
 		self.plexServer = None
 		self.isServerOwner = False
 		self.plexAlertListener = None
@@ -43,6 +44,7 @@ class PlexAlertListener:
 			try:
 				self.plexAccount = MyPlexAccount(token = self.token)
 				self.logger.info("Signed in as Plex User \"%s\"", self.plexAccount.username)
+				self.listenForUser = self.serverConfig.get("listenForUser", self.plexAccount.username)
 				self.plexServer = None
 				for resource in self.plexAccount.resources():
 					if resource.product == self.productName and resource.name.lower() == self.serverConfig["name"].lower():
@@ -56,7 +58,7 @@ class PlexAlertListener:
 						self.logger.info("Connected to %s \"%s\"", self.productName, resource.name)
 						self.plexAlertListener = AlertListener(self.plexServer, self.handlePlexAlert, self.reconnect)
 						self.plexAlertListener.start()
-						self.logger.info("Listening for alerts from user \"%s\"", self.plexAccount.username)
+						self.logger.info("Listening for alerts from user \"%s\"", self.listenForUser)
 						self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
 						self.connectionTimeoutTimer.start()
 						connected = True
@@ -155,11 +157,11 @@ class PlexAlertListener:
 						if session.sessionKey == sessionKey:
 							self.logger.debug("Session found")
 							sessionUsername = session.usernames[0].lower()
-							if sessionUsername == self.plexAccount.username:
-								self.logger.debug("Username \"%s\" matches \"%s\", continuing", sessionUsername, self.plexAccount.username)
+							if sessionUsername == self.listenForUser:
+								self.logger.debug("Username \"%s\" matches \"%s\", continuing", sessionUsername, self.listenForUser)
 								break
 							else:
-								self.logger.debug("Username \"%s\" doesn't match \"%s\", ignoring", sessionUsername, self.plexAccount.username)
+								self.logger.debug("Username \"%s\" doesn't match \"%s\", ignoring", sessionUsername, self.listenForUser)
 								return
 					else:
 						self.logger.debug("No matching session found, ignoring")
