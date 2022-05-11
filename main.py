@@ -23,9 +23,9 @@ if len(config["users"]) == 0:
 	}).json()
 	logger.info("Open the below URL in your web browser and sign in:")
 	logger.info("https://app.plex.tv/auth#?clientID=%s&code=%s&context%%5Bdevice%%5D%%5Bproduct%%5D=%s", plexClientID, response["code"], urllib.parse.quote(name))
-	for _ in range(10):
-		time.sleep(5)
-		logger.info("Checking whether authentication was successful...")
+	time.sleep(5)
+	logger.info("Checking whether authentication is successful...")
+	for _ in range(120):
 		authCheckResponse = requests.get(f"https://plex.tv/api/v2/pins/{response['id']}.json?code={response['code']}", headers = {
 			"X-Plex-Client-Identifier": plexClientID,
 		}).json()
@@ -35,6 +35,7 @@ if len(config["users"]) == 0:
 			config["users"].append({ "token": authCheckResponse["authToken"], "servers": [{ "name": serverName }] })
 			configService.saveConfig()
 			break
+		time.sleep(5)
 	else:
 		logger.info("Authentication failed.")
 		exit()
