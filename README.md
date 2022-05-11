@@ -10,7 +10,7 @@ Current Version: 2.0.3
 2. Download [this repository's contents](https://github.com/phineas05/discord-rich-presence-plex/archive/refs/heads/master.zip)
 3. Extract the folder contained in the above ZIP file
 4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) into the above-extracted directory
-5. Install the required Python modules by running `python -m pip install -r requirements.txt`
+5. Install the required Python modules by running `python -m pip install -U -r requirements.txt`
 6. Start the script by running `python main.py`
 
 When the script runs for the first time, a `config.json` file will be created in the working directory and you will be prompted to complete the authentication flow to allow the script to retrieve an access token for your Plex account.
@@ -67,6 +67,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 * [Discord](https://discord.com)
 * [Plex](https://www.plex.tv)
-* [plexapi](https://github.com/pkkid/python-plexapi)
+* [Python-PlexAPI](https://github.com/pkkid/python-plexapi)
 * [requests](https://github.com/psf/requests)
 * [websocket-client](https://github.com/websocket-client/websocket-client)
