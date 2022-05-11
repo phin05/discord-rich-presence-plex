@@ -7,9 +7,9 @@ Current Version: 2.0.2
 ## Getting Started
 
 1. Install [Python 3.10](https://www.python.org/downloads/)
-2. [Download](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip) the ZIP file containing the files in this repository
-3. Extract the contents of the above ZIP file into a new directory
-4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) to the above directory
+2. [Download](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip) the ZIP file containing a folder with this repository's code
+3. Extract the folder contained in the above ZIP file
+4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) to the directory extracted above
 5. Install the required Python modules by running `python -m pip install -r requirements.txt`
 6. Start the script by running `python main.py`
 
