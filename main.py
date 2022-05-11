@@ -16,7 +16,7 @@ if config["logging"]["debug"]:
 PlexAlertListener.useRemainingTime = config["display"]["useRemainingTime"]
 
 if len(config["users"]) == 0:
-	logger.info("No users found in the config file. Initiating authorisation flow.")
+	logger.info("No users found in the config file. Initiating authentication flow.")
 	response = requests.post("https://plex.tv/api/v2/pins.json?strong=true", headers = {
 		"X-Plex-Product": name,
 		"X-Plex-Client-Identifier": plexClientID,
@@ -25,18 +25,18 @@ if len(config["users"]) == 0:
 	logger.info("https://app.plex.tv/auth#?clientID=%s&code=%s&context%%5Bdevice%%5D%%5Bproduct%%5D=%s", plexClientID, response["code"], urllib.parse.quote(name))
 	for _ in range(10):
 		time.sleep(5)
-		logger.info("Checking whether authorisation was successful...")
+		logger.info("Checking whether authentication was successful...")
 		authCheckResponse = requests.get(f"https://plex.tv/api/v2/pins/{response['id']}.json?code={response['code']}", headers = {
 			"X-Plex-Client-Identifier": plexClientID,
 		}).json()
 		if authCheckResponse["authToken"]:
-			logger.info("Authorisation successful.")
+			logger.info("Authentication successful.")
 			serverName = input("Enter the name of the Plex Media Server you wish to connect to: ")
 			config["users"].append({ "token": authCheckResponse["authToken"], "servers": [{ "name": serverName }] })
 			configService.saveConfig()
 			break
 	else:
-		logger.info("Authorisation failed.")
+		logger.info("Authentication failed.")
 		exit()
 
 plexAlertListeners: list[PlexAlertListener] = []

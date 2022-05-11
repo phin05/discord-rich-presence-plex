@@ -2,14 +2,14 @@
 
 A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discord.com) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.0.2
+Current Version: 2.0.3
 
 ## Getting Started
 
 1. Install [Python 3.10](https://www.python.org/downloads/)
-2. [Download](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip) the ZIP file containing a folder with this repository's code
+2. Download [this repository's contents](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip)
 3. Extract the folder contained in the above ZIP file
-4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) to the directory extracted above
+4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) into the above extracted directory
 5. Install the required Python modules by running `python -m pip install -r requirements.txt`
 6. Start the script by running `python main.py`
 
@@ -22,11 +22,11 @@ The script must be running on the same machine as your Discord client.
 ### Reference
 
 * `logging`
-  * `debug` - Output more information to the console
+  * `debug` (default: `true`) - Outputs additional debug-helpful information to the console if enabled.
 * `display`
-  * `useRemainingTime` - Display remaining time in your Rich Presence instead of elapsed time
+  * `useRemainingTime` (default: `false`) - Displays your media's remaining time instead of elapsed time in your Rich Presence  if enabled.
 * `users` (list)
-  * `token` - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token)
+  * `token` - An authentication token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)
     * `name` - Name of the Plex Media Server you wish to connect to.
     * `blacklistedLibraries` (optional list) - Alerts originating from libraries in this list are ignored.
