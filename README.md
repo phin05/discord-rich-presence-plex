@@ -45,7 +45,7 @@ The script must be running on the same machine as your Discord client.
       "token": "HPbrz2NhfLRjU888Rrdt",
       "servers": [
         {
-          "name": "Bob's Home Media Server",
+          "name": "Bob's Home Media Server"
         },
         {
           "name": "A Friend's Server",
