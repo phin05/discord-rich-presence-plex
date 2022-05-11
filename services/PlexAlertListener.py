@@ -17,8 +17,7 @@ class PlexAlertListener:
 	maximumIgnores = 2
 	useRemainingTime = False
 
-	def __init__(self, username, token, serverConfig):
-		self.username = username
+	def __init__(self, token, serverConfig):
 		self.token = token
 		self.serverConfig = serverConfig
 		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}/{hashlib.md5(str(id(self)).encode('UTF-8')).hexdigest()[:5].upper()}] ")
@@ -33,20 +32,20 @@ class PlexAlertListener:
 		self.plexServer = None
 		self.isServerOwner = False
 		self.plexAlertListener = None
-		self.lastState = None
-		self.lastSessionKey = None
-		self.lastRatingKey = None
+		self.lastState = ""
+		self.lastSessionKey = 0
+		self.lastRatingKey = 0
 		self.ignoreCount = 0
 
 	def connect(self):
 		connected = False
 		while not connected:
 			try:
-				self.plexAccount = MyPlexAccount(self.username, token = self.token)
+				self.plexAccount = MyPlexAccount(token = self.token)
 				self.logger.info("Logged in as Plex User \"%s\"", self.plexAccount.username)
 				self.plexServer = None
 				for resource in self.plexAccount.resources():
-					if resource.product == self.productName and resource.name == self.serverConfig["name"]:
+					if resource.product == self.productName and resource.name.lower() == self.serverConfig["name"].lower():
 						self.logger.info("Connecting to %s \"%s\"", self.productName, self.serverConfig["name"])
 						self.plexServer = resource.connect()
 						try:
@@ -54,10 +53,10 @@ class PlexAlertListener:
 							self.isServerOwner = True
 						except:
 							pass
-						self.logger.info("Connected to %s \"%s\"", self.productName, self.serverConfig["name"])
+						self.logger.info("Connected to %s \"%s\"", self.productName, resource.name)
 						self.plexAlertListener = AlertListener(self.plexServer, self.handlePlexAlert, self.reconnect)
 						self.plexAlertListener.start()
-						self.logger.info("Listening for alerts from user \"%s\"", self.username)
+						self.logger.info("Listening for alerts from user \"%s\"", self.plexAccount.username)
 						self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
 						self.connectionTimeoutTimer.start()
 						connected = True
@@ -156,11 +155,11 @@ class PlexAlertListener:
 						if session.sessionKey == sessionKey:
 							self.logger.debug("Session found")
 							sessionUsername = session.usernames[0].lower()
-							if sessionUsername == self.username:
-								self.logger.debug("Username \"%s\" matches \"%s\", continuing", sessionUsername, self.username)
+							if sessionUsername == self.plexAccount.username:
+								self.logger.debug("Username \"%s\" matches \"%s\", continuing", sessionUsername, self.plexAccount.username)
 								break
 							else:
-								self.logger.debug("Username \"%s\" doesn't match \"%s\", ignoring", sessionUsername, self.username)
+								self.logger.debug("Username \"%s\" doesn't match \"%s\", ignoring", sessionUsername, self.plexAccount.username)
 								return
 					else:
 						self.logger.debug("No matching session found, ignoring")
@@ -171,7 +170,7 @@ class PlexAlertListener:
 				self.updateTimeoutTimer.start()
 				self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
 				if state != "playing":
-					stateText = f"{formatSeconds(viewOffset / 1000, ':')}/{formatSeconds(item.duration / 1000, ':')}"
+					stateText = f"{formatSeconds(viewOffset / 1000, ':')} / {formatSeconds(item.duration / 1000, ':')}"
 				else:
 					stateText = formatSeconds(item.duration / 1000)
 				mediaType = item.type

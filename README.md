@@ -11,7 +11,7 @@ A Python script that displays your [Plex](https://www.plex.tv) status on [Discor
 5. Install the required Python modules by running `python -m pip install -r requirements.txt`
 6. Start the script by running `python main.py`
 
-When the script runs for the first time, a `config.json` file will be created in the working directory and you will be prompted to complete the authentication flow to allow the script to retrieve your username and an access token.
+When the script runs for the first time, a `config.json` file will be created in the working directory and you will be prompted to complete the authentication flow to allow the script to retrieve an access token for your Plex account.
 
 The script must be running on the same machine as your Discord client.
 
@@ -24,10 +24,9 @@ The script must be running on the same machine as your Discord client.
 * `display`
   * `useRemainingTime` - Display remaining time in your Rich Presence instead of elapsed time
 * `users` (list)
-  * `username` - Username or e-mail
   * `token` - A [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token)
   * `servers` (list)
-    * `name` - Friendly name of the Plex Media Server you wish to connect to.
+    * `name` - Name of the Plex Media Server you wish to connect to.
     * `blacklistedLibraries` (optional list) - Alerts originating from libraries in this list are ignored.
     * `whitelistedLibraries` (optional list) - If set, alerts originating from libraries that are not in this list are ignored.
 
@@ -43,7 +42,6 @@ The script must be running on the same machine as your Discord client.
   },
   "users": [
     {
-      "username": "bob",
       "token": "HPbrz2NhfLRjU888Rrdt",
       "servers": [
         {
@@ -68,4 +66,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 * [Discord](https://discord.com)
 * [Plex](https://www.plex.tv)
 * [plexapi](https://github.com/pkkid/python-plexapi)
+* [requests](https://github.com/psf/requests)
 * [websocket-client](https://github.com/websocket-client/websocket-client)
