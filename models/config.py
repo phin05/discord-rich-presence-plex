@@ -6,13 +6,12 @@ class Logging(TypedDict):
 class Display(TypedDict):
 	useRemainingTime: bool
 
-class Server(TypedDict):
+class Server(TypedDict, total = False):
 	name: str
 	blacklistedLibraries: list[str]
 	whitelistedLibraries: list[str]
 
 class User(TypedDict):
-	username: str
 	token: str
 	servers: list[Server]
 
