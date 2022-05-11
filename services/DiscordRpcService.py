@@ -30,10 +30,10 @@ class DiscordRpcService:
 	async def handshake(self):
 		try:
 			if isUnix:
-				self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(self.ipcPipe, loop = self.loop)
+				self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(self.ipcPipe)
 			else:
-				self.pipeReader = asyncio.StreamReader(loop = self.loop)
-				self.pipeWriter, _ = await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader, loop = self.loop), self.ipcPipe)
+				self.pipeReader = asyncio.StreamReader()
+				self.pipeWriter, _ = await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader), self.ipcPipe)
 			self.write(0, { "v": 1, "client_id": self.clientID })
 			if await self.read():
 				self.connected = True
