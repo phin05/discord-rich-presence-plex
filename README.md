@@ -6,7 +6,7 @@ Current Version: 2.1.1
 
 ## Getting Started
 
-1. Install [Python 3.10](https://www.python.org/downloads/)
+1. Install [Python 3.10](https://www.python.org/downloads/) - Make sure to tick "Add Python 3.10 to PATH" during the installation
 2. Download [this repository's contents](https://github.com/phineas05/discord-rich-presence-plex/archive/refs/heads/master.zip)
 3. Extract the folder contained in the above ZIP file
 4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) into the above-extracted directory
@@ -70,5 +70,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 * [Discord](https://discord.com)
 * [Plex](https://www.plex.tv)
 * [Python-PlexAPI](https://github.com/pkkid/python-plexapi)
-* [requests](https://github.com/psf/requests)
+* [Requests](https://github.com/psf/requests)
 * [websocket-client](https://github.com/websocket-client/websocket-client)
