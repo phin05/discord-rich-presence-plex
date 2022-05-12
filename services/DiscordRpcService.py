@@ -1,7 +1,7 @@
-# type: ignore
+ # type: ignore
 
-from store.constants import isUnix, processID
-from utils.logs import logger
+from store.constants import discordClientID, isUnix, processID
+from utils.logging import logger
 import asyncio
 import json
 import os
@@ -10,7 +10,6 @@ import time
 
 class DiscordRpcService:
 
-	clientID = "413407336082833418"
 	ipcPipe = ((os.environ.get("XDG_RUNTIME_DIR", None) or os.environ.get("TMPDIR", None) or os.environ.get("TMP", None) or os.environ.get("TEMP", None) or "/tmp") + "/discord-ipc-0") if isUnix else r"\\?\pipe\discord-ipc-0"
 
 	def __init__(self):
@@ -34,7 +33,7 @@ class DiscordRpcService:
 			else:
 				self.pipeReader = asyncio.StreamReader()
 				self.pipeWriter, _ = await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader), self.ipcPipe)
-			self.write(0, { "v": 1, "client_id": self.clientID })
+			self.write(0, { "v": 1, "client_id": discordClientID })
 			if await self.read():
 				self.connected = True
 		except:

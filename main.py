@@ -1,6 +1,8 @@
-from services import ConfigService, PlexAlertListener
+from services import PlexAlertListener
+from services.cache import loadCache
+from services.config import config, loadConfig, saveConfig
 from store.constants import isUnix, name, plexClientID, version
-from utils.logs import logger
+from utils.logging import logger
 import logging
 import os
 import requests
@@ -9,12 +11,11 @@ import urllib.parse
 
 os.system("clear" if isUnix else "cls")
 logger.info("%s - v%s", name, version)
-configService = ConfigService("config.json")
-config = configService.config
+loadConfig()
+loadCache()
+
 if config["logging"]["debug"]:
 	logger.setLevel(logging.DEBUG)
-PlexAlertListener.useRemainingTime = config["display"]["useRemainingTime"]
-
 if len(config["users"]) == 0:
 	logger.info("No users found in the config file. Initiating authentication flow.")
 	response = requests.post("https://plex.tv/api/v2/pins.json?strong=true", headers = {
@@ -33,7 +34,7 @@ if len(config["users"]) == 0:
 			logger.info("Authentication successful.")
 			serverName = input("Enter the name of the Plex Media Server you wish to connect to: ")
 			config["users"].append({ "token": authCheckResponse["authToken"], "servers": [{ "name": serverName }] })
-			configService.saveConfig()
+			saveConfig()
 			break
 		time.sleep(5)
 	else:
@@ -48,7 +49,7 @@ try:
 	while True:
 		userInput = input()
 		if userInput in ["exit", "quit"]:
-			break
+			raise KeyboardInterrupt
 except KeyboardInterrupt:
 	for plexAlertListener in plexAlertListeners:
 		plexAlertListener.disconnect()

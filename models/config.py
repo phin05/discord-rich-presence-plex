@@ -3,8 +3,13 @@ from typing import TypedDict
 class Logging(TypedDict):
 	debug: bool
 
+class Posters(TypedDict):
+	enabled: bool
+	imgurClientID: str
+
 class Display(TypedDict):
 	useRemainingTime: bool
+	posters: Posters
 
 class Server(TypedDict, total = False):
 	name: str
