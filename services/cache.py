@@ -22,7 +22,6 @@ def setKey(key: str, value: Any) -> None:
 	cache[key] = value
 	try:
 		with open(cacheFilePath, "w", encoding = "UTF-8") as cacheFile:
-			json.dump(cache, cacheFile, indent = "\t")
-			cacheFile.write("\n")
+			json.dump(cache, cacheFile, separators = (",", ":"))
 	except:
 		logger.exception("Failed to write to the application's cache file.")

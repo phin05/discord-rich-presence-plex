@@ -1,4 +1,4 @@
- # type: ignore
+# type: ignore
 
 from store.constants import discordClientID, isUnix, processID
 from utils.logging import logger
