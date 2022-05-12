@@ -16,4 +16,3 @@ def uploadImage(url: str) -> Optional[str]:
 		return data["data"]["link"]
 	except:
 		logger.exception("An unexpected error occured while uploading an image")
-	return None

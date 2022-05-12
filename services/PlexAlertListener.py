@@ -28,6 +28,9 @@ class PlexAlertListener(threading.Thread):
 		self.discordRpcService = DiscordRpcService()
 		self.updateTimeoutTimer = None
 		self.connectionTimeoutTimer = None
+		self.lastState = ""
+		self.lastSessionKey = 0
+		self.lastRatingKey = 0
 		self.reset()
 		self.start()
 
@@ -37,9 +40,6 @@ class PlexAlertListener(threading.Thread):
 		self.plexServer = None
 		self.isServerOwner = False
 		self.plexAlertListener = None
-		self.lastState = ""
-		self.lastSessionKey = 0
-		self.lastRatingKey = 0
 		self.ignoreCount = 0
 
 	def run(self):
@@ -76,12 +76,11 @@ class PlexAlertListener(threading.Thread):
 				time.sleep(10)
 
 	def disconnect(self):
-		self.discordRpcService.disconnect()
-		self.cancelTimers()
 		try:
 			self.plexAlertListener.stop()
 		except:
 			pass
+		self.disconnectRpc()
 		self.reset()
 		self.logger.info("Stopped listening for alerts")
 
@@ -90,6 +89,11 @@ class PlexAlertListener(threading.Thread):
 		self.disconnect()
 		self.logger.error("Reconnecting")
 		self.run()
+
+	def disconnectRpc(self):
+		self.lastState, self.lastSessionKey, self.lastRatingKey = "", 0, 0
+		self.discordRpcService.disconnect()
+		self.cancelTimers()
 
 	def cancelTimers(self):
 		if self.updateTimeoutTimer:
@@ -101,8 +105,7 @@ class PlexAlertListener(threading.Thread):
 
 	def updateTimeout(self):
 		self.logger.debug("No recent updates from session key %s", self.lastSessionKey)
-		self.discordRpcService.disconnect()
-		self.cancelTimers()
+		self.disconnectRpc()
 
 	def connectionTimeout(self):
 		try:
@@ -143,12 +146,10 @@ class PlexAlertListener(threading.Thread):
 					else:
 						self.ignoreCount = 0
 						if state == "stopped":
-							self.lastState, self.lastSessionKey, self.lastRatingKey = None, None, None
-							self.discordRpcService.disconnect()
-							self.cancelTimers()
+							self.disconnectRpc()
 							return
 				elif state == "stopped":
-					self.logger.debug("Received \"stopped\" state alert from unknown session key, ignoring")
+					self.logger.debug("Received \"stopped\" state alert from unknown session, ignoring")
 					return
 				if self.isServerOwner:
 					self.logger.debug("Searching sessions for session key %s", sessionKey)
@@ -201,7 +202,7 @@ class PlexAlertListener(threading.Thread):
 				else:
 					self.logger.debug("Unsupported media type \"%s\", ignoring", mediaType)
 					return
-				thumbUrl = None
+				thumbUrl = ""
 				if config["display"]["posters"]["enabled"]:
 					if not (thumbUrl := getKey(plexThumb)):
 						self.logger.debug("Uploading image")
