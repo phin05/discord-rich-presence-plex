@@ -26,8 +26,8 @@ The script must be running on the same machine as your Discord client.
 * `display`
   * `useRemainingTime` (boolean, default: `false`) - Displays your media's remaining time instead of elapsed time in your Rich Presence if enabled.
   * `posters`
-    * `enabled` (boolean, default: `false`)
-    * `imgurClientID` (string, default: `""`)
+    * `enabled` (boolean, default: `false`) - Displays media posters in Rich Presence if enabled. Requires `imgurClientID`.
+    * `imgurClientID` (string, default: `""`) - [Instructions](#obtaining-an-imgur-client-id)
 * `users` (list)
   * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)
