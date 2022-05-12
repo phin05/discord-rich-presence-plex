@@ -2,7 +2,7 @@
 
 A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discord.com) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.1.1
+Current Version: 2.2.0
 
 ## Getting Started
 
@@ -25,6 +25,9 @@ The script must be running on the same machine as your Discord client.
   * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console if enabled.
 * `display`
   * `useRemainingTime` (boolean, default: `false`) - Displays your media's remaining time instead of elapsed time in your Rich Presence if enabled.
+  * `posters`
+    * `enabled` (boolean, default: `false`)
+    * `imgurClientID` (string, default: `""`)
 * `users` (list)
   * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)
@@ -32,6 +35,12 @@ The script must be running on the same machine as your Discord client.
     * `listenForUser` (string, optional) - The script will respond to alerts originating only from this username. Defaults to the parent user's username if not set.
     * `blacklistedLibraries` (list, optional) - Alerts originating from libraries in this list are ignored.
     * `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in this list are ignored.
+
+### Obtaining an Imgur client ID
+
+1. Go to Imgur's [application registration page](https://api.imgur.com/oauth2/addclient)
+2. Enter any name for the application and pick OAuth2 without a callback URL as the authorisation type
+3. Submit the form to obtain your application's client ID
 
 ### Example
 
@@ -41,7 +50,11 @@ The script must be running on the same machine as your Discord client.
     "debug": true
   },
   "display": {
-    "useRemainingTime": false
+    "useRemainingTime": false,
+    "posters": {
+      "enabled": true,
+      "imgurClientID": "9e9sf637S8bRp4z"
+    }
   },
   "users": [
     {

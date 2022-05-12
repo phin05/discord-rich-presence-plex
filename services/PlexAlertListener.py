@@ -1,23 +1,27 @@
 # type: ignore
 
+from .DiscordRpcService import DiscordRpcService
+from .cache import getKey, setKey
+from .config import config
+from .imgur import uploadImage
 from plexapi.alert import AlertListener
 from plexapi.myplex import MyPlexAccount
-from services import DiscordRpcService
-from utils.logs import LoggerWithPrefix
+from utils.logging import LoggerWithPrefix
 from utils.text import formatSeconds
 import hashlib
 import threading
 import time
 
-class PlexAlertListener:
+class PlexAlertListener(threading.Thread):
 
 	productName = "Plex Media Server"
 	updateTimeoutTimerInterval = 30
 	connectionTimeoutTimerInterval = 60
 	maximumIgnores = 2
-	useRemainingTime = False
 
 	def __init__(self, token, serverConfig):
+		super().__init__()
+		self.daemon = True
 		self.token = token
 		self.serverConfig = serverConfig
 		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}/{hashlib.md5(str(id(self)).encode('UTF-8')).hexdigest()[:5].upper()}] ")
@@ -25,7 +29,7 @@ class PlexAlertListener:
 		self.updateTimeoutTimer = None
 		self.connectionTimeoutTimer = None
 		self.reset()
-		self.connect()
+		self.start()
 
 	def reset(self):
 		self.plexAccount = None
@@ -38,7 +42,7 @@ class PlexAlertListener:
 		self.lastRatingKey = 0
 		self.ignoreCount = 0
 
-	def connect(self):
+	def run(self):
 		connected = False
 		while not connected:
 			try:
@@ -85,7 +89,7 @@ class PlexAlertListener:
 		self.logger.error("Connection to Plex lost: %s", exception)
 		self.disconnect()
 		self.logger.error("Reconnecting")
-		self.connect()
+		self.run()
 
 	def cancelTimers(self):
 		if self.updateTimeoutTimer:
@@ -180,12 +184,12 @@ class PlexAlertListener:
 					if len(item.genres) > 0:
 						stateText += f" · {', '.join(genre.tag for genre in item.genres[:3])}"
 					largeText = "Watching a movie"
-					# self.logger.debug("Poster: %s", item.thumbUrl)
+					plexThumb = item.thumb
 				elif mediaType == "episode":
 					title = item.grandparentTitle
 					stateText += f" · S{item.parentIndex:02}E{item.index:02} - {item.title}"
 					largeText = "Watching a TV show"
-					# self.logger.debug("Poster: %s", self.plexServer.url(item.grandparentThumb, True))
+					plexThumb = item.grandparentThumb
 				elif mediaType == "track":
 					title = item.title
 					artist = item.originalTitle
@@ -193,23 +197,29 @@ class PlexAlertListener:
 						artist = item.grandparentTitle
 					stateText = f"{artist} - {item.parentTitle}"
 					largeText = "Listening to music"
-					# self.logger.debug("Album Art: %s", item.thumbUrl)
+					plexThumb = item.thumb
 				else:
 					self.logger.debug("Unsupported media type \"%s\", ignoring", mediaType)
 					return
+				thumbUrl = None
+				if config["display"]["posters"]["enabled"]:
+					if not (thumbUrl := getKey(plexThumb)):
+						self.logger.debug("Uploading image")
+						thumbUrl = uploadImage(self.plexServer.url(plexThumb, True))
+						setKey(plexThumb, thumbUrl)
 				activity = {
 					"details": title[:128],
 					"state": stateText[:128],
 					"assets": {
 						"large_text": largeText,
-						"large_image": "logo",
+						"large_image": thumbUrl or "logo",
 						"small_text": state.capitalize(),
 						"small_image": state,
 					},
 				}
 				if state == "playing":
 					currentTimestamp = int(time.time())
-					if self.useRemainingTime:
+					if config["display"]["useRemainingTime"]:
 						activity["timestamps"] = {"end": round(currentTimestamp + ((item.duration - viewOffset) / 1000))}
 					else:
 						activity["timestamps"] = {"start": round(currentTimestamp - (viewOffset / 1000))}
