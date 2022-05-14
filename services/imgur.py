@@ -1,12 +1,12 @@
-from models.imgur import ImgurUploadResponse
 from services.config import config
 from typing import Optional
 from utils.logging import logger
+import models.imgur
 import requests
 
 def uploadImage(url: str) -> Optional[str]:
 	try:
-		data: ImgurUploadResponse = requests.post(
+		data: models.imgur.UploadResponse = requests.post(
 			"https://api.imgur.com/3/image",
 			headers = { "Authorization": f"Client-ID {config['display']['posters']['imgurClientID']}" },
 			files = { "image": requests.get(url).content }

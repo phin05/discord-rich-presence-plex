@@ -1,4 +1,6 @@
-def formatSeconds(seconds: int, joiner: str = "") -> str:
+from typing import Optional
+
+def formatSeconds(seconds: int | float, joiner: Optional[str] = None) -> str:
 	seconds = round(seconds)
 	timeValues = {"h": seconds // 3600, "m": seconds // 60 % 60, "s": seconds % 60}
 	if not joiner:
