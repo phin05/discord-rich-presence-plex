@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 import logging
 
 logger = logging.getLogger("discord-rich-presence-plex")
@@ -11,18 +11,13 @@ class LoggerWithPrefix:
 
 	def __init__(self, prefix: str) -> None:
 		self.prefix = prefix
+		self.info = self._wrapLoggerFunc(logger.info)
+		self.warning = self._wrapLoggerFunc(logger.warning)
+		self.error = self._wrapLoggerFunc(logger.error)
+		self.exception = self._wrapLoggerFunc(logger.exception)
+		self.debug = self._wrapLoggerFunc(logger.debug)
 
-	def info(self, obj: Any, *args: Any, **kwargs: Any) -> None:
-		logger.info(self.prefix + str(obj), *args, **kwargs)
-
-	def warning(self, obj: Any, *args: Any, **kwargs: Any) -> None:
-		logger.warning(self.prefix + str(obj), *args, **kwargs)
-
-	def error(self, obj: Any, *args: Any, **kwargs: Any) -> None:
-		logger.error(self.prefix + str(obj), *args, **kwargs)
-
-	def exception(self, obj: Any, *args: Any, **kwargs: Any) -> None:
-		logger.exception(self.prefix + str(obj), *args, **kwargs)
-
-	def debug(self, obj: Any, *args: Any, **kwargs: Any) -> None:
-		logger.debug(self.prefix + str(obj), *args, **kwargs)
+	def _wrapLoggerFunc(self, func: Callable[..., None]) -> Callable[..., None]:
+		def wrappedFunc(obj: Any, *args: Any, **kwargs: Any) -> None:
+			func(self.prefix + str(obj), *args, **kwargs)
+		return wrappedFunc

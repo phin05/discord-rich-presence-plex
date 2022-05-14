@@ -1,12 +1,12 @@
 from typing import TypedDict
 
-class ImgurResponse(TypedDict):
+class Response(TypedDict):
 	success: bool
 	status: int
 
-class ImgurUploadResponseData(TypedDict):
+class UploadResponseData(TypedDict):
 	error: str
 	link: str
 
-class ImgurUploadResponse(ImgurResponse):
-	data: ImgurUploadResponseData
+class UploadResponse(Response):
+	data: UploadResponseData

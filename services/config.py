@@ -1,12 +1,12 @@
-from models.config import Config
 from store.constants import configFilePath
-from utils.logging import logger
 from utils.dict import merge
+from utils.logging import logger
 import json
+import models.config
 import os
 import time
 
-config: Config = {
+config: models.config.Config = {
 	"logging": {
 		"debug": True,
 	},

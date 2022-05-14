@@ -43,9 +43,7 @@ if len(config["users"]) == 0:
 
 plexAlertListeners: list[PlexAlertListener] = []
 try:
-	for user in config["users"]:
-		for server in user["servers"]:
-			plexAlertListeners.append(PlexAlertListener(user["token"], server))
+	plexAlertListeners = [PlexAlertListener(user["token"], server) for user in config["users"] for server in user["servers"]]
 	while True:
 		userInput = input()
 		if userInput in ["exit", "quit"]:
