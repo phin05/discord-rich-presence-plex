@@ -1,0 +1,15 @@
+name: Close Pull Requests
+on:
+  pull_request_target:
+jobs:
+  close-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+    - env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr comment --repo=${{ github.repository }} ${{ github.event.number }} --body "This repository does not accept pull requests."
+        gh pr close --repo=${{ github.repository }} ${{ github.event.number }}
