@@ -44,8 +44,9 @@ class PlexAlertListener(threading.Thread):
 		connected = False
 		while not connected:
 			try:
+				self.logger.info("Signing into Plex")
 				self.account = MyPlexAccount(token = self.token)
-				self.logger.info("Signed in as Plex User \"%s\"", self.account.username)
+				self.logger.info("Signed in as Plex user \"%s\"", self.account.username)
 				self.listenForUser = self.serverConfig.get("listenForUser", self.account.username)
 				self.server = None
 				for resource in self.account.resources():
