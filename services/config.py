@@ -9,6 +9,7 @@ import time
 config: models.config.Config = {
 	"logging": {
 		"debug": True,
+		"writeToFile": False,
 	},
 	"display": {
 		"useRemainingTime": False,
@@ -25,10 +26,11 @@ def loadConfig() -> None:
 		try:
 			with open(configFilePath, "r", encoding = "UTF-8") as configFile:
 				loadedConfig = json.load(configFile)
-			merge(loadedConfig, config)
 		except:
 			os.rename(configFilePath, configFilePath.replace(".json", f"-{time.time():.0f}.json"))
 			logger.exception("Failed to parse the application's config file. A new one will be created.")
+		else:
+			merge(loadedConfig, config)
 	saveConfig()
 
 def saveConfig() -> None:
