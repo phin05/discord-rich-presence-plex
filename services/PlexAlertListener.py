@@ -1,4 +1,4 @@
-# pyright: reportTypedDictNotRequiredAccess=none
+# pyright: reportTypedDictNotRequiredAccess=none,reportUnknownArgumentType=none,reportUnknownMemberType=none
 
 from .DiscordRpcService import DiscordRpcService
 from .cache import getKey, setKey
@@ -175,7 +175,9 @@ class PlexAlertListener(threading.Thread):
 				self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
 				self.updateTimeoutTimer.start()
 				self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
-				mediaType = item.type
+				mediaType: str = item.type
+				title: str
+				thumb: str
 				if mediaType in ["movie", "episode"]:
 					stateStrings: list[str] = [formatSeconds(item.duration / 1000)]
 					if mediaType == "movie":

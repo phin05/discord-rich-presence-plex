@@ -2,6 +2,7 @@ from typing import TypedDict
 
 class Logging(TypedDict):
 	debug: bool
+	writeToFile: bool
 
 class Posters(TypedDict):
 	enabled: bool

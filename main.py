@@ -1,21 +1,27 @@
 from services import PlexAlertListener
 from services.cache import loadCache
 from services.config import config, loadConfig, saveConfig
-from store.constants import isUnix, name, plexClientID, version
-from utils.logging import logger
+from store.constants import isUnix, logFilePath, name, plexClientID, version
+from utils.logging import formatter, logger
 import logging
 import os
 import requests
+import sys
 import time
 import urllib.parse
 
-os.system("clear" if isUnix else "cls")
-logger.info("%s - v%s", name, version)
 loadConfig()
-loadCache()
-
 if config["logging"]["debug"]:
 	logger.setLevel(logging.DEBUG)
+if config["logging"]["writeToFile"]:
+	fileHandler = logging.FileHandler(logFilePath)
+	fileHandler.setFormatter(formatter)
+	logger.addHandler(fileHandler)
+
+os.system("clear" if isUnix else "cls")
+logger.info("%s - v%s", name, version)
+loadCache()
+
 if len(config["users"]) == 0:
 	logger.info("No users found in the config file. Initiating authentication flow.")
 	response = requests.post("https://plex.tv/api/v2/pins.json?strong=true", headers = {
@@ -45,9 +51,12 @@ plexAlertListeners: list[PlexAlertListener] = []
 try:
 	plexAlertListeners = [PlexAlertListener(user["token"], server) for user in config["users"] for server in user["servers"]]
 	while True:
-		userInput = input()
-		if userInput in ["exit", "quit"]:
-			raise KeyboardInterrupt
+		if sys.stdin:
+			userInput = input()
+			if userInput in ["exit", "quit"]:
+				raise KeyboardInterrupt
+		else:
+			time.sleep(3600)
 except KeyboardInterrupt:
 	for plexAlertListener in plexAlertListeners:
 		plexAlertListener.disconnect()

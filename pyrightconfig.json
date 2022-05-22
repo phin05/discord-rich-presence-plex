@@ -1,5 +1,3 @@
 {
-	"reportMissingTypeStubs": "information",
-	"reportUnknownArgumentType": "none",
-	"reportUnknownMemberType": "none"
+	"reportMissingTypeStubs": "information"
 }
