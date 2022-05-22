@@ -4,7 +4,7 @@
 
 A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discord.com) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.2.3
+Current Version: 2.2.4
 
 ## Getting Started
 
@@ -25,7 +25,7 @@ The script must be running on the same machine as your Discord client.
 
 * `logging`
   * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console if enabled.
-  * `writeToFile` (boolean, default: `false`) - Writes everything outputted to console to a `console.log` file if enabled.
+  * `writeToFile` (boolean, default: `false`) - Writes everything outputted to the console to a `console.log` file if enabled.
 * `display`
   * `useRemainingTime` (boolean, default: `false`) - Displays your media's remaining time instead of elapsed time in your Rich Presence if enabled.
   * `posters`
