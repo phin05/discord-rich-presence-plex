@@ -4,7 +4,7 @@
 
 A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discord.com) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.2.4
+Current Version: 2.2.5
 
 ## Getting Started
 
