@@ -204,7 +204,7 @@ class PlexAlertListener(threading.Thread):
 					self.logger.debug("Unsupported media type \"%s\", ignoring", mediaType)
 					return
 				thumbUrl = ""
-				if config["display"]["posters"]["enabled"]:
+				if thumb and config["display"]["posters"]["enabled"]:
 					thumbUrl = getKey(thumb)
 					if not thumbUrl:
 						self.logger.debug("Uploading image")
