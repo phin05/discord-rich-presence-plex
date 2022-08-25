@@ -4,7 +4,7 @@
 
 A Python script that displays your [Plex](https://www.plex.tv) status on [Discord](https://discord.com) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.2.5
+Current Version: 2.3.0
 
 ## Getting Started
 
@@ -30,9 +30,12 @@ The script must be running on the same machine as your Discord client.
   * `useRemainingTime` (boolean, default: `false`) - Displays your media's remaining time instead of elapsed time in your Rich Presence if enabled.
   * `posters`
     * `enabled` (boolean, default: `false`) - Displays media posters in Rich Presence if enabled. Requires `imgurClientID`.
-    * `imgurClientID` (string, default: `""`) - [Instructions](#obtaining-an-imgur-client-id)
+    * `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
+  * `buttons` (list) - [Information](#buttons)
+    * `label` (string) - The label to be displayed on the button.
+    * `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).
 * `users` (list)
-  * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
+  * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)
     * `name` (string) - Name of the Plex Media Server you wish to connect to.
     * `listenForUser` (string, optional) - The script will respond to alerts originating only from this username. Defaults to the parent user's username if not set.
@@ -44,6 +47,18 @@ The script must be running on the same machine as your Discord client.
 1. Go to Imgur's [application registration page](https://api.imgur.com/oauth2/addclient)
 2. Enter any name for the application and pick OAuth2 without a callback URL as the authorisation type
 3. Submit the form to obtain your application's client ID
+
+### Buttons
+
+A maximum of 2 buttons can be displayed in your Rich Presence.
+
+Due to a strange Discord bug, buttons displayed in your Rich Presence are unresponsive to your own clicks, but other users are able to click on them to open their corresponding URLs.
+
+#### Dynamic Button URLs
+
+During runtime, the following dynamic URL placeholders will get replaced with real URLs based on the media being played:
+* `dynamic:imdb`
+* `dynamic:tmdb`
 
 ### Example
 
@@ -58,7 +73,17 @@ The script must be running on the same machine as your Discord client.
     "posters": {
       "enabled": true,
       "imgurClientID": "9e9sf637S8bRp4z"
-    }
+    },
+    "buttons": [
+      {
+        "label": "IMDb Link",
+        "url": "dynamic:imdb"
+      },
+      {
+        "label": "My YouTube Channel",
+        "url": "https://www.youtube.com/"
+      }
+    ]
   },
   "users": [
     {

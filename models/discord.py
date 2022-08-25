@@ -10,8 +10,13 @@ class ActivityTimestamps(TypedDict, total = False):
 	start: int
 	end: int
 
+class ActivityButton(TypedDict):
+	label: str
+	url: str
+
 class Activity(TypedDict, total = False):
 	details: str
 	state: str
 	assets: ActivityAssets
 	timestamps: ActivityTimestamps
+	buttons: list[ActivityButton]

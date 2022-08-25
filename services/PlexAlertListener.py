@@ -6,6 +6,7 @@ from .config import config
 from .imgur import uploadImage
 from plexapi.alert import AlertListener
 from plexapi.base import Playable, PlexPartialObject
+from plexapi.media import Genre, GuidTag
 from plexapi.myplex import MyPlexAccount, PlexServer
 from typing import Optional
 from utils.logging import LoggerWithPrefix
@@ -183,7 +184,8 @@ class PlexAlertListener(threading.Thread):
 					stateStrings: list[str] = [formatSeconds(item.duration / 1000)]
 					if mediaType == "movie":
 						title = f"{item.title} ({item.year})"
-						stateStrings.append(f"{', '.join(genre.tag for genre in item.genres[:3])}")
+						genres: list[Genre] = item.genres[:3]
+						stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
 						largeText = "Watching a movie"
 						thumb = item.thumb
 					else:
@@ -220,6 +222,35 @@ class PlexAlertListener(threading.Thread):
 						"small_image": state,
 					},
 				}
+				if config["display"]["buttons"]:
+					guidTags: list[GuidTag] = []
+					if mediaType == "movie":
+						guidTags = item.guids
+					elif mediaType == "episode":
+						guidTags = self.server.fetchItem(item.grandparentRatingKey).guids
+					guids: list[str] = [guid.id for guid in guidTags]
+					buttons: list[models.discord.ActivityButton] = []
+					for button in config["display"]["buttons"]:
+						if button["url"].startswith("dynamic:"):
+							if guids:
+								newUrl = button["url"]
+								if button["url"] == "dynamic:imdb":
+									for guid in guids:
+										if guid.startswith("imdb://"):
+											newUrl = guid.replace("imdb://", "https://www.imdb.com/title/")
+											break
+								elif button["url"] == "dynamic:tmdb":
+									for guid in guids:
+										if guid.startswith("tmdb://"):
+											tmdbPathSegment = "movie" if mediaType == "movie" else "tv"
+											newUrl = guid.replace("tmdb://", f"https://www.themoviedb.org/{tmdbPathSegment}/")
+											break
+								if newUrl:
+									buttons.append({ "label": button["label"], "url": newUrl })
+						else:
+							buttons.append(button)
+					if buttons:
+						activity["buttons"] = buttons[:2]
 				if state == "playing":
 					currentTimestamp = int(time.time())
 					if config["display"]["useRemainingTime"]:

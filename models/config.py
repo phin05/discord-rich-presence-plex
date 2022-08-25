@@ -8,9 +8,14 @@ class Posters(TypedDict):
 	enabled: bool
 	imgurClientID: str
 
+class Button(TypedDict):
+	label: str
+	url: str
+
 class Display(TypedDict):
 	useRemainingTime: bool
 	posters: Posters
+	buttons: list[Button]
 
 class Server(TypedDict, total = False):
 	name: str
