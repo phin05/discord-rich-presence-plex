@@ -17,6 +17,7 @@ config: models.config.Config = {
 			"enabled": False,
 			"imgurClientID": "",
 		},
+		"buttons": [],
 	},
 	"users": [],
 }
