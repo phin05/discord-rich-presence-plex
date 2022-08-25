@@ -103,6 +103,12 @@ During runtime, the following dynamic URL placeholders will get replaced with re
 }
 ```
 
+## Configuration - Discord
+
+The "Display current activity as a status message" setting must be enabled in Discord Settings > Activity Settings > Activity Privacy.
+
+![Discord settings](https://i.imgur.com/ur5ZNRg.png)
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
