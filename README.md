@@ -1,6 +1,6 @@
 # Discord Rich Presence for Plex
 
-![image](https://user-images.githubusercontent.com/59180111/168054648-af0590fd-9bd7-42d0-91b2-d7974643debd.png)
+![Showcase](https://user-images.githubusercontent.com/59180111/168054648-af0590fd-9bd7-42d0-91b2-d7974643debd.png)
 
 A Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
@@ -105,9 +105,9 @@ During runtime, the following dynamic URL placeholders will get replaced with re
 
 ## Configuration - Discord
 
-The "Display current activity as a status message" setting must be enabled in Discord Settings > Activity Settings > Activity Privacy.
+The "Display current activity as a status message" setting must be enabled in Discord Settings → Activity Settings → Activity Privacy.
 
-![Discord settings](https://i.imgur.com/ur5ZNRg.png)
+![Discord Settings](https://user-images.githubusercontent.com/59180111/186830889-35af3895-ece0-4a7d-9efb-f68640116884.png)
 
 ## License
 
