@@ -4,7 +4,7 @@
 
 A Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.3.1
+Current Version: 2.3.2
 
 ## Getting Started
 
@@ -51,9 +51,9 @@ The script must be running on the same machine as your Discord client.
 
 ### Buttons
 
-A maximum of 2 buttons can be displayed in your Rich Presence.
+Discord can display up to 2 buttons in your Rich Presence.
 
-Due to a strange Discord bug, buttons displayed in your Rich Presence are unresponsive to your own clicks, but other users are able to click on them to open their corresponding URLs.
+Due to a strange Discord bug, these buttons are unresponsive or exhibit strange behaviour towards your own clicks, but other users are able to click on them to open their corresponding URLs.
 
 #### Dynamic Button URLs
 
