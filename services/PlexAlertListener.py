@@ -195,7 +195,10 @@ class PlexAlertListener(threading.Thread):
 						largeText = "Watching a TV show"
 						thumb = item.grandparentThumb
 					if state != "playing":
-						stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
+						if config["display"]["useRemainingTime"]:
+							stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
+						else:
+							stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
 					stateText = " · ".join(stateString for stateString in stateStrings if stateString)
 				elif mediaType == "track":
 					title = item.title
