@@ -13,6 +13,7 @@ class Button(TypedDict):
 	url: str
 
 class Display(TypedDict):
+	hideTotalTime: bool
 	useRemainingTime: bool
 	posters: Posters
 	buttons: list[Button]

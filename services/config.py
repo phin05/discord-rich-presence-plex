@@ -12,6 +12,7 @@ config: models.config.Config = {
 		"writeToFile": False,
 	},
 	"display": {
+		"hideTotalTime": False,
 		"useRemainingTime": False,
 		"posters": {
 			"enabled": False,
