@@ -181,7 +181,7 @@ class PlexAlertListener(threading.Thread):
 				title: str
 				thumb: str
 				if mediaType in ["movie", "episode"]:
-					stateStrings: list[str] = [formatSeconds(item.duration / 1000)]
+					stateStrings: list[str] = [] if config["display"]["hideTotalTime"] else [formatSeconds(item.duration / 1000)]
 					if mediaType == "movie":
 						title = f"{item.title} ({item.year})"
 						genres: list[Genre] = item.genres[:3]

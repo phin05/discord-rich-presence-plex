@@ -4,7 +4,7 @@
 
 A Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.3.0
+Current Version: 2.3.1
 
 ## Getting Started
 
@@ -26,10 +26,11 @@ The script must be running on the same machine as your Discord client.
 * `logging`
   * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console if enabled.
   * `writeToFile` (boolean, default: `false`) - Writes everything outputted to the console to a `console.log` file if enabled.
-* `display`
-  * `useRemainingTime` (boolean, default: `false`) - Displays your media's remaining time instead of elapsed time in your Rich Presence if enabled.
+* `display` - Display settings for Rich Presence
+  * `hideTotalTime` (boolean, default: `false`) - Hides the total duration of the media if enabled.
+  * `useRemainingTime` (boolean, default: `false`) - Displays the media's remaining time instead of elapsed time if enabled.
   * `posters`
-    * `enabled` (boolean, default: `false`) - Displays media posters in Rich Presence if enabled. Requires `imgurClientID`.
+    * `enabled` (boolean, default: `false`) - Displays media posters if enabled. Requires `imgurClientID`.
     * `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
   * `buttons` (list) - [Information](#buttons)
     * `label` (string) - The label to be displayed on the button.
@@ -69,6 +70,7 @@ During runtime, the following dynamic URL placeholders will get replaced with re
     "writeToFile": false
   },
   "display": {
+    "hideTotalTime": false,
     "useRemainingTime": false,
     "posters": {
       "enabled": true,
