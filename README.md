@@ -2,11 +2,11 @@
 
 ![Showcase](https://user-images.githubusercontent.com/59180111/168054648-af0590fd-9bd7-42d0-91b2-d7974643debd.png)
 
-A Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
+Discord Rich Presence for Plex is a Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-Current Version: 2.3.2
+[![Latest Release](https://shields.io/badge/Latest%20Release-v2.3.2-informational)](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip)
 
-## Getting Started
+## Usage
 
 1. Install [Python 3.10](https://www.python.org/downloads/) - Make sure to tick "Add Python 3.10 to PATH" during the installation.
 2. Download [this repository's contents](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip).
@@ -20,8 +20,6 @@ When the script runs for the first time, a `config.json` file will be created in
 The script must be running on the same machine as your Discord client.
 
 ## Configuration - `config.json`
-
-### Reference
 
 * `logging`
   * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console if enabled.
