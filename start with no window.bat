@@ -1,0 +1,1 @@
+pythonw main.pyw
