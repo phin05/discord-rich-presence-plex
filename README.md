@@ -1,8 +1,8 @@
-# Discord Rich Presence for Plex
+# Discord Rich Presence for Plexamp
 
 ![Showcase](https://i.imgur.com/oBtnoIP.png)
 
-Discord Rich Presence for Plex is a Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
+Discord Rich Presence for Plexamp is a Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
 [![Latest Release](https://shields.io/badge/Latest%20Release-v2.3.2-informational)](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip)
 
@@ -120,3 +120,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 * [Python-PlexAPI](https://github.com/pkkid/python-plexapi)
 * [Requests](https://github.com/psf/requests)
 * [websocket-client](https://github.com/websocket-client/websocket-client)
+
+
+The only difference between this one and the original is that this one says "Plexamp" instead of "Plex" inside of discord.
