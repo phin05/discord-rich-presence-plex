@@ -1,6 +1,6 @@
 # Discord Rich Presence for Plex
 
-![Showcase]([https://user-images.githubusercontent.com/59180111/168054648-af0590fd-9bd7-42d0-91b2-d7974643debd.png](https://i.imgur.com/oBtnoIP.png))
+![Showcase](https://i.imgur.com/oBtnoIP.png)
 
 Discord Rich Presence for Plex is a Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
