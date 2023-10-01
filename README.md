@@ -108,6 +108,10 @@ During runtime, the following dynamic URL placeholders will get replaced with re
 }
 ```
 
+## Configuration - Environment Variables
+
+* `PLEX_SERVER_NAME` - Name of the Plex Media Server you wish to connect to. Used only during the initial setup (when the config file isn't present) for adding a server to the config after authentication. If this isn't set, the user is prompted for an input. In non-interactive environments, "ServerName" is used as a placeholder when this variable isn't set.
+
 ## Configuration - Discord
 
 The "Display current activity as a status message" setting must be enabled in Discord Settings → Activity Settings → Activity Privacy.

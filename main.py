@@ -51,7 +51,9 @@ try:
 			}).json()
 			if authCheckResponse["authToken"]:
 				logger.info("Authentication successful.")
-				serverName = input("Enter the name of the Plex Media Server you wish to connect to: ")
+				serverName = os.environ.get("PLEX_SERVER_NAME")
+				if not serverName:
+					serverName = input("Enter the name of the Plex Media Server you wish to connect to: ") if sys.stdin.isatty() else "ServerName"
 				config["users"].append({ "token": authCheckResponse["authToken"], "servers": [{ "name": serverName }] })
 				saveConfig()
 				break
@@ -60,7 +62,7 @@ try:
 			logger.info("Authentication failed.")
 			exit()
 	plexAlertListeners = [PlexAlertListener(user["token"], server) for user in config["users"] for server in user["servers"]]
-	if sys.stdin:
+	if sys.stdin.isatty():
 		while True:
 			userInput = input()
 			if userInput in ["exit", "quit"]:
