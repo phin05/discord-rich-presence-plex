@@ -1,10 +1,17 @@
+from store.constants import isUnix
+import os
+
+if isUnix and os.environ.get("IN_CONTAINER", "") == "true":
+	uid = 10000
+	os.system(f"chown -R {uid}:{uid} /app")
+	os.setuid(uid)
+
 from services import PlexAlertListener
 from services.cache import loadCache
 from services.config import config, loadConfig, saveConfig
-from store.constants import isUnix, logFilePath, name, plexClientID, version
+from store.constants import dataFolderPath, logFilePath, name, plexClientID, version
 from utils.logging import formatter, logger
 import logging
-import os
 import requests
 import sys
 import time
@@ -13,6 +20,11 @@ import urllib.parse
 plexAlertListeners: list[PlexAlertListener] = []
 
 try:
+	if not os.path.exists(dataFolderPath):
+		os.mkdir(dataFolderPath)
+	for oldFilePath in ["config.json", "cache.json", "console.log"]:
+		if os.path.isfile(oldFilePath):
+			os.rename(oldFilePath, os.path.join(dataFolderPath, oldFilePath))
 	loadConfig()
 	if config["logging"]["debug"]:
 		logger.setLevel(logging.DEBUG)

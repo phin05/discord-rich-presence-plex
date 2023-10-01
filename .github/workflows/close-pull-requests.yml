@@ -15,7 +15,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      PR_NUMBER: ${{ github.event.number || inputs.prNumber }}
+      PR_NUMBER: ${{ inputs.prNumber || github.event.number }}
     steps:
       - name: Comment
         run: gh pr comment ${{ env.PR_NUMBER }} --body "This repository does not accept pull requests."

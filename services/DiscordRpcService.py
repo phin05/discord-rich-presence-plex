@@ -12,7 +12,7 @@ import time
 
 class DiscordRpcService:
 
-	ipcPipe = ((os.environ.get("XDG_RUNTIME_DIR", None) or os.environ.get("TMPDIR", None) or os.environ.get("TMP", None) or os.environ.get("TEMP", None) or "/tmp") + "/discord-ipc-0") if isUnix else r"\\?\pipe\discord-ipc-0"
+	ipcPipe = (((os.path.isdir("/run/app") and "/run/app") or os.environ.get("XDG_RUNTIME_DIR", None) or os.environ.get("TMPDIR", None) or os.environ.get("TMP", None) or os.environ.get("TEMP", None) or "/tmp") + "/discord-ipc-0") if isUnix else r"\\?\pipe\discord-ipc-0"
 
 	def __init__(self) -> None:
 		self.loop: Optional[asyncio.AbstractEventLoop] = None

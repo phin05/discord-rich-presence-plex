@@ -2,28 +2,33 @@
 
 ![Showcase](https://user-images.githubusercontent.com/59180111/168054648-af0590fd-9bd7-42d0-91b2-d7974643debd.png)
 
-Discord Rich Presence for Plex is a Python script that displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
+Discord Rich Presence for Plex is a Python script which displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
-[![Latest Release](https://shields.io/badge/Latest%20Release-v2.3.2-informational)](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip)
+[![Latest Release](https://img.shields.io/github/v/release/phin05/discord-rich-presence-plex?label=Latest%20Release)](https://github.com/phin05/discord-rich-presence-plex/releases/latest)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/phin05/discord-rich-presence-plex/release.yml?label=Build&logo=github)](https://github.com/phin05/discord-rich-presence-plex/actions/workflows/release.yml)
 
 ## Usage
 
+When the script runs for the first time, a `data` directory will be created in the current working directory along with a `config.json` file inside of it. You will be prompted to complete the authentication flow to allow the script to retrieve an access token for your Plex account.
+
+The script must be running on the same machine as your Discord client.
+
+### Instructions
+
 1. Install [Python 3.10](https://www.python.org/downloads/) - Make sure to tick "Add Python 3.10 to PATH" during the installation.
-2. Download [this repository's contents](https://github.com/phin05/discord-rich-presence-plex/archive/refs/heads/master.zip).
-3. Extract the folder contained in the above ZIP file.
+2. Download the [latest release](https://github.com/phin05/discord-rich-presence-plex/releases/latest) of this script.
+3. Extract the directory contained in the above ZIP file.
 4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) into the above-extracted directory.
 5. Install the required Python modules by running `python -m pip install -U -r requirements.txt`.
 6. Start the script by running `python main.py`.
 
-When the script runs for the first time, a `config.json` file will be created in the working directory and you will be prompted to complete the authentication flow to allow the script to retrieve an access token for your Plex account.
-
-The script must be running on the same machine as your Discord client.
+Alternatively, you can [run with Docker](#run-with-docker) if you're using a Linux-based operating system.
 
 ## Configuration - `config.json`
 
 * `logging`
   * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console if enabled.
-  * `writeToFile` (boolean, default: `false`) - Writes everything outputted to the console to a `console.log` file if enabled.
+  * `writeToFile` (boolean, default: `false`) - Writes console output to a `console.log` file in the `data` directory if enabled.
 * `display` - Display settings for Rich Presence
   * `hideTotalTime` (boolean, default: `false`) - Hides the total duration of the media if enabled.
   * `useRemainingTime` (boolean, default: `false`) - Displays the media's remaining time instead of elapsed time if enabled.
@@ -109,14 +114,32 @@ The "Display current activity as a status message" setting must be enabled in Di
 
 ![Discord Settings](https://user-images.githubusercontent.com/59180111/186830889-35af3895-ece0-4a7d-9efb-f68640116884.png)
 
-## License
+## Run with Docker
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+### Image
 
-## Credits
+[ghcr.io/phin05/discord-rich-presence-plex](https://ghcr.io/phin05/discord-rich-presence-plex)
 
-* [Discord](https://discord.com)
-* [Plex](https://www.plex.tv)
-* [Python-PlexAPI](https://github.com/pkkid/python-plexapi)
-* [Requests](https://github.com/psf/requests)
-* [websocket-client](https://github.com/websocket-client/websocket-client)
+### Volumes
+
+Mount a directory for persistent data (config file, cache file and log file) at `/app/data`.
+
+The directory where Discord stores its inter-process communication Unix socket file needs to be mounted into the container at `/run/app`. The path for this would be the first non-null value from the values of the following environment variables: ([source](https://github.com/discord/discord-rpc/blob/963aa9f3e5ce81a4682c6ca3d136cddda614db33/src/connection_unix.cpp#L29C33-L29C33))
+
+* XDG_RUNTIME_DIR
+* TMPDIR
+* TMP
+* TEMP
+* Fallback path: /tmp
+
+### Example
+
+```
+docker run \
+  -v ./data:/app/data \
+  -v /run/user/1000:/run/app:ro \
+  --detach \
+  --restart unless-stopped \
+  --name discord-rich-presence-plex \
+  ghcr.io/phin05/discord-rich-presence-plex:latest
+```
