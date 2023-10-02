@@ -7,13 +7,9 @@ Discord Rich Presence for Plex is a Python script which displays your [Plex](htt
 [![Latest Release](https://img.shields.io/github/v/release/phin05/discord-rich-presence-plex?label=Latest%20Release)](https://github.com/phin05/discord-rich-presence-plex/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/phin05/discord-rich-presence-plex/release.yml?label=Build&logo=github)](https://github.com/phin05/discord-rich-presence-plex/actions/workflows/release.yml)
 
-## Usage
+## Installation
 
-When the script runs for the first time, a `data` directory will be created in the current working directory along with a `config.json` file inside of it. You will be prompted to complete the authentication flow to allow the script to retrieve an access token for your Plex account.
-
-The script must be running on the same machine as your Discord client.
-
-### Instructions
+If you're using a Linux-based operating system, you can [run this script with Docker](#run-with-docker). Otherwise, follow these instructions:
 
 1. Install [Python 3.10](https://www.python.org/downloads/) - Make sure to tick "Add Python 3.10 to PATH" during the installation.
 2. Download the [latest release](https://github.com/phin05/discord-rich-presence-plex/releases/latest) of this script.
@@ -22,7 +18,9 @@ The script must be running on the same machine as your Discord client.
 5. Install the required Python modules by running `python -m pip install -U -r requirements.txt`.
 6. Start the script by running `python main.py`.
 
-Alternatively, you can [run with Docker](#run-with-docker) if you're using a Linux-based operating system.
+When the script runs for the first time, a `data` directory will be created in the current working directory along with a `config.json` file inside of it. You will be prompted to complete the authentication flow to allow the script to retrieve an access token for your Plex account.
+
+The script must be running on the same machine as your Discord client.
 
 ## Configuration - `config.json`
 
@@ -42,7 +40,7 @@ Alternatively, you can [run with Docker](#run-with-docker) if you're using a Lin
   * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)
     * `name` (string) - Name of the Plex Media Server you wish to connect to.
-    * `listenForUser` (string, optional) - The script will respond to alerts originating only from this username. Defaults to the parent user's username if not set.
+    * `listenForUser` (string, optional) - The script reacts to alerts originating only from this username. Defaults to the parent user's username if not set.
     * `blacklistedLibraries` (list, optional) - Alerts originating from libraries in this list are ignored.
     * `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in this list are ignored.
 
@@ -110,7 +108,7 @@ During runtime, the following dynamic URL placeholders will get replaced with re
 
 ## Configuration - Environment Variables
 
-* `PLEX_SERVER_NAME` - Name of the Plex Media Server you wish to connect to. Used only during the initial setup (when the config file isn't present) for adding a server to the config after authentication. If this isn't set, the user is prompted for an input. In non-interactive environments, "ServerName" is used as a placeholder when this variable isn't set.
+* `PLEX_SERVER_NAME` - Name of the Plex Media Server you wish to connect to. Used only during the initial setup (when there are no users in the config) for adding a server to the config after authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
 
 ## Configuration - Discord
 
@@ -134,16 +132,25 @@ The directory where Discord stores its inter-process communication Unix socket f
 * TMPDIR
 * TMP
 * TEMP
-* Fallback path: /tmp
+
+If all four environment variables aren't set, `/tmp` is used.
+
+For example, if the environment variable `XDG_RUNTIME_DIR` is set to `/run/user/1000`, that would be the directory that needs to be mounted into the container at `/run/app`. If none of the environment variables are set, you need to mount `/tmp` into the container at `/run/app`.
 
 ### Example
 
 ```
 docker run \
-  -v ./data:/app/data \
-  -v /run/user/1000:/run/app:ro \
+  --volume ./data:/app/data \
+  --volume /run/user/1000:/run/app:ro \
   --detach \
   --restart unless-stopped \
   --name discord-rich-presence-plex \
   ghcr.io/phin05/discord-rich-presence-plex:latest
 ```
+
+If you're running the container for the first time (when there are no users in the config), make sure that the `PLEX_SERVER_NAME` environment variable is set (see the [environment variables](#configuration---environment-variables) section above), and check the container logs for the authentication link.
+
+### Docker on Windows and macOS
+
+The container image for this script is based on Linux. Docker uses virtualisation to run Linux containers on Windows and macOS. In such cases, if you want to run this script in a container, you need to run Discord in a container as well, using an image based on Linux, like [kasmweb/discord](https://hub.docker.com/r/kasmweb/discord) for example. You can mount a designated directory from the host machine into the Discord container at the path where Discord would store its Unix socket file. You can determine this path by checking the environment variables inside the container as per the [volumes](#volumes) section above. That same host directory needs to be mounted into the script's container as well at `/run/app`. This method is not recommended, because depending on the Discord container image you're using, there might be a lot of resource usage overhead or other complications related to containerising interactive desktop applications.
