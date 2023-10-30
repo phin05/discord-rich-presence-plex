@@ -17,6 +17,7 @@ import sys
 import time
 import urllib.parse
 
+isInteractive = sys.stdin and sys.stdin.isatty()
 plexAlertListeners: list[PlexAlertListener] = []
 
 try:
@@ -53,7 +54,7 @@ try:
 				logger.info("Authentication successful.")
 				serverName = os.environ.get("PLEX_SERVER_NAME")
 				if not serverName:
-					serverName = input("Enter the name of the Plex Media Server you wish to connect to: ") if sys.stdin.isatty() else "ServerName"
+					serverName = input("Enter the name of the Plex Media Server you wish to connect to: ") if isInteractive else "ServerName"
 				config["users"].append({ "token": authCheckResponse["authToken"], "servers": [{ "name": serverName }] })
 				saveConfig()
 				break
@@ -62,7 +63,7 @@ try:
 			logger.info("Authentication failed.")
 			exit()
 	plexAlertListeners = [PlexAlertListener(user["token"], server) for user in config["users"] for server in user["servers"]]
-	if sys.stdin.isatty():
+	if isInteractive:
 		while True:
 			userInput = input()
 			if userInput in ["exit", "quit"]:
