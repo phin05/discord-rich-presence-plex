@@ -59,7 +59,7 @@ class PlexAlertListener(threading.Thread):
 						except:
 							pass
 						self.logger.info("Connected to %s \"%s\"", self.productName, resource.name)
-						self.alertListener = AlertListener(self.server, self.handlePlexAlert, self.reconnect)
+						self.alertListener = AlertListener(self.server, self.handleAlert, self.reconnect)
 						self.alertListener.start()
 						self.logger.info("Listening for alerts from user \"%s\"", self.listenForUser)
 						self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
@@ -116,7 +116,7 @@ class PlexAlertListener(threading.Thread):
 			self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
 			self.connectionTimeoutTimer.start()
 
-	def handlePlexAlert(self, alert: models.plex.Alert) -> None:
+	def handleAlert(self, alert: models.plex.Alert) -> None:
 		try:
 			if alert["type"] == "playing" and "PlaySessionStateNotification" in alert:
 				stateNotification = alert["PlaySessionStateNotification"][0]

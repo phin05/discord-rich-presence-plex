@@ -49,7 +49,7 @@ def main() -> None:
 	logger.info("%s - v%s", name, version)
 	loadCache()
 	if not config["users"]:
-		logger.info("No users found in the config file. Initiating authentication flow.")
+		logger.info("No users found in the config file")
 		user = authUser()
 		if not user:
 			exit()

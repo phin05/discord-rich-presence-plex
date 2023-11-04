@@ -11,18 +11,26 @@ Discord Rich Presence for Plex is a Python script which displays your [Plex](htt
 
 If you're using a Linux-based operating system, you can [run this script with Docker](#run-with-docker). Otherwise, follow these instructions:
 
-1. Install [Python 3.10](https://www.python.org/downloads/) - Make sure to tick "Add Python 3.10 to PATH" during the installation.
+1. Install [Python](https://www.python.org/downloads/) (version 3.10 or newer) - Make sure to tick "Add Python to PATH" during the installation.
 2. Download the [latest release](https://github.com/phin05/discord-rich-presence-plex/releases/latest) of this script.
 3. Extract the directory contained in the above ZIP file.
-4. Navigate a command-line interface (cmd.exe, PowerShell, bash, etc.) into the above-extracted directory.
-5. Install the required Python modules by running `python -m pip install -U -r requirements.txt`.
-6. Start the script by running `python main.py`.
+4. Navigate a command-line interface (cmd, PowerShell, bash, etc.) into the above-extracted directory.
+5. Start the script by running `python main.py`.
 
-When the script runs for the first time, a `data` directory will be created in the current working directory along with a `config.json` file inside of it. You will be prompted to complete the authentication flow to allow the script to retrieve an access token for your Plex account.
+When the script runs for the first time, a directory named `data` will be created in the current working directory along with a `config.yaml` file inside of it. You will be prompted to complete authentication to allow the script to retrieve an access token for your Plex account.
 
 The script must be running on the same machine as your Discord client.
 
-## Configuration - `config.json`
+## Configuration
+
+A directory named `data` is used for storing the configuration file.
+
+### Supported Formats
+
+* YAML - `config.yaml` / `config.yml`
+* JSON - `config.json`
+
+### Reference
 
 * `logging`
   * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console if enabled.
@@ -64,6 +72,44 @@ During runtime, the following dynamic URL placeholders will get replaced with re
 
 ### Example
 
+<details>
+
+<summary>YAML</summary>
+
+<br />
+
+```yaml
+logging:
+  debug: true
+  writeToFile: false
+display:
+  hideTotalTime: false
+  useRemainingTime: false
+  posters:
+    enabled: true
+    imgurClientID: 9e9sf637S8bRp4z
+  buttons:
+    - label: IMDb Link
+      url: dynamic:imdb
+    - label: My YouTube Channel
+      url: https://www.youtube.com/channel/me
+users:
+  - token: HPbrz2NhfLRjU888Rrdt
+    servers:
+      - name: Bob's Home Media Server
+      - name: A Friend's Server
+        whitelistedLibraries:
+          - Movies
+```
+
+</details>
+
+<details>
+
+<summary>JSON</summary>
+
+<br />
+
 ```json
 {
   "logging": {
@@ -98,7 +144,9 @@ During runtime, the following dynamic URL placeholders will get replaced with re
         {
           "name": "A Friend's Server",
           "listenForUser": "xyz",
-          "whitelistedLibraries": ["Movies"]
+          "whitelistedLibraries": [
+            "Movies"
+          ]
         }
       ]
     }
@@ -106,15 +154,17 @@ During runtime, the following dynamic URL placeholders will get replaced with re
 }
 ```
 
-## Configuration - Environment Variables
-
-* `PLEX_SERVER_NAME` - Name of the Plex Media Server you wish to connect to. Used only during the initial setup (when there are no users in the config) for adding a server to the config after authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
+</details>
 
 ## Configuration - Discord
 
 The "Display current activity as a status message" setting must be enabled in Discord Settings → Activity Settings → Activity Privacy.
 
 ![Discord Settings](https://user-images.githubusercontent.com/59180111/186830889-35af3895-ece0-4a7d-9efb-f68640116884.png)
+
+## Configuration - Environment Variables
+
+* `PLEX_SERVER_NAME` - Name of the Plex Media Server you wish to connect to. Used only during the initial setup (when there are no users in the config) for adding a server to the config after authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the configuration file and restarting the script.
 
 ## Run with Docker
 
@@ -124,7 +174,7 @@ The "Display current activity as a status message" setting must be enabled in Di
 
 ### Volumes
 
-Mount a directory for persistent data (config file, cache file and log file) at `/app/data`.
+Mount a directory for persistent data (configuration file, cache file and log file) at `/app/data`.
 
 The directory where Discord stores its inter-process communication Unix socket file needs to be mounted into the container at `/run/app`. The path for this would be the first non-null value from the values of the following environment variables: ([source](https://github.com/discord/discord-rpc/blob/963aa9f3e5ce81a4682c6ca3d136cddda614db33/src/connection_unix.cpp#L29C33-L29C33))
 
