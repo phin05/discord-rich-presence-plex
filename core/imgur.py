@@ -1,10 +1,10 @@
-from services.config import config
+from .config import config
 from typing import Optional
 from utils.logging import logger
 import models.imgur
 import requests
 
-def uploadImage(url: str) -> Optional[str]:
+def uploadToImgur(url: str) -> Optional[str]:
 	try:
 		data: models.imgur.UploadResponse = requests.post(
 			"https://api.imgur.com/3/image",
@@ -15,4 +15,4 @@ def uploadImage(url: str) -> Optional[str]:
 			raise Exception(data["data"]["error"])
 		return data["data"]["link"]
 	except:
-		logger.exception("An unexpected error occured while uploading an image")
+		logger.exception("An unexpected error occured while uploading an image to Imgur")

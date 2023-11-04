@@ -1,0 +1,18 @@
+import os
+import sys
+
+name = "Discord Rich Presence for Plex"
+version = "2.3.5"
+
+plexClientID = "discord-rich-presence-plex"
+discordClientID = "413407336082833418"
+
+dataDirectoryPath = "data"
+configFilePath = os.path.join(dataDirectoryPath, "config.json")
+cacheFilePath = os.path.join(dataDirectoryPath, "cache.json")
+logFilePath = os.path.join(dataDirectoryPath, "console.log")
+
+isUnix = sys.platform in ["linux", "darwin"]
+processID = os.getpid()
+isInteractive = sys.stdin and sys.stdin.isatty()
+containerDemotionUid = os.environ.get("DRPP_CONTAINER_DEMOTION_UID", "")

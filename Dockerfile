@@ -7,5 +7,5 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 COPY . .
-ENV IN_CONTAINER true
+ENV DRPP_CONTAINER_DEMOTION_UID=$USER_UID
 CMD ["python", "main.py"]

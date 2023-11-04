@@ -3,5 +3,7 @@
 .github
 .gitignore
 CONTRIBUTING.md
+data
 Dockerfile
 pyrightconfig.json
+Showcase.psd

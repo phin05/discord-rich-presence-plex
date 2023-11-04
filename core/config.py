@@ -1,5 +1,5 @@
-from store.constants import configFilePath
-from utils.dict import merge
+from config.constants import configFilePath
+from utils.dict import copyDict
 from utils.logging import logger
 import json
 import models.config
@@ -32,7 +32,7 @@ def loadConfig() -> None:
 			os.rename(configFilePath, configFilePath.replace(".json", f"-{time.time():.0f}.json"))
 			logger.exception("Failed to parse the application's config file. A new one will be created.")
 		else:
-			merge(loadedConfig, config)
+			copyDict(loadedConfig, config)
 	saveConfig()
 
 def saveConfig() -> None:

@@ -55,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           provenance: false
           tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ env.VERSION }},${{ env.DOCKER_IMAGE_NAME }}:latest

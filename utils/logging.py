@@ -1,7 +1,8 @@
+from config.constants import name
 from typing import Any, Callable
 import logging
 
-logger = logging.getLogger("discord-rich-presence-plex")
+logger = logging.getLogger(name)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", datefmt = "%d-%m-%Y %I:%M:%S %p")
 streamHandler = logging.StreamHandler()

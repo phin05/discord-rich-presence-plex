@@ -1,17 +1,16 @@
-# pyright: reportTypedDictNotRequiredAccess=none,reportUnknownArgumentType=none,reportUnknownMemberType=none
+# pyright: reportUnknownArgumentType=none,reportUnknownMemberType=none,reportUnknownVariableType=none
 
-from .DiscordRpcService import DiscordRpcService
-from .cache import getKey, setKey
 from .config import config
-from .imgur import uploadImage
+from .discord import DiscordIpcService
+from .imgur import uploadToImgur
 from plexapi.alert import AlertListener
 from plexapi.base import Playable, PlexPartialObject
 from plexapi.media import Genre, GuidTag
 from plexapi.myplex import MyPlexAccount, PlexServer
 from typing import Optional
+from utils.cache import getCacheKey, setCacheKey
 from utils.logging import LoggerWithPrefix
 from utils.text import formatSeconds
-import hashlib
 import models.config
 import models.discord
 import models.plex
@@ -30,8 +29,8 @@ class PlexAlertListener(threading.Thread):
 		self.daemon = True
 		self.token = token
 		self.serverConfig = serverConfig
-		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}/{hashlib.md5(str(id(self)).encode('UTF-8')).hexdigest()[:5].upper()}] ")
-		self.discordRpcService = DiscordRpcService()
+		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}] ") # pyright: ignore[reportTypedDictNotRequiredAccess]
+		self.discordIpcService = DiscordIpcService()
 		self.updateTimeoutTimer: Optional[threading.Timer] = None
 		self.connectionTimeoutTimer: Optional[threading.Timer] = None
 		self.account: Optional[MyPlexAccount] = None
@@ -48,7 +47,7 @@ class PlexAlertListener(threading.Thread):
 				self.logger.info("Signing into Plex")
 				self.account = MyPlexAccount(token = self.token)
 				self.logger.info("Signed in as Plex user \"%s\"", self.account.username)
-				self.listenForUser = self.serverConfig.get("listenForUser", self.account.username)
+				self.listenForUser = self.serverConfig.get("listenForUser", "") or self.account.username
 				self.server = None
 				for resource in self.account.resources():
 					if resource.product == self.productName and resource.name.lower() == self.serverConfig["name"].lower():
@@ -71,7 +70,7 @@ class PlexAlertListener(threading.Thread):
 					self.logger.error("%s \"%s\" not found", self.productName, self.serverConfig["name"])
 					break
 			except Exception as e:
-				self.logger.error("Failed to connect to %s \"%s\": %s", self.productName, self.serverConfig["name"], e)
+				self.logger.error("Failed to connect to %s \"%s\": %s", self.productName, self.serverConfig["name"], e) # pyright: ignore[reportTypedDictNotRequiredAccess]
 				self.logger.error("Reconnecting in 10 seconds")
 				time.sleep(10)
 
@@ -93,7 +92,7 @@ class PlexAlertListener(threading.Thread):
 
 	def disconnectRpc(self) -> None:
 		self.lastState, self.lastSessionKey, self.lastRatingKey = "", 0, 0
-		self.discordRpcService.disconnect()
+		self.discordIpcService.disconnect()
 		self.cancelTimers()
 
 	def cancelTimers(self) -> None:
@@ -210,11 +209,11 @@ class PlexAlertListener(threading.Thread):
 					return
 				thumbUrl = ""
 				if thumb and config["display"]["posters"]["enabled"]:
-					thumbUrl = getKey(thumb)
+					thumbUrl = getCacheKey(thumb)
 					if not thumbUrl:
-						self.logger.debug("Uploading image")
-						thumbUrl = uploadImage(self.server.url(thumb, True))
-						setKey(thumb, thumbUrl)
+						self.logger.debug("Uploading image to Imgur")
+						thumbUrl = uploadToImgur(self.server.url(thumb, True))
+						setCacheKey(thumb, thumbUrl)
 				activity: models.discord.Activity = {
 					"details": title[:128],
 					"state": stateText[:128],
@@ -260,9 +259,9 @@ class PlexAlertListener(threading.Thread):
 						activity["timestamps"] = {"end": round(currentTimestamp + ((item.duration - viewOffset) / 1000))}
 					else:
 						activity["timestamps"] = {"start": round(currentTimestamp - (viewOffset / 1000))}
-				if not self.discordRpcService.connected:
-					self.discordRpcService.connect()
-				if self.discordRpcService.connected:
-					self.discordRpcService.setActivity(activity)
+				if not self.discordIpcService.connected:
+					self.discordIpcService.connect()
+				if self.discordIpcService.connected:
+					self.discordIpcService.setActivity(activity)
 		except:
-			self.logger.exception("An unexpected error occured in the alert handler")
+			self.logger.exception("An unexpected error occured in the Plex alert handler")
