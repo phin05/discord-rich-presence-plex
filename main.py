@@ -110,7 +110,10 @@ def testIpc() -> None:
 	discordIpcService.disconnect()
 
 if __name__ == "__main__":
-	if len(sys.argv) > 1 and sys.argv[1] == "test-ipc":
+	mode = sys.argv[1] if len(sys.argv) > 1 else ""
+	if not mode:
+		main()
+	elif mode == "test-ipc":
 		testIpc()
 	else:
-		main()
+		print(f"Invalid mode: {mode}")
