@@ -33,18 +33,18 @@ configFileType = ""
 configFilePath = ""
 
 def loadConfig() -> None:
-	global configFileType, configFileExtension, configFilePath
-	for fileExtension, fileType in supportedConfigFileExtensions.items():
-		filePath = f"{configFilePathRoot}.{fileExtension}"
-		if os.path.isfile(filePath):
+	global configFileExtension, configFileType, configFilePath
+	doesFileExist = False
+	for i, (fileExtension, fileType) in enumerate(supportedConfigFileExtensions.items()):
+		doesFileExist = os.path.isfile(f"{configFilePathRoot}.{fileExtension}")
+		isFirstItem = i == 0
+		if doesFileExist or isFirstItem:
 			configFileExtension = fileExtension
 			configFileType = fileType
-			break
-	else:
-		configFileExtension, configFileType = list(supportedConfigFileExtensions.items())[0]
-		filePath = f"{configFilePathRoot}.{configFileExtension}"
-	configFilePath = filePath
-	if os.path.isfile(configFilePath):
+			configFilePath = f"{configFilePathRoot}.{configFileExtension}"
+			if doesFileExist:
+				break
+	if doesFileExist:
 		try:
 			with open(configFilePath, "r", encoding = "UTF-8") as configFile:
 				if configFileType == "yaml":
@@ -53,7 +53,7 @@ def loadConfig() -> None:
 					loadedConfig = json.load(configFile) or {}
 		except:
 			os.rename(configFilePath, f"{configFilePathRoot}-{time.time():.0f}.{configFileExtension}")
-			logger.exception("Failed to parse the application's config file. A new one will be created.")
+			logger.exception("Failed to parse the config file. A new one will be created.")
 		else:
 			copyDict(loadedConfig, config)
 	saveConfig()
@@ -71,4 +71,4 @@ def saveConfig() -> None:
 				json.dump(config, configFile, indent = "\t")
 				configFile.write("\n")
 	except:
-		logger.exception("Failed to write to the application's config file.")
+		logger.exception("Failed to write to the config file")

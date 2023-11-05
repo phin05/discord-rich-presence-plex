@@ -15,4 +15,4 @@ logFilePath = os.path.join(dataDirectoryPath, "console.log")
 isUnix = sys.platform in ["linux", "darwin"]
 processID = os.getpid()
 isInteractive = sys.stdin and sys.stdin.isatty()
-containerDemotionUid = os.environ.get("DRPP_CONTAINER_DEMOTION_UID", "")
+containerDemotionUidGid = os.environ.get("DRPP_CONTAINER_DEMOTION_UID_GID", "")

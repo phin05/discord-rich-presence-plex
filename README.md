@@ -23,7 +23,7 @@ The script must be running on the same machine as your Discord client.
 
 ## Configuration
 
-A directory named `data` is used for storing the configuration file.
+The config file is stored in a directory named `data`.
 
 ### Supported Formats
 
@@ -164,7 +164,7 @@ The "Display current activity as a status message" setting must be enabled in Di
 
 ## Configuration - Environment Variables
 
-* `PLEX_SERVER_NAME` - Name of the Plex Media Server you wish to connect to. Used only during the initial setup (when there are no users in the config) for adding a server to the config after authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the configuration file and restarting the script.
+* `PLEX_SERVER_NAME` - Name of the Plex Media Server you wish to connect to. Used only during the initial setup (when there are no users in the config) for adding a server to the config after authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
 
 ## Run with Docker
 
@@ -174,7 +174,7 @@ The "Display current activity as a status message" setting must be enabled in Di
 
 ### Volumes
 
-Mount a directory for persistent data (configuration file, cache file and log file) at `/app/data`.
+Mount a directory for persistent data (config file, cache file and log file) at `/app/data`.
 
 The directory where Discord stores its inter-process communication Unix socket file needs to be mounted into the container at `/run/app`. The path for this would be the first non-null value from the values of the following environment variables: ([source](https://github.com/discord/discord-rpc/blob/963aa9f3e5ce81a4682c6ca3d136cddda614db33/src/connection_unix.cpp#L29C33-L29C33))
 
