@@ -38,7 +38,7 @@ import logging
 import models.config
 import time
 
-def main() -> None:
+def init() -> None:
 	if not os.path.exists(dataDirectoryPath):
 		os.mkdir(dataDirectoryPath)
 	for oldFilePath in ["config.json", "cache.json", "console.log"]:
@@ -53,6 +53,9 @@ def main() -> None:
 		logger.addHandler(fileHandler)
 	logger.info("%s - v%s", name, version)
 	loadCache()
+
+def main() -> None:
+	init()
 	if not config["users"]:
 		logger.info("No users found in the config file")
 		user = authNewUser()
@@ -92,9 +95,10 @@ def authNewUser() -> Optional[models.config.User]:
 	else:
 		logger.info(f"Authentication timed out ({formatSeconds(180)})")
 
-def testIpc() -> None:
+def testIpc(ipcPipeNumber: int) -> None:
+	init()
 	logger.info("Testing Discord IPC connection")
-	discordIpcService = DiscordIpcService()
+	discordIpcService = DiscordIpcService(ipcPipeNumber)
 	discordIpcService.connect()
 	discordIpcService.setActivity({
 		"details": "details",
@@ -111,9 +115,12 @@ def testIpc() -> None:
 
 if __name__ == "__main__":
 	mode = sys.argv[1] if len(sys.argv) > 1 else ""
-	if not mode:
-		main()
-	elif mode == "test-ipc":
-		testIpc()
-	else:
-		print(f"Invalid mode: {mode}")
+	try:
+		if not mode:
+			main()
+		elif mode == "test-ipc":
+			testIpc(int(sys.argv[2]) if len(sys.argv) > 2 else -1)
+		else:
+			print(f"Invalid mode: {mode}")
+	except KeyboardInterrupt:
+		pass

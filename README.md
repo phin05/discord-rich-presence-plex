@@ -51,6 +51,7 @@ The config file is stored in a directory named `data`.
     * `listenForUser` (string, optional) - The script reacts to alerts originating only from this username. Defaults to the parent user's username if not set.
     * `blacklistedLibraries` (list, optional) - Alerts originating from libraries in this list are ignored.
     * `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in this list are ignored.
+    * `ipcPipeNumber` (int, optional) - A number in the range of `0-9` to specify the Discord IPC pipe to connect to. Defaults to `-1`, which specifies that the first existing pipe in the range should be used. When a Discord client is launched, it binds to the first unbound pipe number, which is typically `0`.
 
 ### Obtaining an Imgur client ID
 

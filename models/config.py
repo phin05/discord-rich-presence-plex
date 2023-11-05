@@ -23,6 +23,7 @@ class Server(TypedDict, total = False):
 	listenForUser: str
 	blacklistedLibraries: list[str]
 	whitelistedLibraries: list[str]
+	ipcPipeNumber: int
 
 class User(TypedDict):
 	token: str

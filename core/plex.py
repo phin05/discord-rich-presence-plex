@@ -47,7 +47,7 @@ class PlexAlertListener(threading.Thread):
 		self.token = token
 		self.serverConfig = serverConfig
 		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}] ") # pyright: ignore[reportTypedDictNotRequiredAccess]
-		self.discordIpcService = DiscordIpcService()
+		self.discordIpcService = DiscordIpcService(self.serverConfig.get("ipcPipeNumber"))
 		self.updateTimeoutTimer: Optional[threading.Timer] = None
 		self.connectionTimeoutTimer: Optional[threading.Timer] = None
 		self.account: Optional[MyPlexAccount] = None
@@ -63,22 +63,22 @@ class PlexAlertListener(threading.Thread):
 			try:
 				self.logger.info("Signing into Plex")
 				self.account = MyPlexAccount(token = self.token)
-				self.logger.info("Signed in as Plex user \"%s\"", self.account.username)
+				self.logger.info("Signed in as Plex user '%s'", self.account.username)
 				self.listenForUser = self.serverConfig.get("listenForUser", "") or self.account.username
 				self.server = None
 				for resource in self.account.resources():
 					if resource.product == self.productName and resource.name.lower() == self.serverConfig["name"].lower():
-						self.logger.info("Connecting to %s \"%s\"", self.productName, self.serverConfig["name"])
+						self.logger.info("Connecting to %s '%s'", self.productName, self.serverConfig["name"])
 						self.server = resource.connect()
 						try:
 							self.server.account()
 							self.isServerOwner = True
 						except:
 							pass
-						self.logger.info("Connected to %s \"%s\"", self.productName, resource.name)
+						self.logger.info("Connected to %s '%s'", self.productName, resource.name)
 						self.alertListener = AlertListener(self.server, self.handleAlert, self.reconnect)
 						self.alertListener.start()
-						self.logger.info("Listening for alerts from user \"%s\"", self.listenForUser)
+						self.logger.info("Listening for alerts from user '%s'", self.listenForUser)
 						self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
 						self.connectionTimeoutTimer.start()
 						connected = True
@@ -86,7 +86,7 @@ class PlexAlertListener(threading.Thread):
 				if not self.server:
 					raise Exception("Server not found")
 			except Exception as e:
-				self.logger.error("Failed to connect to %s \"%s\": %s", self.productName, self.serverConfig["name"], e) # pyright: ignore[reportTypedDictNotRequiredAccess]
+				self.logger.error("Failed to connect to %s '%s': %s", self.productName, self.serverConfig["name"], e) # pyright: ignore[reportTypedDictNotRequiredAccess]
 				self.logger.error("Reconnecting in 10 seconds")
 				time.sleep(10)
 
@@ -108,7 +108,8 @@ class PlexAlertListener(threading.Thread):
 
 	def disconnectRpc(self) -> None:
 		self.lastState, self.lastSessionKey, self.lastRatingKey = "", 0, 0
-		self.discordIpcService.disconnect()
+		if self.discordIpcService.connected:
+			self.discordIpcService.disconnect()
 		self.cancelTimers()
 
 	def cancelTimers(self) -> None:
@@ -145,10 +146,10 @@ class PlexAlertListener(threading.Thread):
 				item: PlexPartialObject = self.server.fetchItem(ratingKey)
 				libraryName: str = item.section().title
 				if "blacklistedLibraries" in self.serverConfig and libraryName in self.serverConfig["blacklistedLibraries"]:
-					self.logger.debug("Library \"%s\" is blacklisted, ignoring", libraryName)
+					self.logger.debug("Library '%s' is blacklisted, ignoring", libraryName)
 					return
 				if "whitelistedLibraries" in self.serverConfig and libraryName not in self.serverConfig["whitelistedLibraries"]:
-					self.logger.debug("Library \"%s\" is not whitelisted, ignoring", libraryName)
+					self.logger.debug("Library '%s' is not whitelisted, ignoring", libraryName)
 					return
 				if self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey:
 					if self.updateTimeoutTimer:
@@ -166,7 +167,7 @@ class PlexAlertListener(threading.Thread):
 							self.disconnectRpc()
 							return
 				elif state == "stopped":
-					self.logger.debug("Received \"stopped\" state alert from unknown session, ignoring")
+					self.logger.debug("Received 'stopped' state alert from unknown session, ignoring")
 					return
 				if self.isServerOwner:
 					self.logger.debug("Searching sessions for session key %s", sessionKey)
@@ -180,9 +181,9 @@ class PlexAlertListener(threading.Thread):
 							self.logger.debug("Session found")
 							sessionUsername: str = session.usernames[0]
 							if sessionUsername.lower() == self.listenForUser.lower():
-								self.logger.debug("Username \"%s\" matches \"%s\", continuing", sessionUsername, self.listenForUser)
+								self.logger.debug("Username '%s' matches '%s', continuing", sessionUsername, self.listenForUser)
 								break
-							self.logger.debug("Username \"%s\" doesn't match \"%s\", ignoring", sessionUsername, self.listenForUser)
+							self.logger.debug("Username '%s' doesn't match '%s', ignoring", sessionUsername, self.listenForUser)
 							return
 					else:
 						self.logger.debug("No matching session found, ignoring")
@@ -221,7 +222,7 @@ class PlexAlertListener(threading.Thread):
 					largeText = "Listening to music"
 					thumb = item.thumb
 				else:
-					self.logger.debug("Unsupported media type \"%s\", ignoring", mediaType)
+					self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
 					return
 				thumbUrl = ""
 				if thumb and config["display"]["posters"]["enabled"]:
