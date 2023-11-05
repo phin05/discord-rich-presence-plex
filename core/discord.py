@@ -11,7 +11,7 @@ import time
 class DiscordIpcService:
 
 	def __init__(self):
-		self.ipcPipe = ("/run/app" if os.path.isdir("/run/app") else os.environ.get("XDG_RUNTIME_DIR", os.environ.get("TMPDIR", os.environ.get("TMP", os.environ.get("TEMP", "/tmp"))))) if isUnix else r"\\?\pipe\discord-ipc-0"
+		self.ipcPipe = (("/run/app" if os.path.isdir("/run/app") else os.environ.get("XDG_RUNTIME_DIR", os.environ.get("TMPDIR", os.environ.get("TMP", os.environ.get("TEMP", "/tmp"))))) + "/discord-ipc-0") if isUnix else r"\\?\pipe\discord-ipc-0"
 		self.loop: asyncio.AbstractEventLoop = None # pyright: ignore[reportGeneralTypeIssues]
 		self.pipeReader: asyncio.StreamReader = None # pyright: ignore[reportGeneralTypeIssues]
 		self.pipeWriter: asyncio.StreamWriter = None # pyright: ignore[reportGeneralTypeIssues]
