@@ -1,29 +1,24 @@
 name: Release
-run-name: Release ${{ inputs.version || github.ref_name }}
+run-name: Release ${{ github.ref_name }}
 on:
   push:
     tags:
       - v*
   workflow_dispatch:
-    inputs:
-      version:
-        required: true
-        type: string
-        description: Version (vX.X.X)
 env:
-  VERSION: ${{ inputs.version || github.ref_name }}
+  DOCKER_IMAGE_NAME: ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
 jobs:
   release-zip:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
-      RELEASE_ZIP_FILENAME: ${{ github.event.repository.name }}-${{ inputs.version || github.ref_name }}.zip
+      RELEASE_ZIP_FILENAME: ${{ github.event.repository.name }}-${{ github.ref_name }}.zip
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Create release ZIP file
-        run: |
+        run: |-
           mkdir ${{ github.event.repository.name }}
           rm -rf .git .github .gitignore .dockerignore Dockerfile CONTRIBUTING.md pyrightconfig.json
           mv * ${{ github.event.repository.name }} || true
@@ -31,15 +26,14 @@ jobs:
       - name: Release on GitHub
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
         with:
-          tag_name: ${{ env.VERSION }}
           generate_release_notes: true
           files: ${{ env.RELEASE_ZIP_FILENAME }}
+          body: |-
+            Docker Image: [${{ env.DOCKER_IMAGE_NAME }}](https://${{ env.DOCKER_IMAGE_NAME }})
   release-docker:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-    env:
-      DOCKER_IMAGE_NAME: ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -55,7 +49,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/amd64,linux/arm64,linux/i386,linux/arm
           push: true
           provenance: false
-          tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ env.VERSION }},${{ env.DOCKER_IMAGE_NAME }}:latest
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ github.ref_name }},${{ env.DOCKER_IMAGE_NAME }}:latest

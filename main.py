@@ -32,7 +32,7 @@ from core.discord import DiscordIpcService
 from core.plex import PlexAlertListener, initiateAuth, getAuthToken
 from typing import Optional
 from utils.cache import loadCache
-from utils.logging import formatter, logger
+from utils.logging import logger, formatter
 from utils.text import formatSeconds
 import logging
 import models.config
