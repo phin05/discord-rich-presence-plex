@@ -173,6 +173,13 @@ The "Display current activity as a status message" setting must be enabled in Di
 
 [ghcr.io/phin05/discord-rich-presence-plex](https://ghcr.io/phin05/discord-rich-presence-plex)
 
+Images are available for the following platforms:
+
+* linux/amd64
+* linux/arm64
+* linux/386
+* linux/arm/v7
+
 ### Volumes
 
 Mount a directory for persistent data (config file, cache file and log file) at `/app/data`.
@@ -191,13 +198,7 @@ For example, if the environment variable `XDG_RUNTIME_DIR` is set to `/run/user/
 ### Example
 
 ```
-docker run \
-  --volume ./data:/app/data \
-  --volume /run/user/1000:/run/app:ro \
-  --detach \
-  --restart unless-stopped \
-  --name discord-rich-presence-plex \
-  ghcr.io/phin05/discord-rich-presence-plex:latest
+docker run -v ./data:/app/data -v /run/user/1000:/run/app:ro -d --restart unless-stopped --name drpp ghcr.io/phin05/discord-rich-presence-plex:latest
 ```
 
 If you're running the container for the first time (when there are no users in the config), make sure that the `PLEX_SERVER_NAME` environment variable is set (see the [environment variables](#configuration---environment-variables) section above), and check the container logs for the authentication link.
