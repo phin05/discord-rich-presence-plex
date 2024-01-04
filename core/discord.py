@@ -14,7 +14,13 @@ class DiscordIpcService:
 		ipcPipeNumber = ipcPipeNumber or -1
 		ipcPipeNumbers = range(10) if ipcPipeNumber == -1 else [ipcPipeNumber]
 		ipcPipeBase = ("/run/app" if os.path.isdir("/run/app") else os.environ.get("XDG_RUNTIME_DIR", os.environ.get("TMPDIR", os.environ.get("TMP", os.environ.get("TEMP", "/tmp"))))) if isUnix else r"\\?\pipe"
-		self.ipcPipes = [os.path.join(ipcPipeBase, f"discord-ipc-{ipcPipeNumber}") for ipcPipeNumber in ipcPipeNumbers]
+		self.ipcPipes: list[str] = []
+		for ipcPipeNumber in ipcPipeNumbers:
+			pipeFilename = f"discord-ipc-{ipcPipeNumber}"
+			self.ipcPipes.append(os.path.join(ipcPipeBase, pipeFilename))
+			if ipcPipeBase == os.environ.get("XDG_RUNTIME_DIR"):
+				self.ipcPipes.append(os.path.join(ipcPipeBase, "app", "com.discordapp.Discord", pipeFilename))
+				self.ipcPipes.append(os.path.join(ipcPipeBase, ".flatpak", "com.discordapp.Discord", "xdg-run", pipeFilename))
 		self.loop: Optional[asyncio.AbstractEventLoop] = None
 		self.pipeReader: Optional[asyncio.StreamReader] = None
 		self.pipeWriter: Optional[asyncio.StreamWriter] = None
