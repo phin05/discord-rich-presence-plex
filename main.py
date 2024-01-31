@@ -1,12 +1,15 @@
-from config.constants import isUnix, containerDemotionUidGid
+from config.constants import isInContainer, runtimeDirectory
 import os
 import sys
 
-if isUnix and containerDemotionUidGid:
-	uidGid = int(containerDemotionUidGid)
-	os.system(f"chown -R {uidGid}:{uidGid} {os.path.dirname(os.path.realpath(__file__))}")
-	os.setgid(uidGid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
-	os.setuid(uidGid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+if isInContainer:
+	if not os.path.isdir(runtimeDirectory):
+		print(f"Runtime directory does not exist. Make sure that it is mounted into the container at {runtimeDirectory}")
+		exit(1)
+	statResult = os.stat(runtimeDirectory)
+	os.system(f"chown -R {statResult.st_uid}:{statResult.st_gid} {os.path.dirname(os.path.realpath(__file__))}")
+	os.setgid(statResult.st_gid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+	os.setuid(statResult.st_uid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
 else:
 	try:
 		import subprocess
@@ -60,7 +63,7 @@ def main() -> None:
 		logger.info("No users found in the config file")
 		user = authNewUser()
 		if not user:
-			exit()
+			exit(1)
 		config["users"].append(user)
 		saveConfig()
 	plexAlertListeners = [PlexAlertListener(user["token"], server) for user in config["users"] for server in user["servers"]]

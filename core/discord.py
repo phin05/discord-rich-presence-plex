@@ -1,4 +1,4 @@
-from config.constants import discordClientID, isUnix, processID
+from config.constants import discordClientID, isUnix, processID, runtimeDirectory
 from typing import Any, Optional
 from utils.logging import logger
 import asyncio
@@ -13,7 +13,7 @@ class DiscordIpcService:
 	def __init__(self, ipcPipeNumber: Optional[int]):
 		ipcPipeNumber = ipcPipeNumber or -1
 		ipcPipeNumbers = range(10) if ipcPipeNumber == -1 else [ipcPipeNumber]
-		ipcPipeBase = ("/run/app" if os.path.isdir("/run/app") else os.environ.get("XDG_RUNTIME_DIR", os.environ.get("TMPDIR", os.environ.get("TMP", os.environ.get("TEMP", "/tmp"))))) if isUnix else r"\\?\pipe"
+		ipcPipeBase = (runtimeDirectory if os.path.isdir(runtimeDirectory) else os.environ.get("XDG_RUNTIME_DIR", os.environ.get("TMPDIR", os.environ.get("TMP", os.environ.get("TEMP", "/tmp"))))) if isUnix else r"\\?\pipe"
 		self.ipcPipes: list[str] = []
 		for ipcPipeNumber in ipcPipeNumbers:
 			pipeFilename = f"discord-ipc-{ipcPipeNumber}"

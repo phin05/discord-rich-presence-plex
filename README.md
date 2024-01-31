@@ -198,11 +198,44 @@ For example, if the environment variable `XDG_RUNTIME_DIR` is set to `/run/user/
 ### Example
 
 ```
-docker run -v ./data:/app/data -v /run/user/1000:/run/app:ro -d --restart unless-stopped --name drpp ghcr.io/phin05/discord-rich-presence-plex:latest
+docker run -v ./drpp:/app/data -v /run/user/1000:/run/app:ro -d --restart unless-stopped --name drpp ghcr.io/phin05/discord-rich-presence-plex:latest
 ```
 
 If you're running the container for the first time (when there are no users in the config), make sure that the `PLEX_SERVER_NAME` environment variable is set (see the [environment variables](#configuration---environment-variables) section above), and check the container logs for the authentication link.
 
+### Containerised Discord
+
+If you wish to run Discord in a container as well, you need to mount a designated directory from the host machine into your Discord container at the path where Discord would store its Unix socket file. You can determine this path by checking the environment variables inside the container as per the [volumes](#volumes) section above, or you can set one of the environment variables yourself. That same host directory needs to be mounted into this script's container at `/run/app`. Ensure that the designated directory being mounted into the containers is owned by the user the containerized Discord process is running as.
+
+Depending on the Discord container image you're using, there might be a lot of resource usage overhead and other complications.
+
+#### Example using [kasmweb/discord](https://hub.docker.com/r/kasmweb/discord)
+
+```yaml
+services:
+  kasmcord:
+    container_name: kasmcord
+    image: kasmweb/discord:1.14.0
+    restart: unless-stopped
+    ports:
+      - 6901:6901
+    shm_size: 512m
+    environment:
+      VNC_PW: password
+      XDG_RUNTIME_DIR: /run/user/1000
+    volumes:
+      - ./kasmcord:/run/user/1000
+    user: "0"
+    entrypoint: sh -c "chown kasm-user:kasm-user /run/user/1000 && su kasm-user -c \"/dockerstartup/kasm_default_profile.sh /dockerstartup/vnc_startup.sh /dockerstartup/kasm_startup.sh\""
+  drpp:
+    container_name: drpp
+    image: ghcr.io/phin05/discord-rich-presence-plex:latest
+    restart: unless-stopped
+    volumes:
+      - ./kasmcord:/run/app:ro
+      - ./drpp:/app/data
+```
+
 ### Docker on Windows and macOS
 
-The container image for this script is based on Linux. Docker uses virtualisation to run Linux containers on Windows and macOS. In such cases, if you want to run this script in a container, you need to run Discord in a container as well, using an image based on Linux, like [kasmweb/discord](https://hub.docker.com/r/kasmweb/discord) for example. You can mount a designated directory from the host machine into the Discord container at the path where Discord would store its Unix socket file. You can determine this path by checking the environment variables inside the container as per the [volumes](#volumes) section above. That same host directory needs to be mounted into the script's container as well at `/run/app`. This method is not recommended, because depending on the Discord container image you're using, there might be a lot of resource usage overhead or other complications related to containerising interactive desktop applications.
+The container image for this script is based on Linux. Docker uses virtualisation to run Linux containers on Windows and macOS. In such cases, if you want to run this script in a container, you need to run Discord in a container as well, as per the instructions above.
