@@ -1,6 +1,6 @@
 # Discord Rich Presence for Plex
 
-![Showcase](https://user-images.githubusercontent.com/59180111/168054648-af0590fd-9bd7-42d0-91b2-d7974643debd.png)
+![Showcase](assets/showcase.png)
 
 Discord Rich Presence for Plex is a Python script which displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
 
@@ -161,7 +161,7 @@ users:
 
 The "Display current activity as a status message" setting must be enabled in Discord Settings → Activity Settings → Activity Privacy.
 
-![Discord Settings](https://user-images.githubusercontent.com/59180111/186830889-35af3895-ece0-4a7d-9efb-f68640116884.png)
+![Discord Activity Privacy](assets/discord-activity-privacy.png)
 
 ## Configuration - Environment Variables
 
@@ -205,11 +205,11 @@ If you're running the container for the first time (when there are no users in t
 
 ### Containerised Discord
 
-If you wish to run Discord in a container as well, you need to mount a designated directory from the host machine into your Discord container at the path where Discord would store its Unix socket file. You can determine this path by checking the environment variables inside the container as per the [volumes](#volumes) section above, or you can set one of the environment variables yourself. That same host directory needs to be mounted into this script's container at `/run/app`. Ensure that the designated directory being mounted into the containers is owned by the user the containerized Discord process is running as.
+If you wish to run Discord in a container as well, you need to mount a designated directory from the host machine into your Discord container at the path where Discord would store its Unix socket file. You can determine this path by checking the environment variables inside the container as per the [volumes](#volumes) section above, or you can set one of the environment variables yourself. That same host directory needs to be mounted into this script's container at `/run/app`. Ensure that the designated directory being mounted into the containers is owned by the user the containerised Discord process is running as.
 
 Depending on the Discord container image you're using, there might be a lot of resource usage overhead and other complications.
 
-#### Example using [kasmweb/discord](https://hub.docker.com/r/kasmweb/discord)
+#### Docker Compose example using [kasmweb/discord](https://hub.docker.com/r/kasmweb/discord)
 
 ```yaml
 services:
@@ -226,7 +226,7 @@ services:
     volumes:
       - ./kasmcord:/run/user/1000
     user: "0"
-    entrypoint: sh -c "chown kasm-user:kasm-user /run/user/1000 && su kasm-user -c \"/dockerstartup/kasm_default_profile.sh /dockerstartup/vnc_startup.sh /dockerstartup/kasm_startup.sh\""
+    entrypoint: sh -c "chown -R kasm-user:kasm-user /run/user/1000 && su kasm-user -c '/dockerstartup/kasm_default_profile.sh /dockerstartup/vnc_startup.sh /dockerstartup/kasm_startup.sh'"
   drpp:
     container_name: drpp
     image: ghcr.io/phin05/discord-rich-presence-plex:latest
@@ -234,8 +234,10 @@ services:
     volumes:
       - ./kasmcord:/run/app:ro
       - ./drpp:/app/data
+    depends_on:
+      - kasmcord
 ```
 
 ### Docker on Windows and macOS
 
-The container image for this script is based on Linux. Docker uses virtualisation to run Linux containers on Windows and macOS. In such cases, if you want to run this script in a container, you need to run Discord in a container as well, as per the instructions above.
+The container image for this script is based on Linux. Docker uses virtualisation to run Linux containers on Windows and macOS. In such cases, if you want to run this script's container, you need to run Discord in a Linux container as well, as per the instructions above.
