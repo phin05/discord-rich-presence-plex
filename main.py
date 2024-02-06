@@ -1,10 +1,11 @@
 from config.constants import isInContainer, runtimeDirectory
+from utils.logging import logger
 import os
 import sys
 
 if isInContainer:
 	if not os.path.isdir(runtimeDirectory):
-		print(f"Runtime directory does not exist. Make sure that it is mounted into the container at {runtimeDirectory}")
+		logger.error(f"Runtime directory does not exist. Ensure that it is mounted into the container at {runtimeDirectory}")
 		exit(1)
 	statResult = os.stat(runtimeDirectory)
 	os.system(f"chown -R {statResult.st_uid}:{statResult.st_gid} {os.path.dirname(os.path.realpath(__file__))}")
@@ -22,12 +23,10 @@ else:
 		for packageName, packageVersion in requiredPackages.items():
 			if packageName not in installedPackages:
 				package = f"{packageName}{f'=={packageVersion}' if packageVersion else ''}"
-				print(f"Installing missing dependency: {package}")
+				logger.info(f"Installing missing dependency: {package}")
 				subprocess.run([sys.executable, "-m", "pip", "install", "-U", package], check = True)
 	except Exception as e:
-		import traceback
-		traceback.print_exception(e)
-		print("An unexpected error occured during automatic installation of dependencies. Install them manually by running the following command: python -m pip install -U -r requirements.txt")
+		logger.exception("An unexpected error occured during automatic installation of dependencies. Install them manually by running the following command: python -m pip install -U -r requirements.txt")
 
 from config.constants import dataDirectoryPath, logFilePath, name, version, isInteractive
 from core.config import config, loadConfig, saveConfig
@@ -35,15 +34,15 @@ from core.discord import DiscordIpcService
 from core.plex import PlexAlertListener, initiateAuth, getAuthToken
 from typing import Optional
 from utils.cache import loadCache
-from utils.logging import logger, formatter
+from utils.logging import formatter
 from utils.text import formatSeconds
 import logging
 import models.config
 import time
 
 def init() -> None:
-	if not os.path.exists(dataDirectoryPath):
-		os.mkdir(dataDirectoryPath)
+	if not os.path.isdir(dataDirectoryPath):
+		os.makedirs(dataDirectoryPath)
 	for oldFilePath in ["config.json", "cache.json", "console.log"]:
 		if os.path.isfile(oldFilePath):
 			os.rename(oldFilePath, os.path.join(dataDirectoryPath, oldFilePath))
@@ -90,7 +89,7 @@ def authNewUser() -> Optional[models.config.User]:
 		authToken = getAuthToken(id, code)
 		if authToken:
 			logger.info("Authentication successful")
-			serverName = os.environ.get("PLEX_SERVER_NAME")
+			serverName = os.environ.get("DRPP_PLEX_SERVER_NAME_INPUT")
 			if not serverName:
 				serverName = input("Enter the name of the Plex Media Server you wish to connect to: ") if isInteractive else "ServerName"
 			return { "token": authToken, "servers": [{ "name": serverName }] }
@@ -98,10 +97,10 @@ def authNewUser() -> Optional[models.config.User]:
 	else:
 		logger.info(f"Authentication timed out ({formatSeconds(180)})")
 
-def testIpc(ipcPipeNumber: int) -> None:
+def testIpc(pipeNumber: int) -> None:
 	init()
 	logger.info("Testing Discord IPC connection")
-	discordIpcService = DiscordIpcService(ipcPipeNumber)
+	discordIpcService = DiscordIpcService(pipeNumber)
 	discordIpcService.connect()
 	discordIpcService.setActivity({
 		"details": "details",
@@ -124,6 +123,6 @@ if __name__ == "__main__":
 		elif mode == "test-ipc":
 			testIpc(int(sys.argv[2]) if len(sys.argv) > 2 else -1)
 		else:
-			print(f"Invalid mode: {mode}")
+			logger.error(f"Invalid mode: {mode}")
 	except KeyboardInterrupt:
 		pass

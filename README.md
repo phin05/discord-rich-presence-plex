@@ -165,7 +165,7 @@ The "Display current activity as a status message" setting must be enabled in Di
 
 ## Configuration - Environment Variables
 
-* `PLEX_SERVER_NAME` - Name of the Plex Media Server you wish to connect to. Used only during the initial setup (when there are no users in the config) for adding a server to the config after authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
+* `DRPP_PLEX_SERVER_NAME_INPUT` - This is used only during the initial setup (when there are no users in the config) as the name of the Plex server to be added to the config file after user authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
 
 ## Run with Docker
 
@@ -201,7 +201,7 @@ For example, if the environment variable `XDG_RUNTIME_DIR` is set to `/run/user/
 docker run -v ./drpp:/app/data -v /run/user/1000:/run/app:ro -d --restart unless-stopped --name drpp ghcr.io/phin05/discord-rich-presence-plex:latest
 ```
 
-If you're running the container for the first time (when there are no users in the config), make sure that the `PLEX_SERVER_NAME` environment variable is set (see the [environment variables](#configuration---environment-variables) section above), and check the container logs for the authentication link.
+If you're running the container for the first time (when there are no users in the config), make sure that the `DRPP_PLEX_SERVER_NAME_INPUT` environment variable is set (see the [environment variables](#configuration---environment-variables) section above), and check the container logs for the authentication link.
 
 ### Containerised Discord
 

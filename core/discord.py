@@ -1,4 +1,4 @@
-from config.constants import discordClientID, isUnix, processID, runtimeDirectory
+from config.constants import discordClientID, isUnix, processID, ipcPipeBase
 from typing import Any, Optional
 from utils.logging import logger
 import asyncio
@@ -10,17 +10,15 @@ import time
 
 class DiscordIpcService:
 
-	def __init__(self, ipcPipeNumber: Optional[int]):
-		ipcPipeNumber = ipcPipeNumber or -1
-		ipcPipeNumbers = range(10) if ipcPipeNumber == -1 else [ipcPipeNumber]
-		ipcPipeBase = (runtimeDirectory if os.path.isdir(runtimeDirectory) else os.environ.get("XDG_RUNTIME_DIR", os.environ.get("TMPDIR", os.environ.get("TMP", os.environ.get("TEMP", "/tmp"))))) if isUnix else r"\\?\pipe"
-		self.ipcPipes: list[str] = []
-		for ipcPipeNumber in ipcPipeNumbers:
-			pipeFilename = f"discord-ipc-{ipcPipeNumber}"
-			self.ipcPipes.append(os.path.join(ipcPipeBase, pipeFilename))
-			if ipcPipeBase == os.environ.get("XDG_RUNTIME_DIR"):
-				self.ipcPipes.append(os.path.join(ipcPipeBase, "app", "com.discordapp.Discord", pipeFilename))
-				self.ipcPipes.append(os.path.join(ipcPipeBase, ".flatpak", "com.discordapp.Discord", "xdg-run", pipeFilename))
+	def __init__(self, pipeNumber: Optional[int]):
+		pipeNumber = pipeNumber or -1
+		pipeNumbers = range(10) if pipeNumber == -1 else [pipeNumber]
+		self.pipes: list[str] = []
+		for pipeNumber in pipeNumbers:
+			pipeFilename = f"discord-ipc-{pipeNumber}"
+			self.pipes.append(os.path.join(ipcPipeBase, pipeFilename))
+			self.pipes.append(os.path.join(ipcPipeBase, "app", "com.discordapp.Discord", pipeFilename))
+			self.pipes.append(os.path.join(ipcPipeBase, ".flatpak", "com.discordapp.Discord", "xdg-run", pipeFilename))
 		self.loop: Optional[asyncio.AbstractEventLoop] = None
 		self.pipeReader: Optional[asyncio.StreamReader] = None
 		self.pipeWriter: Optional[asyncio.StreamWriter] = None
@@ -29,24 +27,24 @@ class DiscordIpcService:
 	async def handshake(self) -> None:
 		if not self.loop:
 			return
-		for ipcPipe in self.ipcPipes:
+		for pipe in self.pipes:
 			try:
 				if isUnix:
-					self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(ipcPipe) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+					self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(pipe) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
 				else:
 					self.pipeReader = asyncio.StreamReader()
-					self.pipeWriter = (await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader), ipcPipe))[0] # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+					self.pipeWriter = (await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader), pipe))[0] # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
 				self.write(0, { "v": 1, "client_id": discordClientID })
 				if await self.read():
 					self.connected = True
-					logger.info(f"Connected to Discord IPC pipe {ipcPipe}")
+					logger.info(f"Connected to Discord IPC pipe {pipe}")
 					break
 			except FileNotFoundError:
 				pass
 			except:
-				logger.exception(f"An unexpected error occured while connecting to Discord IPC pipe {ipcPipe}")
+				logger.exception(f"An unexpected error occured while connecting to Discord IPC pipe {pipe}")
 		if not self.connected:
-			logger.error(f"Discord IPC pipe not found (attempted pipes: {', '.join(self.ipcPipes)})")
+			logger.error(f"Discord IPC pipe not found (attempted pipes: {', '.join(self.pipes)})")
 
 	async def read(self) -> Optional[Any]:
 		if not self.pipeReader:
