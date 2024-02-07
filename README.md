@@ -184,7 +184,7 @@ Images are available for the following platforms:
 
 Mount a directory for persistent data (config file, cache file and log file) at `/app/data`.
 
-The directory where Discord stores its inter-process communication Unix socket file needs to be mounted into the container at `/run/app`. The path for this would be the first non-null value from the values of the following environment variables: ([source](https://github.com/discord/discord-rpc/blob/963aa9f3e5ce81a4682c6ca3d136cddda614db33/src/connection_unix.cpp#L29C33-L29C33))
+The runtime directory where Discord stores its inter-process communication Unix socket file needs to be mounted into the container at `/run/app`. The path for this would be the first non-null value from the values of the following environment variables in the environment Discord is running in: ([source](https://github.com/discord/discord-rpc/blob/963aa9f3e5ce81a4682c6ca3d136cddda614db33/src/connection_unix.cpp#L29C33-L29C33))
 
 * XDG_RUNTIME_DIR
 * TMPDIR
@@ -193,15 +193,35 @@ The directory where Discord stores its inter-process communication Unix socket f
 
 If all four environment variables aren't set, `/tmp` is used.
 
-For example, if the environment variable `XDG_RUNTIME_DIR` is set to `/run/user/1000`, that would be the directory that needs to be mounted into the container at `/run/app`. If none of the environment variables are set, you need to mount `/tmp` into the container at `/run/app`.
+For example, if the environment variable `XDG_RUNTIME_DIR` is set to `/run/user/1000`, that would be the runtime directory that needs to be mounted into the container at `/run/app`. If none of the environment variables are set, you need to mount `/tmp` into the container at `/run/app`.
 
-### Example
+### UID and GID
 
+The environment variables `DRPP_UID` and `DRPP_GID` can be used to specify the UID and GID of the user Discord is running as. You can determine these by running `id` in your terminal as such user.
+
+If both of the above environment variables are set, the script will change the ownership of `/run/app` and its contents to be in line with the specified UID and GID to prevent issues caused due to insufficient permissions. To skip this ownership change, set the environment variable `DRPP_NO_RUNTIME_DIR_CHOWN` to `true`. Skipping this is necessary only in cases where the runtime directory isn't dedicated exclusively to a single user.
+
+The ownership of `/app` and its contents will be changed as well. If both of the above environment variables are set, they will determine the ownership. Otherwise, the existing ownership information of `/run/app` will be used.
+
+### Other Info
+
+If you're running the container for the first time (when there are no users in the config), set the `DRPP_PLEX_SERVER_NAME_INPUT` environment variable to the name of the Plex server to be added to the config file after user authentication, and check the container logs for the authentication link.
+
+### Docker Compose example
+
+```yaml
+services:
+  drpp:
+    container_name: drpp
+    image: ghcr.io/phin05/discord-rich-presence-plex:latest
+    restart: unless-stopped
+    environment:
+      DRPP_UID: 1000
+      DRPP_GID: 1000
+    volumes:
+      - /run/user/1000:/run/app
+      - ./drpp:/app/data
 ```
-docker run -v ./drpp:/app/data -v /run/user/1000:/run/app:ro -d --restart unless-stopped --name drpp ghcr.io/phin05/discord-rich-presence-plex:latest
-```
-
-If you're running the container for the first time (when there are no users in the config), make sure that the `DRPP_PLEX_SERVER_NAME_INPUT` environment variable is set (see the [environment variables](#configuration---environment-variables) section above), and check the container logs for the authentication link.
 
 ### Containerised Discord
 

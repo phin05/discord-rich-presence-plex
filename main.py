@@ -1,4 +1,4 @@
-from config.constants import isInContainer, runtimeDirectory
+from config.constants import isInContainer, runtimeDirectory, uid, gid, containerCwd, noRuntimeDirChown
 from utils.logging import logger
 import os
 import sys
@@ -7,10 +7,22 @@ if isInContainer:
 	if not os.path.isdir(runtimeDirectory):
 		logger.error(f"Runtime directory does not exist. Ensure that it is mounted into the container at {runtimeDirectory}")
 		exit(1)
-	statResult = os.stat(runtimeDirectory)
-	os.system(f"chown -R {statResult.st_uid}:{statResult.st_gid} {os.path.dirname(os.path.realpath(__file__))}")
-	os.setgid(statResult.st_gid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
-	os.setuid(statResult.st_uid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+	if os.geteuid() == 0: # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+		if uid == -1 or gid == -1:
+			logger.warning(f"Environment variable(s) DRPP_UID and/or DRPP_GID are/is not set. Manually ensure appropriate ownership of {runtimeDirectory}")
+			statResult = os.stat(runtimeDirectory)
+			uid, gid = statResult.st_uid, statResult.st_gid
+		else:
+			if noRuntimeDirChown:
+				logger.warning(f"DRPP_NO_RUNTIME_DIR_CHOWN is set to true. Manually ensure appropriate ownership of {runtimeDirectory}")
+			else:
+				os.system(f"chmod 700 {runtimeDirectory}")
+				os.system(f"chown -R {uid}:{gid} {runtimeDirectory}")
+		os.system(f"chown -R {uid}:{gid} {containerCwd}")
+		os.setgid(gid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+		os.setuid(uid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+	else:
+		logger.warning(f"Not running as the superuser. Manually ensure appropriate ownership of mounted contents")
 else:
 	try:
 		import subprocess
