@@ -45,6 +45,7 @@ The config file is stored in a directory named `data`.
   * `buttons` (list) - [Information](#buttons)
     * `label` (string) - The label to be displayed on the button.
     * `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).
+    * `mediaTypes` (list, optional) - If set, the button is displayed only for the specified media types. Valid media types are `movie`, `episode` and `track`.
 * `users` (list)
   * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)
@@ -69,16 +70,15 @@ Due to a strange Discord bug, these buttons may be unresponsive or exhibit stran
 #### Dynamic Button URLs
 
 During runtime, the following dynamic URL placeholders will get replaced with real URLs based on the media being played:
+
 * `dynamic:imdb`
 * `dynamic:tmdb`
+* `dynamic:thetvdb`
+* `dynamic:trakt`
+* `dynamic:letterboxd`
+* `dynamic:musicbrainz`
 
-### Example
-
-<details>
-
-<summary>YAML</summary>
-
-<br />
+### Example (YAML)
 
 ```yaml
 logging:
@@ -94,8 +94,10 @@ display:
   buttons:
     - label: IMDb
       url: dynamic:imdb
-    - label: My YouTube Channel
-      url: https://www.youtube.com/channel/me
+    - label: Music Stats
+      url: https://github.com
+      mediaTypes:
+        - track
 users:
   - token: HPbrz2NhfLRjU888Rrdt
     servers:
@@ -104,60 +106,6 @@ users:
         whitelistedLibraries:
           - Movies
 ```
-
-</details>
-
-<details>
-
-<summary>JSON</summary>
-
-<br />
-
-```json
-{
-  "logging": {
-    "debug": true,
-    "writeToFile": false
-  },
-  "display": {
-    "hideTotalTime": false,
-    "useRemainingTime": false,
-    "posters": {
-      "enabled": true,
-      "imgurClientID": "9e9sf637S8bRp4z",
-      "maxSize": 256
-    },
-    "buttons": [
-      {
-        "label": "IMDb",
-        "url": "dynamic:imdb"
-      },
-      {
-        "label": "My YouTube Channel",
-        "url": "https://www.youtube.com/channel/me"
-      }
-    ]
-  },
-  "users": [
-    {
-      "token": "HPbrz2NhfLRjU888Rrdt",
-      "servers": [
-        {
-          "name": "Bob's Home Media Server"
-        },
-        {
-          "name": "A Friend's Server",
-          "whitelistedLibraries": [
-            "Movies"
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
-
-</details>
 
 ## Configuration - Discord
 
@@ -168,7 +116,7 @@ The "Display current activity as a status message" setting must be enabled in Di
 ## Configuration - Environment Variables
 
 * `DRPP_PLEX_SERVER_NAME_INPUT` - This is used only during the initial setup (when there are no users in the config) as the name of the Plex server to be added to the config file after user authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
-* `DRPP_NO_PIP_INSTALL` - Automatic invocation of pip to install missing dependencies is skipped if this is set to `true`.
+* `DRPP_NO_PIP_INSTALL` - Set this to `true` to skip automatic invocation of pip on script startup to install missing dependencies.
 
 ## Run with Docker
 

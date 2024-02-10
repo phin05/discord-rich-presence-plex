@@ -34,6 +34,15 @@ def getAuthToken(id: str, code: str) -> Optional[str]:
 	}).json()
 	return response["authToken"]
 
+buttonTypeGuidTypeMap = {
+	"imdb": "imdb",
+	"tmdb": "tmdb",
+	"thetvdb": "tvdb",
+	"trakt": "tmdb",
+	"letterboxd": "tmdb",
+	"musicbrainz": "mbid",
+}
+
 class PlexAlertListener(threading.Thread):
 
 	productName = "Plex Media Server"
@@ -242,32 +251,40 @@ class PlexAlertListener(threading.Thread):
 					},
 				}
 				if config["display"]["buttons"]:
-					guidTags: list[Guid] = []
-					if mediaType == "movie":
-						guidTags = item.guids
-					elif mediaType == "episode":
-						guidTags = self.server.fetchItem(item.grandparentRatingKey).guids
-					guids: list[str] = [guid.id for guid in guidTags]
+					guidsRaw: list[Guid] = item.guids if mediaType in ["movie", "track"] else self.server.fetchItem(item.grandparentRatingKey).guids
+					guids: dict[str, str] = { guidSplit[0]: guidSplit[1] for guidSplit in [guid.id.split("://") for guid in guidsRaw] if len(guidSplit) > 1 }
 					buttons: list[models.discord.ActivityButton] = []
 					for button in config["display"]["buttons"]:
-						if button["url"].startswith("dynamic:"):
-							if guids:
-								newUrl = button["url"]
-								if button["url"] == "dynamic:imdb":
-									for guid in guids:
-										if guid.startswith("imdb://"):
-											newUrl = guid.replace("imdb://", "https://www.imdb.com/title/")
-											break
-								elif button["url"] == "dynamic:tmdb":
-									for guid in guids:
-										if guid.startswith("tmdb://"):
-											tmdbPathSegment = "movie" if mediaType == "movie" else "tv"
-											newUrl = guid.replace("tmdb://", f"https://www.themoviedb.org/{tmdbPathSegment}/")
-											break
-								if newUrl:
-									buttons.append({ "label": button["label"], "url": newUrl })
-						else:
-							buttons.append(button)
+						if "mediaTypes" in button and mediaType not in button["mediaTypes"]:
+							continue
+						if not button["url"].startswith("dynamic:"):
+							buttons.append({ "label": button["label"], "url": button["url"] })
+							continue
+						buttonType = button["url"][8:]
+						guidType = buttonTypeGuidTypeMap.get(buttonType)
+						if not guidType:
+							continue
+						guid = guids.get(guidType)
+						if not guid:
+							continue
+						url = ""
+						if buttonType == "imdb":
+							url = f"https://www.imdb.com/title/{guid}"
+						elif buttonType == "tmdb":
+							tmdbPathSegment = "movie" if mediaType == "movie" else "tv"
+							url = f"https://www.themoviedb.org/{tmdbPathSegment}/{guid}"
+						elif buttonType == "thetvdb":
+							theTvdbPathSegment = "movie" if mediaType == "movie" else "series"
+							url = f"https://www.thetvdb.com/dereferrer/{theTvdbPathSegment}/{guid}"
+						elif buttonType == "trakt":
+							idType = "movie" if mediaType == "movie" else "show"
+							url = f"https://trakt.tv/search/tmdb/{guid}?id_type={idType}"
+						elif buttonType == "letterboxd" and mediaType == "movie":
+							url = f"https://letterboxd.com/tmdb/{guid}"
+						elif buttonType == "musicbrainz":
+							url = f"https://musicbrainz.org/track/{guid}"
+						if url:
+							buttons.append({ "label": button["label"], "url": url })
 					if buttons:
 						activity["buttons"] = buttons[:2]
 				if state == "playing":

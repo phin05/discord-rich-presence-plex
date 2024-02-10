@@ -12,6 +12,7 @@ class Posters(TypedDict):
 class Button(TypedDict):
 	label: str
 	url: str
+	mediaTypes: list[str]
 
 class Display(TypedDict):
 	hideTotalTime: bool
