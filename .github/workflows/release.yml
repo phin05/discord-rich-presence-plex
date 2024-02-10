@@ -23,7 +23,7 @@ jobs:
           mv * ${{ github.event.repository.name }} || true
           zip -r $RELEASE_ZIP_FILENAME ${{ github.event.repository.name }}
       - name: Release on GitHub
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        uses: softprops/action-gh-release@4634c16e79c963813287e889244c50009e7f0981
         with:
           files: ${{ env.RELEASE_ZIP_FILENAME }}
           body_path: ../release-notes/${{ github.ref_name }}.md
@@ -37,15 +37,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Sign into GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Build and push Docker images
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/386,linux/arm/v7

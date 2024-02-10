@@ -5,8 +5,8 @@ from .discord import DiscordIpcService
 from .imgur import uploadToImgur
 from config.constants import name, plexClientID
 from plexapi.alert import AlertListener
-from plexapi.base import Playable, PlexPartialObject
-from plexapi.media import Genre, GuidTag
+from plexapi.base import PlexSession, PlexPartialObject
+from plexapi.media import Genre, Guid
 from plexapi.myplex import MyPlexAccount, PlexServer
 from typing import Optional
 from utils.cache import getCacheKey, setCacheKey
@@ -171,7 +171,7 @@ class PlexAlertListener(threading.Thread):
 					return
 				if self.isServerOwner:
 					self.logger.debug("Searching sessions for session key %s", sessionKey)
-					sessions: list[Playable] = self.server.sessions()
+					sessions: list[PlexSession] = self.server.sessions()
 					if len(sessions) < 1:
 						self.logger.debug("Empty session list, ignoring")
 						return
@@ -242,7 +242,7 @@ class PlexAlertListener(threading.Thread):
 					},
 				}
 				if config["display"]["buttons"]:
-					guidTags: list[GuidTag] = []
+					guidTags: list[Guid] = []
 					if mediaType == "movie":
 						guidTags = item.guids
 					elif mediaType == "episode":
