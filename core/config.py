@@ -18,6 +18,7 @@ config: models.config.Config = {
 		"posters": {
 			"enabled": False,
 			"imgurClientID": "",
+			"maxSize": 256,
 		},
 		"buttons": [],
 	},

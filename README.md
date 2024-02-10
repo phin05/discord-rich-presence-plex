@@ -41,6 +41,7 @@ The config file is stored in a directory named `data`.
   * `posters`
     * `enabled` (boolean, default: `false`) - Displays media posters if enabled. Requires `imgurClientID`.
     * `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
+    * `maxSize` (int, default: `256`)
   * `buttons` (list) - [Information](#buttons)
     * `label` (string) - The label to be displayed on the button.
     * `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).

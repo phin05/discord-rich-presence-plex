@@ -229,7 +229,7 @@ class PlexAlertListener(threading.Thread):
 					thumbUrl = getCacheKey(thumb)
 					if not thumbUrl:
 						self.logger.debug("Uploading image to Imgur")
-						thumbUrl = uploadToImgur(self.server.url(thumb, True))
+						thumbUrl = uploadToImgur(self.server.url(thumb, True), config["display"]["posters"]["maxSize"])
 						setCacheKey(thumb, thumbUrl)
 				activity: models.discord.Activity = {
 					"details": title[:128],

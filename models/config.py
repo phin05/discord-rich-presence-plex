@@ -7,6 +7,7 @@ class Logging(TypedDict):
 class Posters(TypedDict):
 	enabled: bool
 	imgurClientID: str
+	maxSize: int
 
 class Button(TypedDict):
 	label: str
