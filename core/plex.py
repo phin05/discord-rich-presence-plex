@@ -34,6 +34,7 @@ def getAuthToken(id: str, code: str) -> Optional[str]:
 	}).json()
 	return response["authToken"]
 
+validMediaTypes = ["movie", "episode", "track", "clip"]
 buttonTypeGuidTypeMap = {
 	"imdb": "imdb",
 	"tmdb": "tmdb",
@@ -153,7 +154,14 @@ class PlexAlertListener(threading.Thread):
 				self.logger.debug("Received alert: %s", stateNotification)
 				assert self.server
 				item: PlexPartialObject = self.server.fetchItem(ratingKey)
-				libraryName: str = item.section().title
+				mediaType: str = item.type
+				if mediaType not in validMediaTypes:
+					self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
+					return
+				try:
+					libraryName: str = item.section().title
+				except:
+					libraryName = "ERROR"
 				if "blacklistedLibraries" in self.serverConfig and libraryName in self.serverConfig["blacklistedLibraries"]:
 					self.logger.debug("Library '%s' is blacklisted, ignoring", libraryName)
 					return
@@ -202,10 +210,9 @@ class PlexAlertListener(threading.Thread):
 				self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
 				self.updateTimeoutTimer.start()
 				self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
-				mediaType: str = item.type
 				title: str
 				thumb: str
-				if mediaType in ["movie", "episode"]:
+				if mediaType in ["movie", "episode", "clip"]:
 					stateStrings: list[str] = [] if config["display"]["hideTotalTime"] else [formatSeconds(item.duration / 1000)]
 					if mediaType == "movie":
 						title = f"{item.title} ({item.year})"
@@ -213,26 +220,27 @@ class PlexAlertListener(threading.Thread):
 						stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
 						largeText = "Watching a movie"
 						thumb = item.thumb
-					else:
+					elif mediaType == "episode":
 						title = item.grandparentTitle
 						stateStrings.append(f"S{item.parentIndex:02}E{item.index:02}")
 						stateStrings.append(item.title)
 						largeText = "Watching a TV show"
 						thumb = item.grandparentThumb
+					else:
+						title = item.title
+						largeText = "Watching a video"
+						thumb = item.thumb
 					if state != "playing":
 						if config["display"]["useRemainingTime"]:
 							stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
 						else:
 							stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
 					stateText = " · ".join(stateString for stateString in stateStrings if stateString)
-				elif mediaType == "track":
+				else:
 					title = item.title
 					stateText = f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle} ({self.server.fetchItem(item.parentRatingKey).year})"
 					largeText = "Listening to music"
 					thumb = item.thumb
-				else:
-					self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
-					return
 				thumbUrl = ""
 				if thumb and config["display"]["posters"]["enabled"]:
 					thumbUrl = getCacheKey(thumb)
@@ -242,7 +250,6 @@ class PlexAlertListener(threading.Thread):
 						setCacheKey(thumb, thumbUrl)
 				activity: models.discord.Activity = {
 					"details": title[:128],
-					"state": stateText[:128],
 					"assets": {
 						"large_text": largeText,
 						"large_image": thumbUrl or "logo",
@@ -250,8 +257,14 @@ class PlexAlertListener(threading.Thread):
 						"small_image": state,
 					},
 				}
+				if stateText:
+					activity["state"] = stateText[:128]
 				if config["display"]["buttons"]:
-					guidsRaw: list[Guid] = item.guids if mediaType in ["movie", "track"] else self.server.fetchItem(item.grandparentRatingKey).guids
+					guidsRaw: list[Guid] = []
+					if mediaType in ["movie", "track"]:
+						guidsRaw = item.guids
+					elif mediaType == "episode":
+						guidsRaw = self.server.fetchItem(item.grandparentRatingKey).guids
 					guids: dict[str, str] = { guidSplit[0]: guidSplit[1] for guidSplit in [guid.id.split("://") for guid in guidsRaw] if len(guidSplit) > 1 }
 					buttons: list[models.discord.ActivityButton] = []
 					for button in config["display"]["buttons"]:
