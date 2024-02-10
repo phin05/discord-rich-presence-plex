@@ -30,10 +30,10 @@ class DiscordIpcService:
 		for pipe in self.pipes:
 			try:
 				if isUnix:
-					self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(pipe) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+					self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(pipe) # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
 				else:
 					self.pipeReader = asyncio.StreamReader()
-					self.pipeWriter = (await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader), pipe))[0] # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+					self.pipeWriter = (await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader), pipe))[0] # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType,reportArgumentType]
 				self.write(0, { "v": 1, "client_id": discordClientID })
 				if await self.read():
 					self.connected = True

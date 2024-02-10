@@ -219,8 +219,8 @@ services:
       DRPP_UID: 1000
       DRPP_GID: 1000
     volumes:
+      - ./data:/app/data
       - /run/user/1000:/run/app
-      - ./drpp:/app/data
 ```
 
 ### Containerised Discord
@@ -252,8 +252,8 @@ services:
     image: ghcr.io/phin05/discord-rich-presence-plex:latest
     restart: unless-stopped
     volumes:
-      - ./kasmcord:/run/app:ro
       - ./drpp:/app/data
+      - ./kasmcord:/run/app:ro
     depends_on:
       - kasmcord
 ```

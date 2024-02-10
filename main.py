@@ -7,7 +7,7 @@ if isInContainer:
 	if not os.path.isdir(runtimeDirectory):
 		logger.error(f"Runtime directory does not exist. Ensure that it is mounted into the container at {runtimeDirectory}")
 		exit(1)
-	if os.geteuid() == 0: # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+	if os.geteuid() == 0: # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
 		if uid == -1 or gid == -1:
 			logger.warning(f"Environment variable(s) DRPP_UID and/or DRPP_GID are/is not set. Manually ensure appropriate ownership of {runtimeDirectory}")
 			statResult = os.stat(runtimeDirectory)
@@ -19,8 +19,8 @@ if isInContainer:
 				os.system(f"chmod 700 {runtimeDirectory}")
 				os.system(f"chown -R {uid}:{gid} {runtimeDirectory}")
 		os.system(f"chown -R {uid}:{gid} {containerCwd}")
-		os.setgid(gid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
-		os.setuid(uid) # pyright: ignore[reportGeneralTypeIssues,reportUnknownMemberType]
+		os.setgid(gid) # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
+		os.setuid(uid) # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
 	else:
 		logger.warning(f"Not running as the superuser. Manually ensure appropriate ownership of mounted contents")
 else:
