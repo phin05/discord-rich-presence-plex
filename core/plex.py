@@ -86,7 +86,7 @@ class PlexAlertListener(threading.Thread):
 						except:
 							pass
 						self.logger.info("Connected to %s '%s'", self.productName, resource.name)
-						self.alertListener = AlertListener(self.server, self.handleAlert, self.reconnect)
+						self.alertListener = AlertListener(self.server, self.tryHandleAlert, self.reconnect)
 						self.alertListener.start()
 						self.logger.info("Listening for alerts from user '%s'", self.listenForUser)
 						self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
@@ -143,172 +143,176 @@ class PlexAlertListener(threading.Thread):
 			self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
 			self.connectionTimeoutTimer.start()
 
-	def handleAlert(self, alert: models.plex.Alert) -> None:
+	def tryHandleAlert(self, alert: models.plex.Alert) -> None:
 		try:
-			if alert["type"] == "playing" and "PlaySessionStateNotification" in alert:
-				stateNotification = alert["PlaySessionStateNotification"][0]
-				state = stateNotification["state"]
-				sessionKey = int(stateNotification["sessionKey"])
-				ratingKey = int(stateNotification["ratingKey"])
-				viewOffset = int(stateNotification["viewOffset"])
-				self.logger.debug("Received alert: %s", stateNotification)
-				assert self.server
-				item: PlexPartialObject = self.server.fetchItem(ratingKey)
-				mediaType: str = item.type
-				if mediaType not in validMediaTypes:
-					self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
-					return
-				try:
-					libraryName: str = item.section().title
-				except:
-					libraryName = "ERROR"
-				if "blacklistedLibraries" in self.serverConfig and libraryName in self.serverConfig["blacklistedLibraries"]:
-					self.logger.debug("Library '%s' is blacklisted, ignoring", libraryName)
-					return
-				if "whitelistedLibraries" in self.serverConfig and libraryName not in self.serverConfig["whitelistedLibraries"]:
-					self.logger.debug("Library '%s' is not whitelisted, ignoring", libraryName)
-					return
-				if self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey:
-					if self.updateTimeoutTimer:
-						self.updateTimeoutTimer.cancel()
-						self.updateTimeoutTimer = None
-					if self.lastState == state and self.ignoreCount < self.maximumIgnores:
-						self.logger.debug("Nothing changed, ignoring")
-						self.ignoreCount += 1
-						self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
-						self.updateTimeoutTimer.start()
-						return
-					else:
-						self.ignoreCount = 0
-						if state == "stopped":
-							self.disconnectRpc()
-							return
-				elif state == "stopped":
-					self.logger.debug("Received 'stopped' state alert from unknown session, ignoring")
-					return
-				if self.isServerOwner:
-					self.logger.debug("Searching sessions for session key %s", sessionKey)
-					sessions: list[PlexSession] = self.server.sessions()
-					if len(sessions) < 1:
-						self.logger.debug("Empty session list, ignoring")
-						return
-					for session in sessions:
-						self.logger.debug("%s, Session Key: %s, Usernames: %s", session, session.sessionKey, session.usernames)
-						if session.sessionKey == sessionKey:
-							self.logger.debug("Session found")
-							sessionUsername: str = session.usernames[0]
-							if sessionUsername.lower() == self.listenForUser.lower():
-								self.logger.debug("Username '%s' matches '%s', continuing", sessionUsername, self.listenForUser)
-								break
-							self.logger.debug("Username '%s' doesn't match '%s', ignoring", sessionUsername, self.listenForUser)
-							return
-					else:
-						self.logger.debug("No matching session found, ignoring")
-						return
-				if self.updateTimeoutTimer:
-					self.updateTimeoutTimer.cancel()
-				self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
-				self.updateTimeoutTimer.start()
-				self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
-				title: str
-				thumb: str
-				if mediaType in ["movie", "episode", "clip"]:
-					stateStrings: list[str] = [] if config["display"]["hideTotalTime"] else [formatSeconds(item.duration / 1000)]
-					if mediaType == "movie":
-						title = f"{item.title} ({item.year})"
-						genres: list[Genre] = item.genres[:3]
-						stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
-						largeText = "Watching a movie"
-						thumb = item.thumb
-					elif mediaType == "episode":
-						title = item.grandparentTitle
-						stateStrings.append(f"S{item.parentIndex:02}E{item.index:02}")
-						stateStrings.append(item.title)
-						largeText = "Watching a TV show"
-						thumb = item.grandparentThumb
-					else:
-						title = item.title
-						largeText = "Watching a video"
-						thumb = item.thumb
-					if state != "playing":
-						if config["display"]["useRemainingTime"]:
-							stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
-						else:
-							stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
-					stateText = " · ".join(stateString for stateString in stateStrings if stateString)
-				else:
-					title = item.title
-					stateText = f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle} ({self.server.fetchItem(item.parentRatingKey).year})"
-					largeText = "Listening to music"
-					thumb = item.thumb
-				thumbUrl = ""
-				if thumb and config["display"]["posters"]["enabled"]:
-					thumbUrl = getCacheKey(thumb)
-					if not thumbUrl:
-						self.logger.debug("Uploading image to Imgur")
-						thumbUrl = uploadToImgur(self.server.url(thumb, True), config["display"]["posters"]["maxSize"])
-						setCacheKey(thumb, thumbUrl)
-				activity: models.discord.Activity = {
-					"details": title[:128],
-					"assets": {
-						"large_text": largeText,
-						"large_image": thumbUrl or "logo",
-						"small_text": state.capitalize(),
-						"small_image": state,
-					},
-				}
-				if stateText:
-					activity["state"] = stateText[:128]
-				if config["display"]["buttons"]:
-					guidsRaw: list[Guid] = []
-					if mediaType in ["movie", "track"]:
-						guidsRaw = item.guids
-					elif mediaType == "episode":
-						guidsRaw = self.server.fetchItem(item.grandparentRatingKey).guids
-					guids: dict[str, str] = { guidSplit[0]: guidSplit[1] for guidSplit in [guid.id.split("://") for guid in guidsRaw] if len(guidSplit) > 1 }
-					buttons: list[models.discord.ActivityButton] = []
-					for button in config["display"]["buttons"]:
-						if "mediaTypes" in button and mediaType not in button["mediaTypes"]:
-							continue
-						if not button["url"].startswith("dynamic:"):
-							buttons.append({ "label": button["label"], "url": button["url"] })
-							continue
-						buttonType = button["url"][8:]
-						guidType = buttonTypeGuidTypeMap.get(buttonType)
-						if not guidType:
-							continue
-						guid = guids.get(guidType)
-						if not guid:
-							continue
-						url = ""
-						if buttonType == "imdb":
-							url = f"https://www.imdb.com/title/{guid}"
-						elif buttonType == "tmdb":
-							tmdbPathSegment = "movie" if mediaType == "movie" else "tv"
-							url = f"https://www.themoviedb.org/{tmdbPathSegment}/{guid}"
-						elif buttonType == "thetvdb":
-							theTvdbPathSegment = "movie" if mediaType == "movie" else "series"
-							url = f"https://www.thetvdb.com/dereferrer/{theTvdbPathSegment}/{guid}"
-						elif buttonType == "trakt":
-							idType = "movie" if mediaType == "movie" else "show"
-							url = f"https://trakt.tv/search/tmdb/{guid}?id_type={idType}"
-						elif buttonType == "letterboxd" and mediaType == "movie":
-							url = f"https://letterboxd.com/tmdb/{guid}"
-						elif buttonType == "musicbrainz":
-							url = f"https://musicbrainz.org/track/{guid}"
-						if url:
-							buttons.append({ "label": button["label"], "url": url })
-					if buttons:
-						activity["buttons"] = buttons[:2]
-				if state == "playing":
-					currentTimestamp = int(time.time())
-					if config["display"]["useRemainingTime"]:
-						activity["timestamps"] = {"end": round(currentTimestamp + ((item.duration - viewOffset) / 1000))}
-					else:
-						activity["timestamps"] = {"start": round(currentTimestamp - (viewOffset / 1000))}
-				if not self.discordIpcService.connected:
-					self.discordIpcService.connect()
-				if self.discordIpcService.connected:
-					self.discordIpcService.setActivity(activity)
+			self.handleAlert(alert)
 		except:
 			self.logger.exception("An unexpected error occured in the Plex alert handler")
+
+	def handleAlert(self, alert: models.plex.Alert) -> None:
+		if alert["type"] != "playing" or "PlaySessionStateNotification" not in alert:
+			return
+		stateNotification = alert["PlaySessionStateNotification"][0]
+		self.logger.debug("Received alert: %s", stateNotification)
+		ratingKey = int(stateNotification["ratingKey"])
+		assert self.server
+		item: PlexPartialObject = self.server.fetchItem(ratingKey)
+		mediaType: str = item.type
+		if mediaType not in validMediaTypes:
+			self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
+			return
+		state = stateNotification["state"]
+		sessionKey = int(stateNotification["sessionKey"])
+		viewOffset = int(stateNotification["viewOffset"])
+		try:
+			libraryName: str = item.section().title
+		except:
+			libraryName = "ERROR"
+		if "blacklistedLibraries" in self.serverConfig and libraryName in self.serverConfig["blacklistedLibraries"]:
+			self.logger.debug("Library '%s' is blacklisted, ignoring", libraryName)
+			return
+		if "whitelistedLibraries" in self.serverConfig and libraryName not in self.serverConfig["whitelistedLibraries"]:
+			self.logger.debug("Library '%s' is not whitelisted, ignoring", libraryName)
+			return
+		if self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey:
+			if self.updateTimeoutTimer:
+				self.updateTimeoutTimer.cancel()
+				self.updateTimeoutTimer = None
+			if self.lastState == state and self.ignoreCount < self.maximumIgnores:
+				self.logger.debug("Nothing changed, ignoring")
+				self.ignoreCount += 1
+				self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
+				self.updateTimeoutTimer.start()
+				return
+			else:
+				self.ignoreCount = 0
+				if state == "stopped":
+					self.disconnectRpc()
+					return
+		elif state == "stopped":
+			self.logger.debug("Received 'stopped' state alert from unknown session, ignoring")
+			return
+		if self.isServerOwner:
+			self.logger.debug("Searching sessions for session key %s", sessionKey)
+			sessions: list[PlexSession] = self.server.sessions()
+			if len(sessions) < 1:
+				self.logger.debug("Empty session list, ignoring")
+				return
+			for session in sessions:
+				self.logger.debug("%s, Session Key: %s, Usernames: %s", session, session.sessionKey, session.usernames)
+				if session.sessionKey == sessionKey:
+					self.logger.debug("Session found")
+					sessionUsername: str = session.usernames[0]
+					if sessionUsername.lower() == self.listenForUser.lower():
+						self.logger.debug("Username '%s' matches '%s', continuing", sessionUsername, self.listenForUser)
+						break
+					self.logger.debug("Username '%s' doesn't match '%s', ignoring", sessionUsername, self.listenForUser)
+					return
+			else:
+				self.logger.debug("No matching session found, ignoring")
+				return
+		if self.updateTimeoutTimer:
+			self.updateTimeoutTimer.cancel()
+		self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
+		self.updateTimeoutTimer.start()
+		self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
+		title: str
+		thumb: str
+		if mediaType in ["movie", "episode", "clip"]:
+			stateStrings: list[str] = [] if config["display"]["hideTotalTime"] else [formatSeconds(item.duration / 1000)]
+			if mediaType == "movie":
+				title = f"{item.title} ({item.year})"
+				genres: list[Genre] = item.genres[:3]
+				stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
+				largeText = "Watching a movie"
+				thumb = item.thumb
+			elif mediaType == "episode":
+				title = item.grandparentTitle
+				stateStrings.append(f"S{item.parentIndex:02}E{item.index:02}")
+				stateStrings.append(item.title)
+				largeText = "Watching a TV show"
+				thumb = item.grandparentThumb
+			else:
+				title = item.title
+				largeText = "Watching a video"
+				thumb = item.thumb
+			if state != "playing":
+				if config["display"]["useRemainingTime"]:
+					stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
+				else:
+					stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
+			stateText = " · ".join(stateString for stateString in stateStrings if stateString)
+		else:
+			title = item.title
+			stateText = f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle} ({self.server.fetchItem(item.parentRatingKey).year})"
+			largeText = "Listening to music"
+			thumb = item.thumb
+		thumbUrl = ""
+		if thumb and config["display"]["posters"]["enabled"]:
+			thumbUrl = getCacheKey(thumb)
+			if not thumbUrl or not isinstance(thumbUrl, str):
+				self.logger.debug("Uploading poster to Imgur")
+				thumbUrl = uploadToImgur(self.server.url(thumb, True), config["display"]["posters"]["maxSize"])
+				setCacheKey(thumb, thumbUrl)
+		activity: models.discord.Activity = {
+			"details": title[:128],
+			"assets": {
+				"large_text": largeText,
+				"large_image": thumbUrl or "logo",
+				"small_text": state.capitalize(),
+				"small_image": state,
+			},
+		}
+		if stateText:
+			activity["state"] = stateText[:128]
+		if config["display"]["buttons"]:
+			guidsRaw: list[Guid] = []
+			if mediaType in ["movie", "track"]:
+				guidsRaw = item.guids
+			elif mediaType == "episode":
+				guidsRaw = self.server.fetchItem(item.grandparentRatingKey).guids
+			guids: dict[str, str] = { guidSplit[0]: guidSplit[1] for guidSplit in [guid.id.split("://") for guid in guidsRaw] if len(guidSplit) > 1 }
+			buttons: list[models.discord.ActivityButton] = []
+			for button in config["display"]["buttons"]:
+				if "mediaTypes" in button and mediaType not in button["mediaTypes"]:
+					continue
+				if not button["url"].startswith("dynamic:"):
+					buttons.append({ "label": button["label"], "url": button["url"] })
+					continue
+				buttonType = button["url"][8:]
+				guidType = buttonTypeGuidTypeMap.get(buttonType)
+				if not guidType:
+					continue
+				guid = guids.get(guidType)
+				if not guid:
+					continue
+				url = ""
+				if buttonType == "imdb":
+					url = f"https://www.imdb.com/title/{guid}"
+				elif buttonType == "tmdb":
+					tmdbPathSegment = "movie" if mediaType == "movie" else "tv"
+					url = f"https://www.themoviedb.org/{tmdbPathSegment}/{guid}"
+				elif buttonType == "thetvdb":
+					theTvdbPathSegment = "movie" if mediaType == "movie" else "series"
+					url = f"https://www.thetvdb.com/dereferrer/{theTvdbPathSegment}/{guid}"
+				elif buttonType == "trakt":
+					idType = "movie" if mediaType == "movie" else "show"
+					url = f"https://trakt.tv/search/tmdb/{guid}?id_type={idType}"
+				elif buttonType == "letterboxd" and mediaType == "movie":
+					url = f"https://letterboxd.com/tmdb/{guid}"
+				elif buttonType == "musicbrainz":
+					url = f"https://musicbrainz.org/track/{guid}"
+				if url:
+					buttons.append({ "label": button["label"], "url": url })
+			if buttons:
+				activity["buttons"] = buttons[:2]
+		if state == "playing":
+			currentTimestamp = int(time.time())
+			if config["display"]["useRemainingTime"]:
+				activity["timestamps"] = {"end": round(currentTimestamp + ((item.duration - viewOffset) / 1000))}
+			else:
+				activity["timestamps"] = {"start": round(currentTimestamp - (viewOffset / 1000))}
+		if not self.discordIpcService.connected:
+			self.discordIpcService.connect()
+		if self.discordIpcService.connected:
+			self.discordIpcService.setActivity(activity)
