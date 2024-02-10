@@ -7,4 +7,5 @@ COPY requirements.txt .
 RUN pip install -U -r requirements.txt --no-cache-dir
 COPY . .
 ENV DRPP_IS_IN_CONTAINER=true
+ENV DRPP_NO_PIP_INSTALL=true
 ENTRYPOINT ["python", "main.py"]

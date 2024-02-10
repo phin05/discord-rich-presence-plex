@@ -41,7 +41,7 @@ The config file is stored in a directory named `data`.
   * `posters`
     * `enabled` (boolean, default: `false`) - Displays media posters if enabled. Requires `imgurClientID`.
     * `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
-    * `maxSize` (int, default: `256`)
+    * `maxSize` (int, default: `256`) - Maximum width and maximum height to use while downscaling posters before uploading them.
   * `buttons` (list) - [Information](#buttons)
     * `label` (string) - The label to be displayed on the button.
     * `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).
@@ -64,7 +64,7 @@ The config file is stored in a directory named `data`.
 
 Discord can display up to 2 buttons in your Rich Presence.
 
-Due to a strange Discord bug, these buttons are unresponsive or exhibit strange behaviour towards your own clicks, but other users are able to click on them to open their corresponding URLs.
+Due to a strange Discord bug, these buttons may be unresponsive or exhibit strange behaviour towards your own clicks, but other users are able to click on them to open their corresponding URLs.
 
 #### Dynamic Button URLs
 
@@ -90,8 +90,9 @@ display:
   posters:
     enabled: true
     imgurClientID: 9e9sf637S8bRp4z
+    maxSize: 256
   buttons:
-    - label: IMDb Link
+    - label: IMDb
       url: dynamic:imdb
     - label: My YouTube Channel
       url: https://www.youtube.com/channel/me
@@ -123,11 +124,12 @@ users:
     "useRemainingTime": false,
     "posters": {
       "enabled": true,
-      "imgurClientID": "9e9sf637S8bRp4z"
+      "imgurClientID": "9e9sf637S8bRp4z",
+      "maxSize": 256
     },
     "buttons": [
       {
-        "label": "IMDb Link",
+        "label": "IMDb",
         "url": "dynamic:imdb"
       },
       {
@@ -145,7 +147,6 @@ users:
         },
         {
           "name": "A Friend's Server",
-          "listenForUser": "xyz",
           "whitelistedLibraries": [
             "Movies"
           ]
@@ -167,6 +168,7 @@ The "Display current activity as a status message" setting must be enabled in Di
 ## Configuration - Environment Variables
 
 * `DRPP_PLEX_SERVER_NAME_INPUT` - This is used only during the initial setup (when there are no users in the config) as the name of the Plex server to be added to the config file after user authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
+* `DRPP_NO_PIP_INSTALL` - Automatic invocation of pip to install missing dependencies is skipped if this is set to `true`.
 
 ## Run with Docker
 
@@ -247,7 +249,7 @@ services:
     volumes:
       - ./kasmcord:/run/user/1000
     user: "0"
-    entrypoint: sh -c "chown -R kasm-user:kasm-user /run/user/1000 && su kasm-user -c '/dockerstartup/kasm_default_profile.sh /dockerstartup/vnc_startup.sh /dockerstartup/kasm_startup.sh'"
+    entrypoint: sh -c "chmod 700 /run/user/1000 && chown -R kasm-user:kasm-user /run/user/1000 && su kasm-user -c '/dockerstartup/kasm_default_profile.sh /dockerstartup/vnc_startup.sh /dockerstartup/kasm_startup.sh'"
   drpp:
     container_name: drpp
     image: ghcr.io/phin05/discord-rich-presence-plex:latest

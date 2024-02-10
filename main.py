@@ -1,7 +1,6 @@
 from config.constants import isInContainer, runtimeDirectory, uid, gid, containerCwd, noRuntimeDirChown
 from utils.logging import logger
 import os
-import sys
 
 if isInContainer:
 	if not os.path.isdir(runtimeDirectory):
@@ -23,20 +22,24 @@ if isInContainer:
 		os.setuid(uid) # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
 	else:
 		logger.warning(f"Not running as the superuser. Manually ensure appropriate ownership of mounted contents")
-else:
+
+from config.constants import noPipInstall
+import sys
+
+if not noPipInstall:
 	try:
 		import subprocess
 		def parsePipPackages(packagesStr: str) -> dict[str, str]:
-			return { packageSplit[0]: packageSplit[1] if len(packageSplit) > 1 else "" for packageSplit in [package.split("==") for package in packagesStr.splitlines()] }
+			return { packageSplit[0].lower(): packageSplit[1] if len(packageSplit) > 1 else "" for packageSplit in [package.split("==") for package in packagesStr.splitlines()] }
 		pipFreezeResult = subprocess.run([sys.executable, "-m", "pip", "freeze"], stdout = subprocess.PIPE, text = True, check = True)
 		installedPackages = parsePipPackages(pipFreezeResult.stdout)
 		with open("requirements.txt", "r", encoding = "UTF-8") as requirementsFile:
 			requiredPackages = parsePipPackages(requirementsFile.read())
-		for packageName, packageVersion in requiredPackages.items():
-			if packageName not in installedPackages:
-				package = f"{packageName}{f'=={packageVersion}' if packageVersion else ''}"
-				logger.info(f"Installing missing dependency: {package}")
-				subprocess.run([sys.executable, "-m", "pip", "install", "-U", package], check = True)
+		for packageName, requiredPackageVersion in requiredPackages.items():
+			installedPackageVersion = installedPackages.get(packageName, "none")
+			if installedPackageVersion != requiredPackageVersion:
+				logger.info(f"Installing dependency: {packageName} (required: {requiredPackageVersion}, installed: {installedPackageVersion})")
+				subprocess.run([sys.executable, "-m", "pip", "install", "-U", f"{packageName}=={requiredPackageVersion}"], check = True)
 	except Exception as e:
 		logger.exception("An unexpected error occured during automatic installation of dependencies. Install them manually by running the following command: python -m pip install -U -r requirements.txt")
 
