@@ -45,7 +45,7 @@ The config file is stored in a directory named `data`.
   * `buttons` (list) - [Information](#buttons)
     * `label` (string) - The label to be displayed on the button.
     * `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).
-    * `mediaTypes` (list, optional) - If set, the button is displayed only for the specified media types. Valid media types are `movie`, `episode`, `track` and `clip`.
+    * `mediaTypes` (list, optional) - If set, the button is displayed only for the specified media types. Valid media types are `movie`, `episode`, `live_episode`, `track` and `clip`.
 * `users` (list)
   * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)

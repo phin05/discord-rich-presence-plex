@@ -34,7 +34,7 @@ def getAuthToken(id: str, code: str) -> Optional[str]:
 	}).json()
 	return response["authToken"]
 
-validMediaTypes = ["movie", "episode", "track", "clip"]
+validMediaTypes = ["movie", "episode", "live_episode", "track", "clip"]
 buttonTypeGuidTypeMap = {
 	"imdb": "imdb",
 	"tmdb": "tmdb",
@@ -157,7 +157,11 @@ class PlexAlertListener(threading.Thread):
 		ratingKey = int(stateNotification["ratingKey"])
 		assert self.server
 		item: PlexPartialObject = self.server.fetchItem(ratingKey)
-		mediaType: str = item.type
+		mediaType: str
+		if item.key and item.key.startswith("/livetv"):
+			mediaType = "live_episode"
+		else:
+			mediaType = item.type
 		if mediaType not in validMediaTypes:
 			self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
 			return
@@ -218,35 +222,42 @@ class PlexAlertListener(threading.Thread):
 		self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
 		title: str
 		thumb: str
-		if mediaType in ["movie", "episode", "clip"]:
-			stateStrings: list[str] = [] if config["display"]["hideTotalTime"] else [formatSeconds(item.duration / 1000)]
-			if mediaType == "movie":
-				title = f"{item.title} ({item.year})"
-				genres: list[Genre] = item.genres[:3]
-				stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
-				largeText = "Watching a movie"
-				thumb = item.thumb
-			elif mediaType == "episode":
-				title = item.grandparentTitle
-				stateStrings.append(f"S{item.parentIndex:02}E{item.index:02}")
+		stateStrings: list[str] = []
+		if not config["display"]["hideTotalTime"] and item.duration:
+			stateStrings.append(formatSeconds(item.duration / 1000))
+		if mediaType == "movie":
+			title = f"{item.title} ({item.year})"
+			genres: list[Genre] = item.genres[:3]
+			stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
+			largeText = "Watching a movie"
+			thumb = item.thumb
+		elif mediaType == "episode":
+			title = item.grandparentTitle
+			stateStrings.append(f"S{item.parentIndex:02}E{item.index:02}")
+			stateStrings.append(item.title)
+			largeText = "Watching a TV show"
+			thumb = item.grandparentThumb
+		elif mediaType == "livetv":
+			title = item.grandparentTitle
+			if item.title != item.grandparentTitle:
 				stateStrings.append(item.title)
-				largeText = "Watching a TV show"
-				thumb = item.grandparentThumb
-			else:
-				title = item.title
-				largeText = "Watching a video"
-				thumb = item.thumb
-			if state != "playing":
-				if config["display"]["useRemainingTime"]:
-					stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
-				else:
-					stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
-			stateText = " · ".join(stateString for stateString in stateStrings if stateString)
-		else:
+			largeText = "Watching live TV"
+			thumb = item.grandparentThumb
+		elif mediaType == "track":
 			title = item.title
-			stateText = f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle} ({self.server.fetchItem(item.parentRatingKey).year})"
+			stateStrings.append(f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle} ({self.server.fetchItem(item.parentRatingKey).year})")
 			largeText = "Listening to music"
 			thumb = item.thumb
+		else:
+			title = item.title
+			largeText = "Watching a video"
+			thumb = item.thumb
+		if state != "playing" and mediaType != "track":
+			if config["display"]["useRemainingTime"]:
+				stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
+			else:
+				stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
+		stateText = " · ".join(stateString for stateString in stateStrings if stateString)
 		thumbUrl = ""
 		if thumb and config["display"]["posters"]["enabled"]:
 			thumbUrl = getCacheKey(thumb)
