@@ -8,3 +8,8 @@ def formatSeconds(seconds: int | float, joiner: Optional[str] = None) -> str:
 	if timeValues["h"] == 0:
 		del timeValues["h"]
 	return joiner.join(str(v).rjust(2, "0") for v in timeValues.values())
+
+def truncate(text: str, maxLength: int) -> str:
+	if len(text) > maxLength:
+		text = text[:maxLength-3] + "..."
+	return text

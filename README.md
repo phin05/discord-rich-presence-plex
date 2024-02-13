@@ -67,6 +67,10 @@ Discord can display up to 2 buttons in your Rich Presence.
 
 Due to a strange Discord bug, these buttons may be unresponsive or exhibit strange behaviour towards your own clicks, but other users are able to click on them to open their corresponding URLs.
 
+#### Dynamic Button Labels
+
+Instances of `{title}` in button labels will be replaced with the top-level title of the media being played.
+
 #### Dynamic Button URLs
 
 During runtime, the following dynamic URL placeholders will get replaced with real URLs based on the media being played:
@@ -92,7 +96,7 @@ display:
     imgurClientID: 9e9sf637S8bRp4z
     maxSize: 256
   buttons:
-    - label: IMDb
+    - label: '{title} on IMDb'
       url: dynamic:imdb
     - label: Music Stats
       url: https://github.com

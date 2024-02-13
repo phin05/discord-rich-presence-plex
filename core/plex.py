@@ -11,7 +11,7 @@ from plexapi.myplex import MyPlexAccount, PlexServer
 from typing import Optional
 from utils.cache import getCacheKey, setCacheKey
 from utils.logging import LoggerWithPrefix
-from utils.text import formatSeconds
+from utils.text import formatSeconds, truncate
 import models.config
 import models.discord
 import models.plex
@@ -131,8 +131,9 @@ class PlexAlertListener(threading.Thread):
 
 	def connectionCheck(self) -> None:
 		try:
+			self.logger.debug("Running periodic connection check")
 			assert self.server
-			self.logger.debug("Request for list of clients to check connection: %s", self.server.clients())
+			self.server.clients()
 		except Exception as e:
 			self.reconnect(e)
 		else:
@@ -220,7 +221,7 @@ class PlexAlertListener(threading.Thread):
 		if not config["display"]["hideTotalTime"] and item.duration and mediaType != "track":
 			stateStrings.append(formatSeconds(item.duration / 1000))
 		if mediaType == "movie":
-			title = item.title
+			title = shortTitle = item.title
 			if item.year:
 				title += f" ({item.year})"
 			if item.genres:
@@ -229,19 +230,22 @@ class PlexAlertListener(threading.Thread):
 			largeText = "Watching a movie"
 			thumb = item.thumb
 		elif mediaType == "episode":
-			title = item.grandparentTitle
+			title = shortTitle = item.grandparentTitle
+			grandparent = self.server.fetchItem(item.grandparentRatingKey)
+			if grandparent.year:
+				title += f" ({grandparent.year})"
 			stateStrings.append(f"S{item.parentIndex:02}E{item.index:02}")
 			stateStrings.append(item.title)
 			largeText = "Watching a TV show"
 			thumb = item.grandparentThumb
 		elif mediaType == "livetv":
-			title = item.grandparentTitle
+			title = shortTitle = item.grandparentTitle
 			if item.title != item.grandparentTitle:
 				stateStrings.append(item.title)
 			largeText = "Watching live TV"
 			thumb = item.grandparentThumb
 		elif mediaType == "track":
-			title = item.title
+			title = shortTitle = item.title
 			artistAlbum = f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle}"
 			parent = self.server.fetchItem(item.parentRatingKey)
 			if parent.year:
@@ -250,7 +254,7 @@ class PlexAlertListener(threading.Thread):
 			largeText = "Listening to music"
 			thumb = item.thumb
 		else:
-			title = item.title
+			title = shortTitle = item.title
 			largeText = "Watching a video"
 			thumb = item.thumb
 		if state != "playing" and mediaType != "track":
@@ -267,7 +271,7 @@ class PlexAlertListener(threading.Thread):
 				thumbUrl = uploadToImgur(self.server.url(thumb, True), config["display"]["posters"]["maxSize"])
 				setCacheKey(thumb, thumbUrl)
 		activity: models.discord.Activity = {
-			"details": title[:128],
+			"details": truncate(title, 128),
 			"assets": {
 				"large_text": largeText,
 				"large_image": thumbUrl or "logo",
@@ -276,7 +280,7 @@ class PlexAlertListener(threading.Thread):
 			},
 		}
 		if stateText:
-			activity["state"] = stateText[:128]
+			activity["state"] = truncate(stateText, 128)
 		if config["display"]["buttons"]:
 			guidsRaw: list[Guid] = []
 			if mediaType in ["movie", "track"]:
@@ -288,8 +292,9 @@ class PlexAlertListener(threading.Thread):
 			for button in config["display"]["buttons"]:
 				if "mediaTypes" in button and mediaType not in button["mediaTypes"]:
 					continue
+				label = truncate(button["label"].format(title = shortTitle), 32)
 				if not button["url"].startswith("dynamic:"):
-					buttons.append({ "label": button["label"], "url": button["url"] })
+					buttons.append({ "label": label, "url": button["url"] })
 					continue
 				buttonType = button["url"][8:]
 				guidType = buttonTypeGuidTypeMap.get(buttonType)
@@ -315,7 +320,7 @@ class PlexAlertListener(threading.Thread):
 				elif buttonType == "musicbrainz":
 					url = f"https://musicbrainz.org/track/{guid}"
 				if url:
-					buttons.append({ "label": button["label"], "url": url })
+					buttons.append({ "label": label, "url": url })
 			if buttons:
 				activity["buttons"] = buttons[:2]
 		if state == "playing":
