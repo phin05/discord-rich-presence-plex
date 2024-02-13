@@ -238,7 +238,7 @@ class PlexAlertListener(threading.Thread):
 			stateStrings.append(item.title)
 			largeText = "Watching a TV show"
 			thumb = item.grandparentThumb
-		elif mediaType == "livetv":
+		elif mediaType == "live_episode":
 			title = shortTitle = item.grandparentTitle
 			if item.title != item.grandparentTitle:
 				stateStrings.append(item.title)
