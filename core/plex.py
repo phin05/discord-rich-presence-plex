@@ -48,7 +48,7 @@ class PlexAlertListener(threading.Thread):
 
 	productName = "Plex Media Server"
 	updateTimeoutTimerInterval = 30
-	connectionTimeoutTimerInterval = 60
+	connectionCheckTimerInterval = 60
 	maximumIgnores = 2
 
 	def __init__(self, token: str, serverConfig: models.config.Server):
@@ -59,7 +59,7 @@ class PlexAlertListener(threading.Thread):
 		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}] ") # pyright: ignore[reportTypedDictNotRequiredAccess]
 		self.discordIpcService = DiscordIpcService(self.serverConfig.get("ipcPipeNumber"))
 		self.updateTimeoutTimer: Optional[threading.Timer] = None
-		self.connectionTimeoutTimer: Optional[threading.Timer] = None
+		self.connectionCheckTimer: Optional[threading.Timer] = None
 		self.account: Optional[MyPlexAccount] = None
 		self.server: Optional[PlexServer] = None
 		self.alertListener: Optional[AlertListener] = None
@@ -68,8 +68,7 @@ class PlexAlertListener(threading.Thread):
 		self.start()
 
 	def run(self) -> None:
-		connected = False
-		while not connected:
+		while True:
 			try:
 				self.logger.info("Signing into Plex")
 				self.account = MyPlexAccount(token = self.token)
@@ -89,10 +88,9 @@ class PlexAlertListener(threading.Thread):
 						self.alertListener = AlertListener(self.server, self.tryHandleAlert, self.reconnect)
 						self.alertListener.start()
 						self.logger.info("Listening for alerts from user '%s'", self.listenForUser)
-						self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
-						self.connectionTimeoutTimer.start()
-						connected = True
-						break
+						self.connectionCheckTimer = threading.Timer(self.connectionCheckTimerInterval, self.connectionCheck)
+						self.connectionCheckTimer.start()
+						return
 				if not self.server:
 					raise Exception("Server not found")
 			except Exception as e:
@@ -107,6 +105,9 @@ class PlexAlertListener(threading.Thread):
 			except:
 				pass
 		self.disconnectRpc()
+		if self.connectionCheckTimer:
+			self.connectionCheckTimer.cancel()
+			self.connectionCheckTimer = None
 		self.account, self.server, self.alertListener, self.listenForUser, self.isServerOwner, self.ignoreCount = None, None, None, "", False, 0
 		self.logger.info("Stopped listening for alerts")
 
@@ -120,34 +121,30 @@ class PlexAlertListener(threading.Thread):
 		self.lastState, self.lastSessionKey, self.lastRatingKey = "", 0, 0
 		if self.discordIpcService.connected:
 			self.discordIpcService.disconnect()
-		self.cancelTimers()
-
-	def cancelTimers(self) -> None:
 		if self.updateTimeoutTimer:
 			self.updateTimeoutTimer.cancel()
-		if self.connectionTimeoutTimer:
-			self.connectionTimeoutTimer.cancel()
-		self.updateTimeoutTimer, self.connectionTimeoutTimer = None, None
+			self.updateTimeoutTimer = None
 
 	def updateTimeout(self) -> None:
 		self.logger.debug("No recent updates from session key %s", self.lastSessionKey)
 		self.disconnectRpc()
 
-	def connectionTimeout(self) -> None:
+	def connectionCheck(self) -> None:
 		try:
 			assert self.server
 			self.logger.debug("Request for list of clients to check connection: %s", self.server.clients())
 		except Exception as e:
 			self.reconnect(e)
 		else:
-			self.connectionTimeoutTimer = threading.Timer(self.connectionTimeoutTimerInterval, self.connectionTimeout)
-			self.connectionTimeoutTimer.start()
+			self.connectionCheckTimer = threading.Timer(self.connectionCheckTimerInterval, self.connectionCheck)
+			self.connectionCheckTimer.start()
 
 	def tryHandleAlert(self, alert: models.plex.Alert) -> None:
 		try:
 			self.handleAlert(alert)
 		except:
 			self.logger.exception("An unexpected error occured in the Plex alert handler")
+			self.disconnectRpc()
 
 	def handleAlert(self, alert: models.plex.Alert) -> None:
 		if alert["type"] != "playing" or "PlaySessionStateNotification" not in alert:
@@ -157,11 +154,10 @@ class PlexAlertListener(threading.Thread):
 		ratingKey = int(stateNotification["ratingKey"])
 		assert self.server
 		item: PlexPartialObject = self.server.fetchItem(ratingKey)
-		mediaType: str
 		if item.key and item.key.startswith("/livetv"):
 			mediaType = "live_episode"
 		else:
-			mediaType = item.type
+			mediaType: str = item.type
 		if mediaType not in validMediaTypes:
 			self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
 			return
@@ -220,15 +216,16 @@ class PlexAlertListener(threading.Thread):
 		self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
 		self.updateTimeoutTimer.start()
 		self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
-		title: str
-		thumb: str
 		stateStrings: list[str] = []
-		if not config["display"]["hideTotalTime"] and item.duration:
+		if not config["display"]["hideTotalTime"] and item.duration and mediaType != "track":
 			stateStrings.append(formatSeconds(item.duration / 1000))
 		if mediaType == "movie":
-			title = f"{item.title} ({item.year})"
-			genres: list[Genre] = item.genres[:3]
-			stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
+			title = item.title
+			if item.year:
+				title += f" ({item.year})"
+			if item.genres:
+				genres: list[Genre] = item.genres[:3]
+				stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
 			largeText = "Watching a movie"
 			thumb = item.thumb
 		elif mediaType == "episode":
@@ -245,7 +242,11 @@ class PlexAlertListener(threading.Thread):
 			thumb = item.grandparentThumb
 		elif mediaType == "track":
 			title = item.title
-			stateStrings.append(f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle} ({self.server.fetchItem(item.parentRatingKey).year})")
+			artistAlbum = f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle}"
+			parent = self.server.fetchItem(item.parentRatingKey)
+			if parent.year:
+				artistAlbum += f" ({parent.year})"
+			stateStrings.append(artistAlbum)
 			largeText = "Listening to music"
 			thumb = item.thumb
 		else:
