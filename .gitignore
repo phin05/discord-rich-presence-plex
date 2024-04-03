@@ -1,2 +1,6 @@
 data
 assets/showcase.psd
+config/__pycache__/
+core/__pycache__/
+models/__pycache__/
+utils/__pycache__/
