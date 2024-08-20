@@ -43,6 +43,11 @@ buttonTypeGuidTypeMap = {
 	"letterboxd": "tmdb",
 	"musicbrainz": "mbid",
 }
+discordActivityTypeMap = {
+	"playing": 0,
+	"listening": 2,
+	"watching": 3,
+}
 
 class PlexAlertListener(threading.Thread):
 
@@ -221,6 +226,7 @@ class PlexAlertListener(threading.Thread):
 		if not config["display"]["hideTotalTime"] and item.duration and mediaType != "track":
 			stateStrings.append(formatSeconds(item.duration / 1000))
 		if mediaType == "movie":
+			type = discordActivityTypeMap.get("watching")
 			title = shortTitle = item.title
 			if item.year:
 				title += f" ({item.year})"
@@ -230,6 +236,7 @@ class PlexAlertListener(threading.Thread):
 			largeText = "Watching a movie"
 			thumb = item.thumb
 		elif mediaType == "episode":
+			type = discordActivityTypeMap.get("watching")
 			title = shortTitle = item.grandparentTitle
 			grandparent = self.server.fetchItem(item.grandparentRatingKey)
 			if grandparent.year:
@@ -239,12 +246,14 @@ class PlexAlertListener(threading.Thread):
 			largeText = "Watching a TV show"
 			thumb = item.grandparentThumb
 		elif mediaType == "live_episode":
+			type = discordActivityTypeMap.get("watching")
 			title = shortTitle = item.grandparentTitle
 			if item.title != item.grandparentTitle:
 				stateStrings.append(item.title)
 			largeText = "Watching live TV"
 			thumb = item.grandparentThumb
 		elif mediaType == "track":
+			type = discordActivityTypeMap.get("listening")
 			title = shortTitle = item.title
 			artistAlbum = f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle}"
 			parent = self.server.fetchItem(item.parentRatingKey)
@@ -254,6 +263,7 @@ class PlexAlertListener(threading.Thread):
 			largeText = "Listening to music"
 			thumb = item.thumb
 		else:
+			type = discordActivityTypeMap.get("watching")
 			title = shortTitle = item.title
 			largeText = "Watching a video"
 			thumb = item.thumb
@@ -271,6 +281,7 @@ class PlexAlertListener(threading.Thread):
 				thumbUrl = uploadToImgur(self.server.url(thumb, True), config["display"]["posters"]["maxSize"])
 				setCacheKey(thumb, thumbUrl)
 		activity: models.discord.Activity = {
+			"type": type or discordActivityTypeMap.get("playing"),
 			"details": truncate(title, 128),
 			"assets": {
 				"large_text": largeText,

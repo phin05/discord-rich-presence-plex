@@ -15,6 +15,7 @@ class ActivityButton(TypedDict):
 	url: str
 
 class Activity(TypedDict, total = False):
+	type: int
 	details: str
 	state: str
 	assets: ActivityAssets
