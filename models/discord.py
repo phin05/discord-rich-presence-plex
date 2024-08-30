@@ -1,4 +1,9 @@
+from enum import IntEnum
 from typing import TypedDict
+
+class ActivityType(IntEnum):
+	LISTENING = 2
+	WATCHING = 3
 
 class ActivityAssets(TypedDict):
 	large_text: str
@@ -15,6 +20,7 @@ class ActivityButton(TypedDict):
 	url: str
 
 class Activity(TypedDict, total = False):
+	type: ActivityType
 	details: str
 	state: str
 	assets: ActivityAssets

@@ -33,7 +33,13 @@ def getAuthToken(id: str, code: str) -> Optional[str]:
 	}).json()
 	return response["authToken"]
 
-validMediaTypes = ["movie", "episode", "live_episode", "track", "clip"]
+mediaTypeActivityTypeMap = {
+	"movie": models.discord.ActivityType.WATCHING,
+	"episode": models.discord.ActivityType.WATCHING,
+	"live_episode": models.discord.ActivityType.WATCHING,
+	"track": models.discord.ActivityType.LISTENING,
+	"clip": models.discord.ActivityType.WATCHING,
+}
 buttonTypeGuidTypeMap = {
 	"imdb": "imdb",
 	"tmdb": "tmdb",
@@ -131,7 +137,6 @@ class PlexAlertListener(threading.Thread):
 	def connectionCheck(self) -> None:
 		try:
 			self.logger.debug("Running periodic connection check")
-			assert self.server
 			self.server.clients()
 		except Exception as e:
 			self.reconnect(e)
@@ -146,19 +151,26 @@ class PlexAlertListener(threading.Thread):
 			self.logger.exception("An unexpected error occured in the Plex alert handler")
 			self.disconnectRpc()
 
+	def uploadToImgur(self, thumb: str) -> Optional[str]:
+		thumbUrl = getCacheKey(thumb)
+		if not thumbUrl or not isinstance(thumbUrl, str):
+			self.logger.debug("Uploading image to Imgur")
+			thumbUrl = uploadToImgur(self.server.url(thumb, True))
+			setCacheKey(thumb, thumbUrl)
+		return thumbUrl
+
 	def handleAlert(self, alert: models.plex.Alert) -> None:
 		if alert["type"] != "playing" or "PlaySessionStateNotification" not in alert:
 			return
 		stateNotification = alert["PlaySessionStateNotification"][0]
 		self.logger.debug("Received alert: %s", stateNotification)
 		ratingKey = int(stateNotification["ratingKey"])
-		assert self.server
 		item = self.server.fetchItem(ratingKey)
 		if item.key and item.key.startswith("/livetv"):
 			mediaType = "live_episode"
 		else:
 			mediaType = item.type
-		if mediaType not in validMediaTypes:
+		if mediaType not in mediaTypeActivityTypeMap:
 			self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
 			return
 		state = stateNotification["state"]
@@ -228,6 +240,8 @@ class PlexAlertListener(threading.Thread):
 				stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
 			largeText = "Watching a movie"
 			thumb = item.thumb
+			smallText = ""
+			smallThumb = ""
 		elif mediaType == "episode":
 			title = shortTitle = item.grandparentTitle
 			grandparent = self.server.fetchItem(item.grandparentRatingKey)
@@ -237,45 +251,48 @@ class PlexAlertListener(threading.Thread):
 			stateStrings.append(item.title)
 			largeText = "Watching a TV show"
 			thumb = item.grandparentThumb
+			smallText = ""
+			smallThumb = ""
 		elif mediaType == "live_episode":
 			title = shortTitle = item.grandparentTitle
 			if item.title != item.grandparentTitle:
 				stateStrings.append(item.title)
 			largeText = "Watching live TV"
 			thumb = item.grandparentThumb
+			smallText = ""
+			smallThumb = ""
 		elif mediaType == "track":
 			title = shortTitle = item.title
-			artistAlbum = f"{item.originalTitle or item.grandparentTitle} - {item.parentTitle}"
+			largeText = item.parentTitle
 			parent = self.server.fetchItem(item.parentRatingKey)
 			if parent.year:
-				artistAlbum += f" ({parent.year})"
-			stateStrings.append(artistAlbum)
-			largeText = "Listening to music"
+				largeText += f" ({parent.year})"
 			thumb = item.thumb
+			smallText = item.originalTitle or item.grandparentTitle
+			stateStrings.append(smallText)
+			smallThumb = item.grandparentThumb
 		else:
 			title = shortTitle = item.title
 			largeText = "Watching a video"
 			thumb = item.thumb
+			smallText = ""
+			smallThumb = ""
 		if state != "playing" and mediaType != "track":
 			if config["display"]["useRemainingTime"]:
 				stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
 			else:
 				stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
 		stateText = " · ".join(stateString for stateString in stateStrings if stateString)
-		thumbUrl = ""
-		if thumb and config["display"]["posters"]["enabled"]:
-			thumbUrl = getCacheKey(thumb)
-			if not thumbUrl or not isinstance(thumbUrl, str):
-				self.logger.debug("Uploading poster to Imgur")
-				thumbUrl = uploadToImgur(self.server.url(thumb, True))
-				setCacheKey(thumb, thumbUrl)
+		thumbUrl = self.uploadToImgur(thumb) if thumb and config["display"]["posters"]["enabled"] else ""
+		smallThumbUrl = self.uploadToImgur(smallThumb) if smallThumb and config["display"]["posters"]["enabled"] else ""
 		activity: models.discord.Activity = {
+			"type": mediaTypeActivityTypeMap[mediaType],
 			"details": truncate(title, 128),
 			"assets": {
 				"large_text": largeText,
 				"large_image": thumbUrl or "logo",
-				"small_text": state.capitalize(),
-				"small_image": state,
+				"small_text": smallText or state.capitalize(),
+				"small_image": smallThumbUrl or state,
 			},
 		}
 		if stateText:
@@ -323,11 +340,11 @@ class PlexAlertListener(threading.Thread):
 			if buttons:
 				activity["buttons"] = buttons[:2]
 		if state == "playing":
-			currentTimestamp = int(time.time())
+			currentTimestamp = int(time.time() * 1000)
 			if config["display"]["useRemainingTime"]:
-				activity["timestamps"] = { "end": round(currentTimestamp + ((item.duration - viewOffset) / 1000)) }
+				activity["timestamps"] = { "end": round(currentTimestamp + (item.duration - viewOffset)) }
 			else:
-				activity["timestamps"] = { "start": round(currentTimestamp - (viewOffset / 1000)) }
+				activity["timestamps"] = { "start": round(currentTimestamp - viewOffset) }
 		if not self.discordIpcService.connected:
 			self.discordIpcService.connect()
 		if self.discordIpcService.connected:
