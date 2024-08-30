@@ -10,7 +10,7 @@ from plexapi.myplex import MyPlexAccount, PlexServer
 from typing import Optional
 from utils.cache import getCacheKey, setCacheKey
 from utils.logging import LoggerWithPrefix
-from utils.text import formatSeconds, truncate
+from utils.text import formatSeconds, truncate, stripNonAscii
 import models.config
 import models.discord
 import models.plex
@@ -186,6 +186,7 @@ class PlexAlertListener(threading.Thread):
 		if "whitelistedLibraries" in self.serverConfig and libraryName not in self.serverConfig["whitelistedLibraries"]:
 			self.logger.debug("Library '%s' is not whitelisted, ignoring", libraryName)
 			return
+		isIgnorableState = state == "stopped" or (state == "paused" and not config["display"]["paused"])
 		if self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey:
 			if self.updateTimeoutTimer:
 				self.updateTimeoutTimer.cancel()
@@ -198,11 +199,11 @@ class PlexAlertListener(threading.Thread):
 				return
 			else:
 				self.ignoreCount = 0
-				if state == "stopped":
+				if isIgnorableState:
 					self.disconnectRpc()
 					return
-		elif state == "stopped":
-			self.logger.debug("Received 'stopped' state alert from unknown session, ignoring")
+		elif isIgnorableState:
+			self.logger.debug("Received '%s' state alert from unknown session, ignoring", state)
 			return
 		if self.isServerOwner:
 			self.logger.debug("Searching sessions for session key %s", sessionKey)
@@ -229,13 +230,13 @@ class PlexAlertListener(threading.Thread):
 		self.updateTimeoutTimer.start()
 		self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
 		stateStrings: list[str] = []
-		if not config["display"]["hideTotalTime"] and item.duration and mediaType != "track":
+		if config["display"]["duration"] and item.duration and mediaType != "track":
 			stateStrings.append(formatSeconds(item.duration / 1000))
 		if mediaType == "movie":
 			title = shortTitle = item.title
-			if item.year:
+			if config["display"]["year"] and item.year:
 				title += f" ({item.year})"
-			if item.genres:
+			if config["display"]["genres"] and item.genres:
 				genres: list[Genre] = item.genres[:3]
 				stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
 			largeText = "Watching a movie"
@@ -244,9 +245,10 @@ class PlexAlertListener(threading.Thread):
 			smallThumb = ""
 		elif mediaType == "episode":
 			title = shortTitle = item.grandparentTitle
-			grandparent = self.server.fetchItem(item.grandparentRatingKey)
-			if grandparent.year:
-				title += f" ({grandparent.year})"
+			if config["display"]["year"]:
+				grandparent = self.server.fetchItem(item.grandparentRatingKey)
+				if grandparent.year:
+					title += f" ({grandparent.year})"
 			stateStrings.append(f"S{item.parentIndex:02}E{item.index:02}")
 			stateStrings.append(item.title)
 			largeText = "Watching a TV show"
@@ -263,13 +265,17 @@ class PlexAlertListener(threading.Thread):
 			smallThumb = ""
 		elif mediaType == "track":
 			title = shortTitle = item.title
-			largeText = item.parentTitle
-			parent = self.server.fetchItem(item.parentRatingKey)
-			if parent.year:
-				largeText += f" ({parent.year})"
-			thumb = item.thumb
 			smallText = item.originalTitle or item.grandparentTitle
-			stateStrings.append(smallText)
+			if config["display"]["album"]:
+				largeText = item.parentTitle
+				if config["display"]["year"]:
+					parent = self.server.fetchItem(item.parentRatingKey)
+					if parent.year:
+						largeText += f" ({parent.year})"
+				stateStrings.append(smallText)
+			else:
+				largeText = smallText
+			thumb = item.thumb
 			smallThumb = item.grandparentThumb
 		else:
 			title = shortTitle = item.title
@@ -278,7 +284,7 @@ class PlexAlertListener(threading.Thread):
 			smallText = ""
 			smallThumb = ""
 		if state != "playing" and mediaType != "track":
-			if config["display"]["useRemainingTime"]:
+			if config["display"]["remainingTime"]:
 				stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
 			else:
 				stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
@@ -287,7 +293,7 @@ class PlexAlertListener(threading.Thread):
 		smallThumbUrl = self.uploadToImgur(smallThumb) if smallThumb and config["display"]["posters"]["enabled"] else ""
 		activity: models.discord.Activity = {
 			"type": mediaTypeActivityTypeMap[mediaType],
-			"details": truncate(title, 128),
+			"details": truncate(title, 120),
 			"assets": {
 				"large_text": largeText,
 				"large_image": thumbUrl or "logo",
@@ -296,7 +302,7 @@ class PlexAlertListener(threading.Thread):
 			},
 		}
 		if stateText:
-			activity["state"] = truncate(stateText, 128)
+			activity["state"] = truncate(stateText, 120)
 		if config["display"]["buttons"]:
 			guidsRaw: list[Guid] = []
 			if mediaType in ["movie", "track"]:
@@ -308,7 +314,7 @@ class PlexAlertListener(threading.Thread):
 			for button in config["display"]["buttons"]:
 				if "mediaTypes" in button and mediaType not in button["mediaTypes"]:
 					continue
-				label = truncate(button["label"].format(title = shortTitle), 32)
+				label = truncate(button["label"].format(title = stripNonAscii(shortTitle)), 30)
 				if not button["url"].startswith("dynamic:"):
 					buttons.append({ "label": label, "url": button["url"] })
 					continue
@@ -341,7 +347,7 @@ class PlexAlertListener(threading.Thread):
 				activity["buttons"] = buttons[:2]
 		if state == "playing":
 			currentTimestamp = int(time.time() * 1000)
-			if config["display"]["useRemainingTime"]:
+			if config["display"]["remainingTime"]:
 				activity["timestamps"] = { "end": round(currentTimestamp + (item.duration - viewOffset)) }
 			else:
 				activity["timestamps"] = { "start": round(currentTimestamp - viewOffset) }

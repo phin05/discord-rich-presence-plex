@@ -1,4 +1,5 @@
 from typing import Optional
+import re
 
 def formatSeconds(seconds: int | float, joiner: Optional[str] = None) -> str:
 	seconds = round(seconds)
@@ -13,3 +14,6 @@ def truncate(text: str, maxLength: int) -> str:
 	if len(text) > maxLength:
 		text = text[:maxLength-3] + "..."
 	return text
+
+def stripNonAscii(text: str) -> str:
+	return re.sub(r"[^\x00-\x7f]", "", text)

@@ -15,8 +15,12 @@ class Button(TypedDict):
 	mediaTypes: list[str]
 
 class Display(TypedDict):
-	hideTotalTime: bool
-	useRemainingTime: bool
+	duration: bool
+	genres: bool
+	album: bool
+	year: bool
+	remainingTime: bool
+	paused: bool
 	posters: Posters
 	buttons: list[Button]
 

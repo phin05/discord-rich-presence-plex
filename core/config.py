@@ -13,8 +13,12 @@ config: models.config.Config = {
 		"writeToFile": False,
 	},
 	"display": {
-		"hideTotalTime": False,
-		"useRemainingTime": False,
+		"duration": True,
+		"genres": True,
+		"album": True,
+		"year": True,
+		"remainingTime": False,
+		"paused": False,
 		"posters": {
 			"enabled": False,
 			"imgurClientID": "",
@@ -57,6 +61,12 @@ def loadConfig() -> None:
 			logger.exception("Failed to parse the config file. A new one will be created.")
 		else:
 			copyDict(loadedConfig, config)
+		if "hideTotalTime" in config["display"]:
+			config["display"]["duration"] = not config["display"]["hideTotalTime"]
+			del config["display"]["hideTotalTime"]
+		if "useRemainingTime" in config["display"]:
+			config["display"]["remainingTime"] = config["display"]["useRemainingTime"]
+			del config["display"]["useRemainingTime"]
 	saveConfig()
 
 class YamlSafeDumper(yaml.SafeDumper):

@@ -86,6 +86,11 @@ def main() -> None:
 				userInput = input()
 				if userInput in ["exit", "quit"]:
 					raise KeyboardInterrupt
+				elif userInput == "reload-config":
+					loadConfig()
+					print("Config reloaded from file")
+				else:
+					print("Unrecognised command")
 		else:
 			while True:
 				time.sleep(3600)
