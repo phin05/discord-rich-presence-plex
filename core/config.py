@@ -49,9 +49,9 @@ def loadConfig() -> None:
 		try:
 			with open(configFilePath, "r", encoding = "UTF-8") as configFile:
 				if configFileType == "yaml":
-					loadedConfig = yaml.safe_load(configFile) or {}
+					loadedConfig = yaml.safe_load(configFile) or {} # pyright: ignore[reportUnknownVariableType]
 				else:
-					loadedConfig = json.load(configFile) or {}
+					loadedConfig = json.load(configFile) or {} # pyright: ignore[reportUnknownVariableType]
 		except:
 			os.rename(configFilePath, f"{configFilePathBase}-{time.time():.0f}.{configFileExtension}")
 			logger.exception("Failed to parse the config file. A new one will be created.")

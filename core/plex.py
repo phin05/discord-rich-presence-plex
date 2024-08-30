@@ -1,11 +1,10 @@
-# pyright: reportUnknownArgumentType=none,reportUnknownMemberType=none,reportUnknownVariableType=none
+# pyright: reportUnknownArgumentType=none,reportUnknownMemberType=none,reportUnknownVariableType=none,reportTypedDictNotRequiredAccess=none,reportOptionalMemberAccess=none,reportMissingTypeStubs=none
 
 from .config import config
 from .discord import DiscordIpcService
 from .imgur import uploadToImgur
 from config.constants import name, plexClientID
 from plexapi.alert import AlertListener
-from plexapi.base import PlexSession, PlexPartialObject
 from plexapi.media import Genre, Guid
 from plexapi.myplex import MyPlexAccount, PlexServer
 from typing import Optional
@@ -56,7 +55,7 @@ class PlexAlertListener(threading.Thread):
 		self.daemon = True
 		self.token = token
 		self.serverConfig = serverConfig
-		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}] ") # pyright: ignore[reportTypedDictNotRequiredAccess]
+		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}] ")
 		self.discordIpcService = DiscordIpcService(self.serverConfig.get("ipcPipeNumber"))
 		self.updateTimeoutTimer: Optional[threading.Timer] = None
 		self.connectionCheckTimer: Optional[threading.Timer] = None
@@ -94,7 +93,7 @@ class PlexAlertListener(threading.Thread):
 				if not self.server:
 					raise Exception("Server not found")
 			except Exception as e:
-				self.logger.error("Failed to connect to %s '%s': %s", self.productName, self.serverConfig["name"], e) # pyright: ignore[reportTypedDictNotRequiredAccess]
+				self.logger.error("Failed to connect to %s '%s': %s", self.productName, self.serverConfig["name"], e)
 				self.logger.error("Reconnecting in 10 seconds")
 				time.sleep(10)
 
@@ -154,11 +153,11 @@ class PlexAlertListener(threading.Thread):
 		self.logger.debug("Received alert: %s", stateNotification)
 		ratingKey = int(stateNotification["ratingKey"])
 		assert self.server
-		item: PlexPartialObject = self.server.fetchItem(ratingKey)
+		item = self.server.fetchItem(ratingKey)
 		if item.key and item.key.startswith("/livetv"):
 			mediaType = "live_episode"
 		else:
-			mediaType: str = item.type
+			mediaType = item.type
 		if mediaType not in validMediaTypes:
 			self.logger.debug("Unsupported media type '%s', ignoring", mediaType)
 			return
@@ -166,7 +165,7 @@ class PlexAlertListener(threading.Thread):
 		sessionKey = int(stateNotification["sessionKey"])
 		viewOffset = int(stateNotification["viewOffset"])
 		try:
-			libraryName: str = item.section().title
+			libraryName = item.section().title
 		except:
 			libraryName = "ERROR"
 		if "blacklistedLibraries" in self.serverConfig and libraryName in self.serverConfig["blacklistedLibraries"]:
@@ -195,7 +194,7 @@ class PlexAlertListener(threading.Thread):
 			return
 		if self.isServerOwner:
 			self.logger.debug("Searching sessions for session key %s", sessionKey)
-			sessions: list[PlexSession] = self.server.sessions()
+			sessions = self.server.sessions()
 			if len(sessions) < 1:
 				self.logger.debug("Empty session list, ignoring")
 				return
@@ -203,7 +202,7 @@ class PlexAlertListener(threading.Thread):
 				self.logger.debug("%s, Session Key: %s, Usernames: %s", session, session.sessionKey, session.usernames)
 				if session.sessionKey == sessionKey:
 					self.logger.debug("Session found")
-					sessionUsername: str = session.usernames[0]
+					sessionUsername = session.usernames[0]
 					if sessionUsername.lower() == self.listenForUser.lower():
 						self.logger.debug("Username '%s' matches '%s', continuing", sessionUsername, self.listenForUser)
 						break
@@ -268,7 +267,7 @@ class PlexAlertListener(threading.Thread):
 			thumbUrl = getCacheKey(thumb)
 			if not thumbUrl or not isinstance(thumbUrl, str):
 				self.logger.debug("Uploading poster to Imgur")
-				thumbUrl = uploadToImgur(self.server.url(thumb, True), config["display"]["posters"]["maxSize"])
+				thumbUrl = uploadToImgur(self.server.url(thumb, True))
 				setCacheKey(thumb, thumbUrl)
 		activity: models.discord.Activity = {
 			"details": truncate(title, 128),
@@ -326,9 +325,9 @@ class PlexAlertListener(threading.Thread):
 		if state == "playing":
 			currentTimestamp = int(time.time())
 			if config["display"]["useRemainingTime"]:
-				activity["timestamps"] = {"end": round(currentTimestamp + ((item.duration - viewOffset) / 1000))}
+				activity["timestamps"] = { "end": round(currentTimestamp + ((item.duration - viewOffset) / 1000)) }
 			else:
-				activity["timestamps"] = {"start": round(currentTimestamp - (viewOffset / 1000))}
+				activity["timestamps"] = { "start": round(currentTimestamp - (viewOffset / 1000)) }
 		if not self.discordIpcService.connected:
 			self.discordIpcService.connect()
 		if self.discordIpcService.connected:

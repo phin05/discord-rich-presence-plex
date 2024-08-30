@@ -13,7 +13,7 @@ if isInContainer:
 			uid, gid = statResult.st_uid, statResult.st_gid
 		else:
 			if noRuntimeDirChown:
-				logger.warning(f"DRPP_NO_RUNTIME_DIR_CHOWN is set to true. Manually ensure appropriate ownership of {runtimeDirectory}")
+				logger.warning(f"Environment variable DRPP_NO_RUNTIME_DIR_CHOWN is set to true. Manually ensure appropriate ownership of {runtimeDirectory}")
 			else:
 				os.system(f"chmod 700 {runtimeDirectory}")
 				os.system(f"chown -R {uid}:{gid} {runtimeDirectory}")
@@ -21,7 +21,7 @@ if isInContainer:
 		os.setgid(gid) # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
 		os.setuid(uid) # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
 	else:
-		logger.warning(f"Not running as the superuser. Manually ensure appropriate ownership of mounted contents")
+		logger.warning("Not running as the superuser. Manually ensure appropriate ownership of mounted contents")
 
 from config.constants import noPipInstall
 import sys
@@ -43,7 +43,7 @@ if not noPipInstall:
 	except Exception as e:
 		logger.exception("An unexpected error occured during automatic installation of dependencies. Install them manually by running the following command: python -m pip install -U -r requirements.txt")
 
-from config.constants import dataDirectoryPath, logFilePath, name, version, isInteractive
+from config.constants import dataDirectoryPath, logFilePath, name, version, isInteractive, plexServerNameInput
 from core.config import config, loadConfig, saveConfig
 from core.discord import DiscordIpcService
 from core.plex import PlexAlertListener, initiateAuth, getAuthToken
@@ -72,7 +72,6 @@ def init() -> None:
 	loadCache()
 
 def main() -> None:
-	init()
 	if not config["users"]:
 		logger.info("No users found in the config file")
 		user = authNewUser()
@@ -104,9 +103,15 @@ def authNewUser() -> Optional[models.config.User]:
 		authToken = getAuthToken(id, code)
 		if authToken:
 			logger.info("Authentication successful")
-			serverName = os.environ.get("DRPP_PLEX_SERVER_NAME_INPUT")
+			serverName = plexServerNameInput
 			if not serverName:
-				serverName = input("Enter the name of the Plex Media Server you wish to connect to: ") if isInteractive else "ServerName"
+				if isInteractive:
+					serverName = input("Enter the name of the Plex Media Server to connect to: ")
+				else:
+					serverName = "ServerName"
+					logger.warning("Environment variable DRPP_PLEX_SERVER_NAME_INPUT is not set and the environment is non-interactive")
+					logger.warning("\"ServerName\" will be used as a placeholder for the name of the Plex Media Server to connect to")
+					logger.warning("Change this by editing the config file and restarting the script")
 			return { "token": authToken, "servers": [{ "name": serverName }] }
 		time.sleep(5)
 	else:
@@ -134,6 +139,7 @@ if __name__ == "__main__":
 	mode = sys.argv[1] if len(sys.argv) > 1 else ""
 	try:
 		if not mode:
+			init()
 			main()
 		elif mode == "test-ipc":
 			testIpc(int(sys.argv[2]) if len(sys.argv) > 2 else -1)

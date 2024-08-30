@@ -2,7 +2,7 @@ from typing import Optional
 
 def formatSeconds(seconds: int | float, joiner: Optional[str] = None) -> str:
 	seconds = round(seconds)
-	timeValues = {"h": seconds // 3600, "m": seconds // 60 % 60, "s": seconds % 60}
+	timeValues = { "h": seconds // 3600, "m": seconds // 60 % 60, "s": seconds % 60 }
 	if not joiner:
 		return "".join(str(v) + k for k, v in timeValues.items() if v > 0)
 	if timeValues["h"] == 0:

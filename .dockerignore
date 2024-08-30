@@ -3,7 +3,10 @@
 .github
 .gitignore
 CONTRIBUTING.md
-data
 Dockerfile
+lint.bat
 pyrightconfig.json
+
+__pycache__
 assets/showcase.psd
+data

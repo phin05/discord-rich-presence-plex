@@ -18,7 +18,7 @@ jobs:
       - name: Create release ZIP file
         run: |-
           mv .github/release-notes ../
-          rm -rf .git .github .gitignore .dockerignore Dockerfile CONTRIBUTING.md pyrightconfig.json
+          xargs rm -rf < .dockerignore
           mkdir ${{ github.event.repository.name }}
           mv * ${{ github.event.repository.name }} || true
           zip -r $RELEASE_ZIP_FILENAME ${{ github.event.repository.name }}

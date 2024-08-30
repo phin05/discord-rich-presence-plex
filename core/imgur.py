@@ -6,12 +6,13 @@ import io
 import models.imgur
 import requests
 
-def uploadToImgur(url: str, maxSize: int = 0) -> Optional[str]:
+def uploadToImgur(url: str) -> Optional[str]:
 	try:
 		originalImageBytesIO = io.BytesIO(requests.get(url).content)
 		originalImage = Image.open(originalImageBytesIO)
 		newImage = Image.new("RGB", originalImage.size)
-		newImage.putdata(originalImage.getdata()) # pyright: ignore[reportUnknownMemberType,reportUnknownArgumentType]
+		newImage.putdata(originalImage.getdata()) # pyright: ignore[reportArgumentType]
+		maxSize = config["display"]["posters"]["maxSize"]
 		if maxSize:
 			newImage.thumbnail((maxSize, maxSize))
 		newImageBytesIO = io.BytesIO()
