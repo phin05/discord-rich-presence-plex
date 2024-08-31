@@ -37,11 +37,12 @@ The config file is stored in a directory named `data`.
   * `writeToFile` (boolean, default: `false`) - Writes console output to a `console.log` file in the `data` directory.
 * `display` - Display settings for Rich Presence
   * `duration` (boolean, default: `true`) - Displays the total duration.
-  * `genres` (boolean, default: `true`) - Displays the genre (applicable to movies only).
-  * `album` (boolean, default: `true`) - Displays the album name (applicable to music only).
+  * `genres` (boolean, default: `true`) - Displays the genre. Applicable to movies only.
+  * `album` (boolean, default: `true`) - Displays the album name. Applicable to music only.
   * `year` (boolean, default: `true`) - Displays the release year.
-  * `remainingTime` (boolean, default: `false`) - Displays remaining time instead of elapsed time.
-  * `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused.
+  * `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only. Posters get cropped to a square if this is enabled (Discord bug/limitation).
+  * `remainingTime` (boolean, default: `false`) - Displays remaining time instead of elapsed time. This is currently broken due to a Discord bug/limitation.
+  * `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Timestamp while paused is currently broken due to a Discord bug/limitation.
   * `posters`
     * `enabled` (boolean, default: `false`) - Displays media posters (including album art and artist images). Requires `imgurClientID`.
     * `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
@@ -67,7 +68,7 @@ The config file is stored in a directory named `data`.
 
 ### Buttons
 
-Discord can display up to 2 buttons in your Rich Presence. Buttons are visible to only other users and not yourself.
+Discord can display up to 2 buttons in your Rich Presence. Buttons are visible to only other users and not yourself (Discord bug/limitation).
 
 #### Dynamic Button Labels
 
