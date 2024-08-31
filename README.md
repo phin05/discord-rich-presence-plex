@@ -2,7 +2,7 @@
 
 ![Showcase](assets/showcase.png)
 
-Discord Rich Presence for Plex is a Python script which displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/how-to).
+Discord Rich Presence for Plex is a Python script which displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/overview).
 
 [![Latest Release](https://img.shields.io/github/v/release/phin05/discord-rich-presence-plex?label=Latest%20Release)](https://github.com/phin05/discord-rich-presence-plex/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/phin05/discord-rich-presence-plex/release.yml?label=Build&logo=github)](https://github.com/phin05/discord-rich-presence-plex/actions/workflows/release.yml)
@@ -33,13 +33,17 @@ The config file is stored in a directory named `data`.
 ### Reference
 
 * `logging`
-  * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console if enabled.
-  * `writeToFile` (boolean, default: `false`) - Writes console output to a `console.log` file in the `data` directory if enabled.
+  * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console.
+  * `writeToFile` (boolean, default: `false`) - Writes console output to a `console.log` file in the `data` directory.
 * `display` - Display settings for Rich Presence
-  * `hideTotalTime` (boolean, default: `false`) - Hides the total duration of the media if enabled.
-  * `useRemainingTime` (boolean, default: `false`) - Displays the media's remaining time instead of elapsed time if enabled.
+  * `duration` (boolean, default: `true`) - Displays the total duration.
+  * `genres` (boolean, default: `true`) - Displays the genre (applicable to movies only).
+  * `album` (boolean, default: `true`) - Displays the album name (applicable to music only).
+  * `year` (boolean, default: `true`) - Displays the release year.
+  * `remainingTime` (boolean, default: `false`) - Displays remaining time instead of elapsed time.
+  * `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused.
   * `posters`
-    * `enabled` (boolean, default: `false`) - Displays media posters if enabled. Requires `imgurClientID`.
+    * `enabled` (boolean, default: `false`) - Displays media posters (including album art and artist images). Requires `imgurClientID`.
     * `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
     * `maxSize` (int, default: `256`) - Maximum width and maximum height to use while downscaling posters before uploading them.
   * `buttons` (list) - [Information](#buttons)
@@ -49,7 +53,7 @@ The config file is stored in a directory named `data`.
 * `users` (list)
   * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   * `servers` (list)
-    * `name` (string) - Name of the Plex Media Server you wish to connect to.
+    * `name` (string) - Name of the Plex Media Server to connect to.
     * `listenForUser` (string, optional) - The script reacts to alerts originating only from this username. Defaults to the parent user's username if not set.
     * `blacklistedLibraries` (list, optional) - Alerts originating from libraries in this list are ignored.
     * `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in this list are ignored.
@@ -58,14 +62,12 @@ The config file is stored in a directory named `data`.
 ### Obtaining an Imgur client ID
 
 1. Go to Imgur's [application registration page](https://api.imgur.com/oauth2/addclient).
-2. Enter any name for the application and pick OAuth2 without a callback URL as the authorisation type.
+2. Enter any name for the application and pick "OAuth 2 authorization without a callback URL" as the authorisation type.
 3. Submit the form to obtain your application's client ID.
 
 ### Buttons
 
-Discord can display up to 2 buttons in your Rich Presence.
-
-Due to a strange Discord bug, these buttons may be unresponsive or exhibit strange behaviour towards your own clicks, but other users are able to click on them to open their corresponding URLs.
+Discord can display up to 2 buttons in your Rich Presence. Buttons are visible to only other users and not yourself.
 
 #### Dynamic Button Labels
 
@@ -89,8 +91,12 @@ logging:
   debug: true
   writeToFile: false
 display:
-  hideTotalTime: false
-  useRemainingTime: false
+  duration: true
+  genres: true
+  album: true
+  year: true
+  remainingTime: false
+  paused: false
   posters:
     enabled: true
     imgurClientID: 9e9sf637S8bRp4z
@@ -113,7 +119,7 @@ users:
 
 ## Configuration - Discord
 
-The "Display current activity as a status message" setting must be enabled in Discord Settings → Activity Settings → Activity Privacy.
+The "Share your detected activities with others" setting must be enabled in Discord Settings → Activity Settings → Activity Privacy.
 
 ![Discord Activity Privacy](assets/discord-activity-privacy.png)
 
@@ -154,7 +160,7 @@ For example, if the environment variable `XDG_RUNTIME_DIR` is set to `/run/user/
 
 The environment variables `DRPP_UID` and `DRPP_GID` can be used to specify the UID and GID of the user Discord is running as. You can determine these by running `id` in your terminal as such user.
 
-If both of the above environment variables are set, the script will change the ownership of `/run/app` and its contents to be in line with the specified UID and GID to prevent issues caused due to insufficient permissions. To skip this ownership change, set the environment variable `DRPP_NO_RUNTIME_DIR_CHOWN` to `true`. Skipping this is necessary only in cases where the runtime directory isn't dedicated exclusively to a single user.
+If both of the above environment variables are set, the script will change the ownership of `/run/app` and its contents to be in line with the specified UID and GID to prevent issues caused due to insufficient permissions. To skip this ownership change, set the environment variable `DRPP_NO_RUNTIME_DIR_CHOWN` to `true`. Skipping this is necessary only in cases where the runtime directory isn't exclusively dedicated for a single user.
 
 The ownership of `/app` and its contents will be changed as well. If both of the above environment variables are set, they will determine the ownership. Otherwise, the existing ownership information of `/run/app` will be used.
 
@@ -193,7 +199,7 @@ services:
     image: kasmweb/discord:1.14.0
     restart: unless-stopped
     ports:
-      - 6901:6901
+      - 127.0.0.1:6901:6901
     shm_size: 512m
     environment:
       VNC_PW: password
