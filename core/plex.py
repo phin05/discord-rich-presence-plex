@@ -54,6 +54,7 @@ class PlexAlertListener(threading.Thread):
 	productName = "Plex Media Server"
 	updateTimeoutTimerInterval = 30
 	connectionCheckTimerInterval = 60
+	disconnectTimerInterval = 3
 	maximumIgnores = 2
 
 	def __init__(self, token: str, serverConfig: models.config.Server):
@@ -65,6 +66,7 @@ class PlexAlertListener(threading.Thread):
 		self.discordIpcService = DiscordIpcService(self.serverConfig.get("ipcPipeNumber"))
 		self.updateTimeoutTimer: Optional[threading.Timer] = None
 		self.connectionCheckTimer: Optional[threading.Timer] = None
+		self.disconnectTimer: Optional[threading.Timer] = None
 		self.account: Optional[MyPlexAccount] = None
 		self.server: Optional[PlexServer] = None
 		self.alertListener: Optional[AlertListener] = None
@@ -200,7 +202,10 @@ class PlexAlertListener(threading.Thread):
 			else:
 				self.ignoreCount = 0
 				if isIgnorableState:
-					self.disconnectRpc()
+					if self.disconnectTimer:
+						self.disconnectTimer.cancel()
+					self.disconnectTimer = threading.Timer(self.disconnectTimerInterval, self.disconnectRpc)
+					self.disconnectTimer.start()
 					return
 		elif isIgnorableState:
 			self.logger.debug("Received '%s' state alert from unknown session, ignoring", state)
@@ -228,6 +233,9 @@ class PlexAlertListener(threading.Thread):
 			self.updateTimeoutTimer.cancel()
 		self.updateTimeoutTimer = threading.Timer(self.updateTimeoutTimerInterval, self.updateTimeout)
 		self.updateTimeoutTimer.start()
+		if self.disconnectTimer:
+			self.disconnectTimer.cancel()
+			self.disconnectTimer = None
 		self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
 		stateStrings: list[str] = []
 		if config["display"]["duration"] and item.duration and mediaType != "track":
