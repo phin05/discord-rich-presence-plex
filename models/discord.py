@@ -5,7 +5,7 @@ class ActivityType(IntEnum):
 	LISTENING = 2
 	WATCHING = 3
 
-class ActivityAssets(TypedDict):
+class ActivityAssets(TypedDict, total = False):
 	large_text: str
 	large_image: str
 	small_text: str

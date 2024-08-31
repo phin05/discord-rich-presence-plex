@@ -19,6 +19,7 @@ class Display(TypedDict):
 	genres: bool
 	album: bool
 	year: bool
+	statusIcon: bool
 	remainingTime: bool
 	paused: bool
 	posters: Posters

@@ -232,6 +232,7 @@ class PlexAlertListener(threading.Thread):
 		stateStrings: list[str] = []
 		if config["display"]["duration"] and item.duration and mediaType != "track":
 			stateStrings.append(formatSeconds(item.duration / 1000))
+		largeText, thumb, smallText, smallThumb = "", "", "", ""
 		if mediaType == "movie":
 			title = shortTitle = item.title
 			if config["display"]["year"] and item.year:
@@ -239,10 +240,7 @@ class PlexAlertListener(threading.Thread):
 			if config["display"]["genres"] and item.genres:
 				genres: list[Genre] = item.genres[:3]
 				stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
-			largeText = "Watching a movie"
 			thumb = item.thumb
-			smallText = ""
-			smallThumb = ""
 		elif mediaType == "episode":
 			title = shortTitle = item.grandparentTitle
 			if config["display"]["year"]:
@@ -251,56 +249,54 @@ class PlexAlertListener(threading.Thread):
 					title += f" ({grandparent.year})"
 			stateStrings.append(f"S{item.parentIndex:02}E{item.index:02}")
 			stateStrings.append(item.title)
-			largeText = "Watching a TV show"
 			thumb = item.grandparentThumb
-			smallText = ""
-			smallThumb = ""
 		elif mediaType == "live_episode":
 			title = shortTitle = item.grandparentTitle
 			if item.title != item.grandparentTitle:
 				stateStrings.append(item.title)
-			largeText = "Watching live TV"
 			thumb = item.grandparentThumb
-			smallText = ""
-			smallThumb = ""
 		elif mediaType == "track":
 			title = shortTitle = item.title
-			smallText = item.originalTitle or item.grandparentTitle
 			if config["display"]["album"]:
 				largeText = item.parentTitle
 				if config["display"]["year"]:
 					parent = self.server.fetchItem(item.parentRatingKey)
 					if parent.year:
 						largeText += f" ({parent.year})"
-				stateStrings.append(smallText)
-			else:
-				largeText = smallText
 			thumb = item.thumb
+			smallText = item.originalTitle or item.grandparentTitle
+			stateStrings.append(smallText)
 			smallThumb = item.grandparentThumb
 		else:
 			title = shortTitle = item.title
-			largeText = "Watching a video"
 			thumb = item.thumb
-			smallText = ""
-			smallThumb = ""
 		if state != "playing" and mediaType != "track":
 			if config["display"]["remainingTime"]:
 				stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
 			else:
 				stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
+			if not config["display"]["statusIcon"]:
+				stateStrings.append(state.capitalize())
 		stateText = " · ".join(stateString for stateString in stateStrings if stateString)
 		thumbUrl = self.uploadToImgur(thumb) if thumb and config["display"]["posters"]["enabled"] else ""
 		smallThumbUrl = self.uploadToImgur(smallThumb) if smallThumb and config["display"]["posters"]["enabled"] else ""
 		activity: models.discord.Activity = {
 			"type": mediaTypeActivityTypeMap[mediaType],
 			"details": truncate(title, 120),
-			"assets": {
-				"large_text": largeText,
-				"large_image": thumbUrl or "logo",
-				"small_text": smallText or state.capitalize(),
-				"small_image": smallThumbUrl or state,
-			},
 		}
+		if config["display"]["statusIcon"]:
+			smallText = smallText or state.capitalize()
+			smallThumbUrl = smallThumbUrl or state
+		if largeText or thumbUrl or smallText or smallThumbUrl:
+			activity["assets"] = {}
+			if largeText:
+				activity["assets"]["large_text"] = largeText
+			if thumbUrl:
+				activity["assets"]["large_image"] = thumbUrl
+			if smallText:
+				activity["assets"]["small_text"] = smallText
+			if smallThumbUrl:
+				activity["assets"]["small_image"] = smallThumbUrl
 		if stateText:
 			activity["state"] = truncate(stateText, 120)
 		if config["display"]["buttons"]:

@@ -17,6 +17,7 @@ config: models.config.Config = {
 		"genres": True,
 		"album": True,
 		"year": True,
+		"statusIcon": False,
 		"remainingTime": False,
 		"paused": False,
 		"posters": {
