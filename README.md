@@ -42,6 +42,7 @@ The config file is stored in a directory named `data`.
   * `year` (boolean, default: `true`) - Displays the release year.
   * `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only. Posters get cropped to a square if this is enabled (Discord bug/limitation).
   * `remainingTime` (boolean, default: `false`) - Displays remaining time instead of elapsed time. This is currently broken due to a Discord bug/limitation.
+  * `progressBar` (boolean, default: `false`) - Whether or not to use Discord's new progress bar. `remainingTime` is ignored if the progress bar is enabled.
   * `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Timestamp while paused is currently broken due to a Discord bug/limitation.
   * `posters`
     * `enabled` (boolean, default: `false`) - Displays media posters (including album art and artist images). Requires `imgurClientID`.

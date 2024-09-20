@@ -19,6 +19,7 @@ config: models.config.Config = {
 		"year": True,
 		"statusIcon": False,
 		"remainingTime": False,
+		"progressBar": False,
 		"paused": False,
 		"posters": {
 			"enabled": False,

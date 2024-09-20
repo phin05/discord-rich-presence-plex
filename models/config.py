@@ -21,6 +21,7 @@ class Display(TypedDict):
 	year: bool
 	statusIcon: bool
 	remainingTime: bool
+	progressBar: bool
 	paused: bool
 	posters: Posters
 	buttons: list[Button]

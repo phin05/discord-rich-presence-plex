@@ -351,7 +351,12 @@ class PlexAlertListener(threading.Thread):
 				activity["buttons"] = buttons[:2]
 		if state == "playing":
 			currentTimestamp = int(time.time() * 1000)
-			if config["display"]["remainingTime"]:
+			if config["display"]["progressBar"]:
+				activity["timestamps"] = {
+					"start": round(currentTimestamp - viewOffset),
+					"end": round(currentTimestamp + (item.duration - viewOffset))
+				}
+			elif config["display"]["remainingTime"]:
 				activity["timestamps"] = { "end": round(currentTimestamp + (item.duration - viewOffset)) }
 			else:
 				activity["timestamps"] = { "start": round(currentTimestamp - viewOffset) }
