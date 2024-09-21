@@ -266,7 +266,7 @@ class PlexAlertListener(threading.Thread):
 		elif mediaType == "track":
 			title = shortTitle = item.title
 			if config["display"]["album"]:
-				largeText = item.parentTitle
+				largeText = truncate(item.parentTitle, 121)
 				if config["display"]["year"]:
 					parent = self.server.fetchItem(item.parentRatingKey)
 					if parent.year:
@@ -298,7 +298,7 @@ class PlexAlertListener(threading.Thread):
 		if largeText or thumbUrl or smallText or smallThumbUrl:
 			activity["assets"] = {}
 			if largeText:
-				activity["assets"]["large_text"] = largeText
+				activity["assets"]["large_text"] = truncate(largeText, 128)
 			if thumbUrl:
 				activity["assets"]["large_image"] = thumbUrl
 			if smallText:
