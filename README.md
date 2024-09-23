@@ -41,8 +41,8 @@ The config file is stored in a directory named `data`.
   * `album` (boolean, default: `true`) - Displays the album name. Applicable to music only.
   * `year` (boolean, default: `true`) - Displays the release year.
   * `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only. Posters get cropped to a square if this is enabled (Discord bug/limitation).
-  * `remainingTime` (boolean, default: `false`) - Displays remaining time instead of elapsed time. This is currently broken due to a Discord bug/limitation.
-  * `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Timestamp while paused is currently broken due to a Discord bug/limitation.
+  * `progressMode` (string, default: `bar`) - Progress/timestamp display mode. Valid modes are `off`, `elapsed` (displays elapsed time), `remaining` (displays remaining time) and `bar` (displays a progress bar). The `off` and `remaining` modes are currently broken due to a Discord bug/limitation.
+  * `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.
   * `posters`
     * `enabled` (boolean, default: `false`) - Displays media posters (including album art and artist images). Requires `imgurClientID`.
     * `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
@@ -96,7 +96,8 @@ display:
   genres: true
   album: true
   year: true
-  remainingTime: false
+  statusIcon: false
+  progressMode: bar
   paused: false
   posters:
     enabled: true
@@ -120,7 +121,7 @@ users:
 
 ## Configuration - Discord
 
-The "Share your detected activities with others" setting must be enabled in Discord Settings → Activity Settings → Activity Privacy.
+The "Share your detected activities with others" setting must be enabled under Discord Settings → Activity Settings → Activity Privacy.
 
 ![Discord Activity Privacy](assets/discord-activity-privacy.png)
 
