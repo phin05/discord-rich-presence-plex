@@ -270,7 +270,7 @@ class PlexAlertListener(threading.Thread):
 				if config["display"]["year"]:
 					parent = self.server.fetchItem(item.parentRatingKey)
 					if parent.year:
-						largeText += f" ({parent.year})"
+						largeText = f"{truncate(largeText, 110)} ({parent.year})"
 			thumb = item.thumb
 			smallText = item.originalTitle or item.grandparentTitle
 			stateStrings.append(smallText)
@@ -298,11 +298,11 @@ class PlexAlertListener(threading.Thread):
 		if largeText or thumbUrl or smallText or smallThumbUrl:
 			activity["assets"] = {}
 			if largeText:
-				activity["assets"]["large_text"] = largeText
+				activity["assets"]["large_text"] = truncate(largeText, 120)
 			if thumbUrl:
 				activity["assets"]["large_image"] = thumbUrl
 			if smallText:
-				activity["assets"]["small_text"] = smallText
+				activity["assets"]["small_text"] = truncate(smallText, 120)
 			if smallThumbUrl:
 				activity["assets"]["small_image"] = smallThumbUrl
 		if stateText:
