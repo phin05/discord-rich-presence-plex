@@ -9,7 +9,7 @@ import requests
 def uploadToImgur(url: str) -> Optional[str]:
 	try:
 		originalImageBytesIO = io.BytesIO(requests.get(url).content)
-		originalImage = Image.open(originalImageBytesIO)
+		originalImage = Image.open(originalImageBytesIO).convert("RGB")
 		newImage = Image.new("RGB", originalImage.size)
 		newImage.putdata(originalImage.getdata()) # pyright: ignore[reportArgumentType]
 		maxSize = config["display"]["posters"]["maxSize"]
