@@ -279,7 +279,7 @@ class PlexAlertListener(threading.Thread):
 			title = shortTitle = item.title
 			thumb = item.thumb
 		if state != "playing" and mediaType != "track":
-			if config["display"]["remainingTime"]:
+			if config["display"]["progressMode"] == "remaining":
 				stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
 			else:
 				stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
@@ -351,10 +351,15 @@ class PlexAlertListener(threading.Thread):
 				activity["buttons"] = buttons[:2]
 		if state == "playing":
 			currentTimestamp = int(time.time() * 1000)
-			if config["display"]["remainingTime"]:
-				activity["timestamps"] = { "end": round(currentTimestamp + (item.duration - viewOffset)) }
-			else:
-				activity["timestamps"] = { "start": round(currentTimestamp - viewOffset) }
+			match config["display"]["progressMode"]:
+				case "elapsed":
+					activity["timestamps"] = { "start": round(currentTimestamp - viewOffset) }
+				case "remaining":
+					activity["timestamps"] = { "end": round(currentTimestamp + (item.duration - viewOffset)) }
+				case "bar":
+					activity["timestamps"] = { "start": round(currentTimestamp - viewOffset), "end": round(currentTimestamp + (item.duration - viewOffset)) }
+				case _:
+					pass
 		if not self.discordIpcService.connected:
 			self.discordIpcService.connect()
 		if self.discordIpcService.connected:

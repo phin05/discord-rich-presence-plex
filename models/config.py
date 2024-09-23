@@ -20,7 +20,7 @@ class Display(TypedDict):
 	album: bool
 	year: bool
 	statusIcon: bool
-	remainingTime: bool
+	progressMode: str
 	paused: bool
 	posters: Posters
 	buttons: list[Button]

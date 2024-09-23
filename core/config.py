@@ -18,7 +18,7 @@ config: models.config.Config = {
 		"album": True,
 		"year": True,
 		"statusIcon": False,
-		"remainingTime": False,
+		"progressMode": "bar",
 		"paused": False,
 		"posters": {
 			"enabled": False,
@@ -66,8 +66,11 @@ def loadConfig() -> None:
 			config["display"]["duration"] = not config["display"]["hideTotalTime"]
 			del config["display"]["hideTotalTime"]
 		if "useRemainingTime" in config["display"]:
-			config["display"]["remainingTime"] = config["display"]["useRemainingTime"]
 			del config["display"]["useRemainingTime"]
+		if "remainingTime" in config["display"]:
+			del config["display"]["remainingTime"]
+		if config["display"]["progressMode"] not in ["off", "elapsed", "remaining", "bar"]:
+			config["display"]["progressMode"] = "bar"
 	saveConfig()
 
 class YamlSafeDumper(yaml.SafeDumper):
