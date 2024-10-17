@@ -36,9 +36,12 @@ The config file is stored in a directory named `data`.
   - `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console.
   - `writeToFile` (boolean, default: `false`) - Writes console output to a `console.log` file in the `data` directory.
 - `display` - Display settings for Rich Presence
-  - `duration` (boolean, default: `true`) - Displays the total duration.
+  - `duration` (boolean, default: `true`) - Displays the total duration. Applicable to movies and TV shows only.
   - `genres` (boolean, default: `true`) - Displays the genre. Applicable to movies only.
   - `album` (boolean, default: `true`) - Displays the album name. Applicable to music only.
+  - `albumImage` (boolean, default: `true`) - Displays the album image. Applicable to music only.
+  - `artist` (boolean, default: `true`) - Displays the artist name. Applicable to music only.
+  - `artistImage` (boolean, default: `true`) - Displays the artist image. Applicable to music only.
   - `year` (boolean, default: `true`) - Displays the release year.
   - `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only. Posters get cropped to a square if this is enabled (Discord bug/limitation).
   - `progressMode` (string, default: `bar`) - Progress/timestamp display mode. Valid modes are `off`, `elapsed` (displays elapsed time), `remaining` (displays remaining time) and `bar` (displays a progress bar). The `off` and `remaining` modes are currently broken due to a Discord bug/limitation.

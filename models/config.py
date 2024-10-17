@@ -18,6 +18,9 @@ class Display(TypedDict):
 	duration: bool
 	genres: bool
 	album: bool
+	albumImage: bool
+	artist: bool
+	artistImage: bool
 	year: bool
 	statusIcon: bool
 	progressMode: str

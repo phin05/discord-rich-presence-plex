@@ -271,10 +271,13 @@ class PlexAlertListener(threading.Thread):
 					parent = self.server.fetchItem(item.parentRatingKey)
 					if parent.year:
 						largeText = f"{truncate(largeText, 110)} ({parent.year})"
-			thumb = item.thumb
-			smallText = item.originalTitle or item.grandparentTitle
-			stateStrings.append(smallText)
-			smallThumb = item.grandparentThumb
+			if config["display"]["albumImage"]:
+				thumb = item.thumb
+			if config["display"]["artist"]:
+				stateStrings.append(item.originalTitle or item.grandparentTitle)
+			if config["display"]["artistImage"]:
+				smallText = item.grandparentTitle or item.originalTitle
+				smallThumb = item.grandparentThumb
 		else:
 			title = shortTitle = item.title
 			thumb = item.thumb
