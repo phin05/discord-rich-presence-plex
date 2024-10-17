@@ -4,7 +4,7 @@
 .gitignore
 CONTRIBUTING.md
 Dockerfile
-lint.bat
+Makefile
 pyrightconfig.json
 
 __pycache__

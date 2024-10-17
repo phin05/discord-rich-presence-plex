@@ -27,38 +27,38 @@ The config file is stored in a directory named `data`.
 
 ### Supported Formats
 
-* YAML - `config.yaml` / `config.yml`
-* JSON - `config.json`
+- YAML - `config.yaml` / `config.yml`
+- JSON - `config.json`
 
 ### Reference
 
-* `logging`
-  * `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console.
-  * `writeToFile` (boolean, default: `false`) - Writes console output to a `console.log` file in the `data` directory.
-* `display` - Display settings for Rich Presence
-  * `duration` (boolean, default: `true`) - Displays the total duration.
-  * `genres` (boolean, default: `true`) - Displays the genre. Applicable to movies only.
-  * `album` (boolean, default: `true`) - Displays the album name. Applicable to music only.
-  * `year` (boolean, default: `true`) - Displays the release year.
-  * `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only. Posters get cropped to a square if this is enabled (Discord bug/limitation).
-  * `progressMode` (string, default: `bar`) - Progress/timestamp display mode. Valid modes are `off`, `elapsed` (displays elapsed time), `remaining` (displays remaining time) and `bar` (displays a progress bar). The `off` and `remaining` modes are currently broken due to a Discord bug/limitation.
-  * `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.
-  * `posters`
-    * `enabled` (boolean, default: `false`) - Displays media posters (including album art and artist images). Requires `imgurClientID`.
-    * `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
-    * `maxSize` (int, default: `256`) - Maximum width and maximum height to use while downscaling posters before uploading them.
-  * `buttons` (list) - [Information](#buttons)
-    * `label` (string) - The label to be displayed on the button.
-    * `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).
-    * `mediaTypes` (list, optional) - If set, the button is displayed only for the specified media types. Valid media types are `movie`, `episode`, `live_episode`, `track` and `clip`.
-* `users` (list)
-  * `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
-  * `servers` (list)
-    * `name` (string) - Name of the Plex Media Server to connect to.
-    * `listenForUser` (string, optional) - The script reacts to alerts originating only from this username. Defaults to the parent user's username if not set.
-    * `blacklistedLibraries` (list, optional) - Alerts originating from libraries in this list are ignored.
-    * `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in this list are ignored.
-    * `ipcPipeNumber` (int, optional) - A number in the range of `0-9` to specify the Discord IPC pipe to connect to. Defaults to `-1`, which specifies that the first existing pipe in the range should be used. When a Discord client is launched, it binds to the first unbound pipe number, which is typically `0`.
+- `logging`
+  - `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console.
+  - `writeToFile` (boolean, default: `false`) - Writes console output to a `console.log` file in the `data` directory.
+- `display` - Display settings for Rich Presence
+  - `duration` (boolean, default: `true`) - Displays the total duration.
+  - `genres` (boolean, default: `true`) - Displays the genre. Applicable to movies only.
+  - `album` (boolean, default: `true`) - Displays the album name. Applicable to music only.
+  - `year` (boolean, default: `true`) - Displays the release year.
+  - `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only. Posters get cropped to a square if this is enabled (Discord bug/limitation).
+  - `progressMode` (string, default: `bar`) - Progress/timestamp display mode. Valid modes are `off`, `elapsed` (displays elapsed time), `remaining` (displays remaining time) and `bar` (displays a progress bar). The `off` and `remaining` modes are currently broken due to a Discord bug/limitation.
+  - `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.
+  - `posters`
+    - `enabled` (boolean, default: `false`) - Displays media posters (including album art and artist images). Requires `imgurClientID`.
+    - `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
+    - `maxSize` (int, default: `256`) - Maximum width and maximum height to use while downscaling posters before uploading them.
+  - `buttons` (list) - [Information](#buttons)
+    - `label` (string) - The label to be displayed on the button.
+    - `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).
+    - `mediaTypes` (list, optional) - If set, the button is displayed only for the specified media types. Valid media types are `movie`, `episode`, `live_episode`, `track` and `clip`.
+- `users` (list)
+  - `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
+  - `servers` (list)
+    - `name` (string) - Name of the Plex Media Server to connect to.
+    - `listenForUser` (string, optional) - The script reacts to alerts originating only from this username. Defaults to the parent user's username if not set.
+    - `blacklistedLibraries` (list, optional) - Alerts originating from libraries in this list are ignored.
+    - `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in this list are ignored.
+    - `ipcPipeNumber` (int, optional) - A number in the range of `0-9` to specify the Discord IPC pipe to connect to. Defaults to `-1`, which specifies that the first existing pipe in the range should be used. When a Discord client is launched, it binds to the first unbound pipe number, which is typically `0`.
 
 ### Obtaining an Imgur client ID
 
@@ -78,12 +78,12 @@ Instances of `{title}` in button labels will be replaced with the top-level titl
 
 During runtime, the following dynamic URL placeholders will get replaced with real URLs based on the media being played:
 
-* `dynamic:imdb`
-* `dynamic:tmdb`
-* `dynamic:thetvdb`
-* `dynamic:trakt`
-* `dynamic:letterboxd`
-* `dynamic:musicbrainz`
+- `dynamic:imdb`
+- `dynamic:tmdb`
+- `dynamic:thetvdb`
+- `dynamic:trakt`
+- `dynamic:letterboxd`
+- `dynamic:musicbrainz`
 
 ### Example (YAML)
 
@@ -104,7 +104,7 @@ display:
     imgurClientID: 9e9sf637S8bRp4z
     maxSize: 256
   buttons:
-    - label: '{title} on IMDb'
+    - label: "{title} on IMDb"
       url: dynamic:imdb
     - label: Music Stats
       url: https://github.com
@@ -127,8 +127,8 @@ The "Share your detected activities with others" setting must be enabled under D
 
 ## Configuration - Environment Variables
 
-* `DRPP_PLEX_SERVER_NAME_INPUT` - This is used only during the initial setup (when there are no users in the config) as the name of the Plex server to be added to the config file after user authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
-* `DRPP_NO_PIP_INSTALL` - Set this to `true` to skip automatic invocation of pip on script startup to install missing dependencies.
+- `DRPP_PLEX_SERVER_NAME_INPUT` - This is used only during the initial setup (when there are no users in the config) as the name of the Plex server to be added to the config file after user authentication. If this isn't set, in interactive environments, the user is prompted for an input, and in non-interactive environments, "ServerName" is used as a placeholder, which can later be changed by editing the config file and restarting the script.
+- `DRPP_NO_PIP_INSTALL` - Set this to `true` to skip automatic invocation of pip on script startup to install missing dependencies.
 
 ## Run with Docker
 
@@ -138,10 +138,10 @@ The "Share your detected activities with others" setting must be enabled under D
 
 Images are available for the following platforms:
 
-* linux/amd64
-* linux/arm64
-* linux/386
-* linux/arm/v7
+- linux/amd64
+- linux/arm64
+- linux/386
+- linux/arm/v7
 
 ### Volumes
 
@@ -149,10 +149,10 @@ Mount a directory for persistent data (config file, cache file and log file) at 
 
 The runtime directory where Discord stores its inter-process communication Unix socket file needs to be mounted into the container at `/run/app`. The path for this would be the first non-null value from the values of the following environment variables in the environment Discord is running in: ([source](https://github.com/discord/discord-rpc/blob/963aa9f3e5ce81a4682c6ca3d136cddda614db33/src/connection_unix.cpp#L29C33-L29C33))
 
-* XDG_RUNTIME_DIR
-* TMPDIR
-* TMP
-* TEMP
+- XDG_RUNTIME_DIR
+- TMPDIR
+- TMP
+- TEMP
 
 If all four environment variables aren't set, `/tmp` is used.
 
