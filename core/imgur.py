@@ -17,11 +17,13 @@ def uploadToImgur(url: str) -> Optional[str]:
 			newImage.thumbnail((maxSize, maxSize))
 		newImageBytesIO = io.BytesIO()
 		newImage.save(newImageBytesIO, subsampling = 0, quality = 90, format = "JPEG")
-		data: models.imgur.UploadResponse = requests.post(
+		response = requests.post(
 			"https://api.imgur.com/3/image",
 			headers = { "Authorization": f"Client-ID {config['display']['posters']['imgurClientID']}" },
 			files = { "image": newImageBytesIO.getvalue() }
-		).json()
+		)
+		logger.debug("HTTP %d, %s, %s", response.status_code, response.headers, response.text.strip())
+		data: models.imgur.UploadResponse = response.json()
 		if not data["success"]:
 			raise Exception(data["data"]["error"])
 		return data["data"]["link"]
