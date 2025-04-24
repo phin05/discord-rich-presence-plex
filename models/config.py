@@ -8,6 +8,7 @@ class Posters(TypedDict):
 	enabled: bool
 	imgurClientID: str
 	maxSize: int
+	fit: bool
 
 class Button(TypedDict):
 	label: str

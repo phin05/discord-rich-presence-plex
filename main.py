@@ -1,11 +1,12 @@
 from config.constants import isInContainer, runtimeDirectory, uid, gid, containerCwd, noRuntimeDirChown
 from utils.logging import logger
 import os
+import sys
 
 if isInContainer:
 	if not os.path.isdir(runtimeDirectory):
 		logger.error(f"Runtime directory does not exist. Ensure that it is mounted into the container at {runtimeDirectory}")
-		exit(1)
+		sys.exit(1)
 	if os.geteuid() == 0: # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
 		if uid == -1 or gid == -1:
 			logger.warning(f"Environment variable(s) DRPP_UID and/or DRPP_GID are/is not set. Manually ensure appropriate ownership of {runtimeDirectory}")
@@ -24,7 +25,6 @@ if isInContainer:
 		logger.warning("Not running as the superuser. Manually ensure appropriate ownership of mounted contents")
 
 from config.constants import noPipInstall
-import sys
 
 if not noPipInstall:
 	try:
@@ -40,13 +40,15 @@ if not noPipInstall:
 			if installedPackageVersion != requiredPackageVersion:
 				logger.info(f"Installing dependency: {packageName} (required: {requiredPackageVersion}, installed: {installedPackageVersion})")
 				subprocess.run([sys.executable, "-m", "pip", "install", "-U", f"{packageName}=={requiredPackageVersion}"], check = True)
-	except Exception as e:
+	except:
 		logger.exception("An unexpected error occured during automatic installation of dependencies. Install them manually by running the following command: python -m pip install -U -r requirements.txt")
 
 from config.constants import dataDirectoryPath, logFilePath, name, version, isInteractive, plexServerNameInput
 from core.config import config, loadConfig, saveConfig
 from core.discord import DiscordIpcService
+from core.imgur import uploadToImgur
 from core.plex import PlexAlertListener, initiateAuth, getAuthToken
+from models.discord import ActivityType
 from typing import Optional
 from utils.cache import loadCache
 from utils.logging import formatter
@@ -76,7 +78,7 @@ def main() -> None:
 		logger.info("No users found in the config file")
 		user = authNewUser()
 		if not user:
-			exit(1)
+			sys.exit(1)
 		config["users"].append(user)
 		saveConfig()
 	plexAlertListeners = [PlexAlertListener(user["token"], server) for user in config["users"] for server in user["servers"]]
@@ -125,17 +127,29 @@ def authNewUser() -> Optional[models.config.User]:
 def testIpc(pipeNumber: int) -> None:
 	init()
 	logger.info("Testing Discord IPC connection")
+	currentTimestamp = int(time.time() * 1000)
 	discordIpcService = DiscordIpcService(pipeNumber)
 	discordIpcService.connect()
 	discordIpcService.setActivity({
+		"type": ActivityType.WATCHING,
 		"details": "details",
 		"state": "state",
 		"assets": {
 			"large_text": "large_text",
-			"large_image": "logo",
+			"large_image": uploadToImgur("https://placehold.co/256x256/EEE/333.png") or "large_text",
 			"small_text": "small_text",
 			"small_image": "playing",
 		},
+		"timestamps": {
+			"start": currentTimestamp,
+			"end": currentTimestamp + 15000,
+		},
+		"buttons": [
+			{
+				"label": "Label",
+				"url": "https://placehold.co/"
+			},
+		],
 	})
 	time.sleep(15)
 	discordIpcService.disconnect()

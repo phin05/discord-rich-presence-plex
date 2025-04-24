@@ -4,7 +4,7 @@ from utils.logging import logger
 import json
 import models.config
 import os
-import time
+import sys
 import yaml
 
 config: models.config.Config = {
@@ -13,7 +13,7 @@ config: models.config.Config = {
 		"writeToFile": False,
 	},
 	"display": {
-		"duration": True,
+		"duration": False,
 		"genres": True,
 		"album": True,
 		"albumImage": True,
@@ -27,6 +27,7 @@ config: models.config.Config = {
 			"enabled": False,
 			"imgurClientID": "",
 			"maxSize": 256,
+			"fit": True,
 		},
 		"buttons": [],
 	},
@@ -61,8 +62,8 @@ def loadConfig() -> None:
 				else:
 					loadedConfig = json.load(configFile) or {} # pyright: ignore[reportUnknownVariableType]
 		except:
-			os.rename(configFilePath, f"{configFilePathBase}-{time.time():.0f}.{configFileExtension}")
-			logger.exception("Failed to parse the config file. A new one will be created.")
+			logger.exception("Failed to parse the config file")
+			sys.exit(1)
 		else:
 			copyDict(loadedConfig, config)
 		if "hideTotalTime" in config["display"]:

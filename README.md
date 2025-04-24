@@ -36,20 +36,21 @@ The config file is stored in a directory named `data`.
   - `debug` (boolean, default: `true`) - Outputs additional debug-helpful information to the console.
   - `writeToFile` (boolean, default: `false`) - Writes console output to a `console.log` file in the `data` directory.
 - `display` - Display settings for Rich Presence
-  - `duration` (boolean, default: `true`) - Displays the total duration. Applicable to movies and TV shows only.
+  - `duration` (boolean, default: `false`) - Displays the total duration. Applicable to movies and TV shows only.
   - `genres` (boolean, default: `true`) - Displays the genre. Applicable to movies only.
   - `album` (boolean, default: `true`) - Displays the album name. Applicable to music only.
   - `albumImage` (boolean, default: `true`) - Displays the album image. Applicable to music only.
   - `artist` (boolean, default: `true`) - Displays the artist name. Applicable to music only.
   - `artistImage` (boolean, default: `true`) - Displays the artist image. Applicable to music only.
   - `year` (boolean, default: `true`) - Displays the release year.
-  - `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only. Posters get cropped to a square if this is enabled (Discord bug/limitation).
+  - `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only.
   - `progressMode` (string, default: `bar`) - Progress/timestamp display mode. Valid modes are `off`, `elapsed` (displays elapsed time), `remaining` (displays remaining time) and `bar` (displays a progress bar). The `off` and `remaining` modes are currently broken due to a Discord bug/limitation.
   - `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.
   - `posters`
     - `enabled` (boolean, default: `false`) - Displays media posters (including album art and artist images). Requires `imgurClientID`.
     - `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
     - `maxSize` (int, default: `256`) - Maximum width and maximum height to use while downscaling posters before uploading them.
+    - `fit` (boolean, default: `true`) - Fits posters inside a square while maintaining the original aspect ratio. Otherwise, Discord crops posters into a square.
   - `buttons` (list) - [Information](#buttons)
     - `label` (string) - The label to be displayed on the button.
     - `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).
@@ -95,9 +96,12 @@ logging:
   debug: true
   writeToFile: false
 display:
-  duration: true
+  duration: false
   genres: true
   album: true
+  albumImage: true
+  artist: true
+  artistImage: true
   year: true
   statusIcon: false
   progressMode: bar
@@ -106,6 +110,7 @@ display:
     enabled: true
     imgurClientID: 9e9sf637S8bRp4z
     maxSize: 256
+    fit: true
   buttons:
     - label: "{title} on IMDb"
       url: dynamic:imdb
