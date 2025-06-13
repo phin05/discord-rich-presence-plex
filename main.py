@@ -136,7 +136,7 @@ def testIpc(pipeNumber: int) -> None:
 		"state": "state",
 		"assets": {
 			"large_text": "large_text",
-			"large_image": uploadToImgur("https://placehold.co/256x256/EEE/333.png") or "large_text",
+			"large_image": uploadToImgur("https://placehold.co/256x256/EEE/333.png") or "paused",
 			"small_text": "small_text",
 			"small_image": "playing",
 		},

@@ -67,12 +67,12 @@ def loadConfig() -> None:
 		else:
 			copyDict(loadedConfig, config)
 		if "hideTotalTime" in config["display"]:
-			config["display"]["duration"] = not config["display"]["hideTotalTime"]
-			del config["display"]["hideTotalTime"]
+			config["display"]["duration"] = not config["display"]["hideTotalTime"] # pyright: ignore[reportGeneralTypeIssues]
+			del config["display"]["hideTotalTime"] # pyright: ignore[reportGeneralTypeIssues]
 		if "useRemainingTime" in config["display"]:
-			del config["display"]["useRemainingTime"]
+			del config["display"]["useRemainingTime"] # pyright: ignore[reportGeneralTypeIssues]
 		if "remainingTime" in config["display"]:
-			del config["display"]["remainingTime"]
+			del config["display"]["remainingTime"] # pyright: ignore[reportGeneralTypeIssues]
 		if config["display"]["progressMode"] not in ["off", "elapsed", "remaining", "bar"]:
 			config["display"]["progressMode"] = "bar"
 	saveConfig()

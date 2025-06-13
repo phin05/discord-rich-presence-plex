@@ -11,7 +11,7 @@ def uploadToImgur(url: str) -> Optional[str]:
 		originalImageBytesIO = io.BytesIO(requests.get(url).content)
 		originalImage = Image.open(originalImageBytesIO).convert("RGBA")
 		newImage = Image.new("RGBA", originalImage.size)
-		newImage.putdata(originalImage.getdata()) # pyright: ignore[reportArgumentType]
+		newImage.putdata(originalImage.getdata()) # pyright: ignore[reportUnknownArgumentType,reportUnknownMemberType]
 		if newImage.width != newImage.height and config["display"]["posters"]["fit"]:
 			longestSideLength = max(newImage.width, newImage.height)
 			newImage = ImageOps.pad(newImage, (longestSideLength, longestSideLength), color = (0, 0, 0, 0))

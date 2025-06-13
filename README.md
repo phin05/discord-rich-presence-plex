@@ -1,11 +1,11 @@
 # Discord Rich Presence for Plex
 
-![Showcase](assets/showcase.png)
-
 Discord Rich Presence for Plex is a Python script which displays your [Plex](https://www.plex.tv/) status on [Discord](https://discord.com/) using [Rich Presence](https://discord.com/developers/docs/rich-presence/overview).
 
 [![Latest Release](https://img.shields.io/github/v/release/phin05/discord-rich-presence-plex?label=Latest%20Release)](https://github.com/phin05/discord-rich-presence-plex/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/phin05/discord-rich-presence-plex/release.yml?label=Build&logo=github)](https://github.com/phin05/discord-rich-presence-plex/actions/workflows/release.yml)
+
+![Showcase](assets/readme/showcase.png)
 
 ## Installation
 
@@ -131,7 +131,7 @@ users:
 
 The "Share your detected activities with others" setting must be enabled under Discord Settings → Activity Settings → Activity Privacy.
 
-![Discord Activity Privacy](assets/discord-activity-privacy.png)
+![Discord Activity Privacy](assets/readme/discord-activity-privacy.png)
 
 ## Configuration - Environment Variables
 

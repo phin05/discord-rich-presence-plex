@@ -11,7 +11,7 @@ logger.addHandler(streamHandler)
 
 class LoggerWithPrefix:
 
-	def __init__(self, prefix: str) -> None:
+	def __init__(self, prefix: str):
 		self.prefix = prefix
 		self.info = self.wrapLoggerFunc(logger.info)
 		self.warning = self.wrapLoggerFunc(logger.warning)
