@@ -87,7 +87,7 @@ class PlexAlertListener(threading.Thread):
 						self.logger.info("Connecting to %s '%s'", self.productName, self.serverConfig["name"])
 						self.server = resource.connect()
 						try:
-							self.server.account()
+							self.server.myPlexAccount()
 							self.isServerOwner = True
 						except:
 							pass
