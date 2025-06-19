@@ -1,12 +1,5 @@
-.dockerignore
-.git
-.github
-.gitignore
-CONTRIBUTING.md
-Dockerfile
-Makefile
-pyrightconfig.json
-
-__pycache__
-assets/showcase.psd
+assets/readme/showcase.psd
 data
+out
+web/dist
+web/node_modules

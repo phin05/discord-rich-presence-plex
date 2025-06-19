@@ -1,3 +1,5 @@
-__pycache__
 assets/readme/showcase.psd
 data
+out
+web/dist
+web/node_modules
