@@ -68,7 +68,7 @@ config: Config = {
 		"progressMode": "bar",
 		"paused": False,
 		"posters": {
-			"enabled": False,
+			"enabled": True,
 			"imgurClientID": "",
 			"maxSize": 256,
 			"fit": True,

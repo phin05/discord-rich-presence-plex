@@ -47,7 +47,7 @@ The config file is stored in a directory named `data`.
   - `progressMode` (string, default: `bar`) - Progress/timestamp display mode. Valid modes are `off`, `elapsed` (displays elapsed time), `remaining` (displays remaining time) and `bar` (displays a progress bar). The `off` and `remaining` modes are currently broken due to a Discord bug/limitation.
   - `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.
   - `posters`
-    - `enabled` (boolean, default: `false`) - Displays media posters (including album art and artist images). Requires `imgurClientID`.
+    - `enabled` (boolean, default: `true`) - Displays media posters (including album art and artist images). [Imgur](https://imgur.com/) is used if `imgurClientID` is set, otherwise [Litterbox](https://litterbox.catbox.moe/) is used.
     - `imgurClientID` (string, default: `""`) - [Obtention Instructions](#obtaining-an-imgur-client-id)
     - `maxSize` (int, default: `256`) - Maximum width and maximum height to use while downscaling posters before uploading them.
     - `fit` (boolean, default: `true`) - Fits posters inside a square while maintaining the original aspect ratio. Otherwise, Discord crops posters into a square.
@@ -112,7 +112,7 @@ display:
     maxSize: 256
     fit: true
   buttons:
-    - label: "{title} on IMDb"
+    - label: "IMDb: {title}"
       url: dynamic:imdb
     - label: Music Stats
       url: https://github.com

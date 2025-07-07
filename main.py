@@ -40,7 +40,7 @@ if not constants.noPipInstall:
 	except:
 		logger.exception("An unexpected error occured during automatic installation of dependencies. Install them manually by running the following command: python -m pip install -U -r requirements.txt")
 
-from app import cache, config, discord, imgur, plex
+from app import cache, config, discord, images, plex
 from typing import Optional
 import logging
 import time
@@ -126,7 +126,7 @@ def testIpc(pipeNumber: int) -> None:
 			"state": "state",
 			"assets": {
 				"large_text": "large_text",
-				"large_image": imgur.upload("https://placehold.co/256x256/EEE/333.png") or "paused",
+				"large_image": images.upload("key", "https://placehold.co/256x256/EEE/333.png") or "paused",
 				"small_text": "small_text",
 				"small_image": "playing",
 			},

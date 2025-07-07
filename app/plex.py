@@ -1,6 +1,6 @@
 # pyright: reportUnknownArgumentType=none,reportUnknownMemberType=none,reportUnknownVariableType=none,reportTypedDictNotRequiredAccess=none,reportOptionalMemberAccess=none,reportMissingTypeStubs=none
 
-from app import cache, config, constants, discord, imgur, logger
+from app import config, constants, discord, images, logger
 from plexapi.alert import AlertListener
 from plexapi.media import Genre, Guid
 from plexapi.myplex import MyPlexAccount, PlexServer
@@ -156,14 +156,6 @@ class PlexAlertListener(threading.Thread):
 			self.logger.exception("An unexpected error occured in the Plex alert handler")
 			self.disconnectRpc()
 
-	def uploadToImgur(self, thumb: str) -> Optional[str]:
-		thumbUrl = cache.get(thumb)
-		if not thumbUrl or not isinstance(thumbUrl, str):
-			self.logger.debug("Uploading image to Imgur")
-			thumbUrl = imgur.upload(self.server.url(thumb, True))
-			cache.set(thumb, thumbUrl)
-		return thumbUrl
-
 	def handleAlert(self, alert: Alert) -> None:
 		if alert["type"] != "playing" or "PlaySessionStateNotification" not in alert:
 			return
@@ -292,8 +284,8 @@ class PlexAlertListener(threading.Thread):
 			if not config.config["display"]["statusIcon"]:
 				stateStrings.append(state.capitalize())
 		stateText = " · ".join(stateString for stateString in stateStrings if stateString)
-		thumbUrl = self.uploadToImgur(thumb) if thumb and config.config["display"]["posters"]["enabled"] else ""
-		smallThumbUrl = self.uploadToImgur(smallThumb) if smallThumb and config.config["display"]["posters"]["enabled"] else ""
+		thumbUrl = images.upload(thumb, self.server.url(thumb, True)) if thumb and config.config["display"]["posters"]["enabled"] else ""
+		smallThumbUrl = images.upload(smallThumb, self.server.url(smallThumb, True)) if smallThumb and config.config["display"]["posters"]["enabled"] else ""
 		activity: discord.Activity = {
 			"type": mediaTypeActivityTypeMap[mediaType],
 			"details": truncate(title, 120),
