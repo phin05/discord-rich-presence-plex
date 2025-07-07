@@ -1,13 +1,19 @@
-from config.constants import name
+from app import constants
 from typing import Any, Callable
 import logging
 
-logger = logging.getLogger(name)
+logger = logging.getLogger(constants.name)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", datefmt = "%d-%m-%Y %I:%M:%S %p")
 streamHandler = logging.StreamHandler()
 streamHandler.setFormatter(formatter)
 logger.addHandler(streamHandler)
+
+info = logger.info
+warning = logger.warning
+error = logger.error
+exception = logger.exception
+debug = logger.debug
 
 class LoggerWithPrefix:
 

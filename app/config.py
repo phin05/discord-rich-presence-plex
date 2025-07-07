@@ -1,13 +1,57 @@
-from config.constants import configFilePathBase
-from utils.dict import copyDict
-from utils.logging import logger
+from app import constants, logger
+from typing import Any
+from typing import TypedDict
 import json
-import models.config
 import os
 import sys
 import yaml
 
-config: models.config.Config = {
+class Logging(TypedDict):
+	debug: bool
+	writeToFile: bool
+
+class Posters(TypedDict):
+	enabled: bool
+	imgurClientID: str
+	maxSize: int
+	fit: bool
+
+class Button(TypedDict):
+	label: str
+	url: str
+	mediaTypes: list[str]
+
+class Display(TypedDict):
+	duration: bool
+	genres: bool
+	album: bool
+	albumImage: bool
+	artist: bool
+	artistImage: bool
+	year: bool
+	statusIcon: bool
+	progressMode: str
+	paused: bool
+	posters: Posters
+	buttons: list[Button]
+
+class Server(TypedDict, total = False):
+	name: str
+	listenForUser: str
+	blacklistedLibraries: list[str]
+	whitelistedLibraries: list[str]
+	ipcPipeNumber: int
+
+class User(TypedDict):
+	token: str
+	servers: list[Server]
+
+class Config(TypedDict):
+	logging: Logging
+	display: Display
+	users: list[User]
+
+config: Config = {
 	"logging": {
 		"debug": True,
 		"writeToFile": False,
@@ -33,31 +77,31 @@ config: models.config.Config = {
 	},
 	"users": [],
 }
-supportedConfigFileExtensions = {
+supportedFileExtensions = {
 	"yaml": "yaml",
 	"yml": "yaml",
 	"json": "json",
 }
-configFileExtension = ""
-configFileType = ""
-configFilePath = ""
+fileExtension = ""
+fileType = ""
+filePath = ""
 
-def loadConfig() -> None:
-	global configFileExtension, configFileType, configFilePath
+def load() -> None:
+	global fileExtension, fileType, filePath
 	doesFileExist = False
-	for i, (fileExtension, fileType) in enumerate(supportedConfigFileExtensions.items()):
-		doesFileExist = os.path.isfile(f"{configFilePathBase}.{fileExtension}")
+	for i, (fileExtension, fileType) in enumerate(supportedFileExtensions.items()):
+		doesFileExist = os.path.isfile(f"{constants.configFilePathBase}.{fileExtension}")
 		isFirstItem = i == 0
 		if doesFileExist or isFirstItem:
-			configFileExtension = fileExtension
-			configFileType = fileType
-			configFilePath = f"{configFilePathBase}.{configFileExtension}"
+			fileExtension = fileExtension
+			fileType = fileType
+			filePath = f"{constants.configFilePathBase}.{fileExtension}"
 			if doesFileExist:
 				break
 	if doesFileExist:
 		try:
-			with open(configFilePath, "r", encoding = "UTF-8") as configFile:
-				if configFileType == "yaml":
+			with open(filePath, "r", encoding = "UTF-8") as configFile:
+				if fileType == "yaml":
 					loadedConfig = yaml.safe_load(configFile) or {} # pyright: ignore[reportUnknownVariableType]
 				else:
 					loadedConfig = json.load(configFile) or {} # pyright: ignore[reportUnknownVariableType]
@@ -75,19 +119,26 @@ def loadConfig() -> None:
 			del config["display"]["remainingTime"] # pyright: ignore[reportGeneralTypeIssues]
 		if config["display"]["progressMode"] not in ["off", "elapsed", "remaining", "bar"]:
 			config["display"]["progressMode"] = "bar"
-	saveConfig()
+	save()
 
 class YamlSafeDumper(yaml.SafeDumper):
     def increase_indent(self, flow: bool = False, indentless: bool = False) -> None:
         return super().increase_indent(flow, False)
 
-def saveConfig() -> None:
+def save() -> None:
 	try:
-		with open(configFilePath, "w", encoding = "UTF-8") as configFile:
-			if configFileType == "yaml":
+		with open(filePath, "w", encoding = "UTF-8") as configFile:
+			if fileType == "yaml":
 				yaml.dump(config, configFile, sort_keys = False, Dumper = YamlSafeDumper, allow_unicode = True)
 			else:
 				json.dump(config, configFile, indent = "\t")
 				configFile.write("\n")
 	except:
 		logger.exception("Failed to write to the config file")
+
+def copyDict(source: Any, target: Any) -> None:
+	for key, value in source.items():
+		if isinstance(value, dict):
+			copyDict(value, target.setdefault(key, {}))
+		else:
+			target[key] = value

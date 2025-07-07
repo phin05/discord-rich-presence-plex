@@ -1,19 +1,11 @@
 # pyright: reportUnknownArgumentType=none,reportUnknownMemberType=none,reportUnknownVariableType=none,reportTypedDictNotRequiredAccess=none,reportOptionalMemberAccess=none,reportMissingTypeStubs=none
 
-from .config import config
-from .discord import DiscordIpcService
-from .imgur import uploadToImgur
-from config.constants import name, plexClientID
+from app import cache, config, constants, discord, imgur, logger
 from plexapi.alert import AlertListener
 from plexapi.media import Genre, Guid
 from plexapi.myplex import MyPlexAccount, PlexServer
-from typing import Optional
-from utils.cache import getCacheKey, setCacheKey
-from utils.logging import LoggerWithPrefix
-from utils.text import formatSeconds, truncate, stripNonAscii
-import models.config
-import models.discord
-import models.plex
+from typing import Optional, TypedDict
+import re
 import requests
 import threading
 import time
@@ -21,25 +13,26 @@ import urllib.parse
 
 def initiateAuth() -> tuple[str, str, str]:
 	response = requests.post("https://plex.tv/api/v2/pins.json?strong=true", headers = {
-		"X-Plex-Product": name,
-		"X-Plex-Client-Identifier": plexClientID,
+		"X-Plex-Product": constants.name,
+		"X-Plex-Client-Identifier": constants.plexClientID,
 	}).json()
-	authUrl = f"https://app.plex.tv/auth#?clientID={plexClientID}&code={response['code']}&context%%5Bdevice%%5D%%5Bproduct%%5D={urllib.parse.quote(name)}"
+	authUrl = f"https://app.plex.tv/auth#?clientID={constants.plexClientID}&code={response['code']}&context%%5Bdevice%%5D%%5Bproduct%%5D={urllib.parse.quote(constants.name)}"
 	return response["id"], response["code"], authUrl
 
 def getAuthToken(id: str, code: str) -> Optional[str]:
 	response = requests.get(f"https://plex.tv/api/v2/pins/{id}.json?code={code}", headers = {
-		"X-Plex-Client-Identifier": plexClientID,
+		"X-Plex-Client-Identifier": constants.plexClientID,
 	}).json()
 	return response["authToken"]
 
 mediaTypeActivityTypeMap = {
-	"movie": models.discord.ActivityType.WATCHING,
-	"episode": models.discord.ActivityType.WATCHING,
-	"live_episode": models.discord.ActivityType.WATCHING,
-	"track": models.discord.ActivityType.LISTENING,
-	"clip": models.discord.ActivityType.WATCHING,
+	"movie": discord.ActivityType.WATCHING,
+	"episode": discord.ActivityType.WATCHING,
+	"live_episode": discord.ActivityType.WATCHING,
+	"track": discord.ActivityType.LISTENING,
+	"clip": discord.ActivityType.WATCHING,
 }
+
 buttonTypeGuidTypeMap = {
 	"imdb": "imdb",
 	"tmdb": "tmdb",
@@ -49,6 +42,16 @@ buttonTypeGuidTypeMap = {
 	"musicbrainz": "mbid",
 }
 
+class StateNotification(TypedDict):
+	state: str
+	sessionKey: int
+	ratingKey: int
+	viewOffset: int
+
+class Alert(TypedDict):
+	type: str
+	PlaySessionStateNotification: list[StateNotification]
+
 class PlexAlertListener(threading.Thread):
 
 	productName = "Plex Media Server"
@@ -57,13 +60,13 @@ class PlexAlertListener(threading.Thread):
 	disconnectTimerInterval = 3
 	maximumIgnores = 2
 
-	def __init__(self, token: str, serverConfig: models.config.Server):
+	def __init__(self, token: str, serverConfig: config.Server):
 		super().__init__()
 		self.daemon = True
 		self.token = token
 		self.serverConfig = serverConfig
-		self.logger = LoggerWithPrefix(f"[{self.serverConfig['name']}] ")
-		self.discordIpcService = DiscordIpcService(self.serverConfig.get("ipcPipeNumber"))
+		self.logger = logger.LoggerWithPrefix(f"[{self.serverConfig['name']}] ")
+		self.discordIpcService = discord.DiscordIpcService(self.serverConfig.get("ipcPipeNumber"))
 		self.updateTimeoutTimer: Optional[threading.Timer] = None
 		self.connectionCheckTimer: Optional[threading.Timer] = None
 		self.disconnectTimer: Optional[threading.Timer] = None
@@ -146,7 +149,7 @@ class PlexAlertListener(threading.Thread):
 			self.connectionCheckTimer = threading.Timer(self.connectionCheckTimerInterval, self.connectionCheck)
 			self.connectionCheckTimer.start()
 
-	def tryHandleAlert(self, alert: models.plex.Alert) -> None:
+	def tryHandleAlert(self, alert: Alert) -> None:
 		try:
 			self.handleAlert(alert)
 		except:
@@ -154,14 +157,14 @@ class PlexAlertListener(threading.Thread):
 			self.disconnectRpc()
 
 	def uploadToImgur(self, thumb: str) -> Optional[str]:
-		thumbUrl = getCacheKey(thumb)
+		thumbUrl = cache.get(thumb)
 		if not thumbUrl or not isinstance(thumbUrl, str):
 			self.logger.debug("Uploading image to Imgur")
-			thumbUrl = uploadToImgur(self.server.url(thumb, True))
-			setCacheKey(thumb, thumbUrl)
+			thumbUrl = imgur.upload(self.server.url(thumb, True))
+			cache.set(thumb, thumbUrl)
 		return thumbUrl
 
-	def handleAlert(self, alert: models.plex.Alert) -> None:
+	def handleAlert(self, alert: Alert) -> None:
 		if alert["type"] != "playing" or "PlaySessionStateNotification" not in alert:
 			return
 		stateNotification = alert["PlaySessionStateNotification"][0]
@@ -188,7 +191,7 @@ class PlexAlertListener(threading.Thread):
 		if "whitelistedLibraries" in self.serverConfig and libraryName not in self.serverConfig["whitelistedLibraries"]:
 			self.logger.debug("Library '%s' is not whitelisted, ignoring", libraryName)
 			return
-		isIgnorableState = state == "stopped" or (state == "paused" and not config["display"]["paused"])
+		isIgnorableState = state == "stopped" or (state == "paused" and not config.config["display"]["paused"])
 		if self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey:
 			if self.updateTimeoutTimer:
 				self.updateTimeoutTimer.cancel()
@@ -238,20 +241,20 @@ class PlexAlertListener(threading.Thread):
 			self.disconnectTimer = None
 		self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
 		stateStrings: list[str] = []
-		if config["display"]["duration"] and item.duration and mediaType != "track":
+		if config.config["display"]["duration"] and item.duration and mediaType != "track":
 			stateStrings.append(formatSeconds(item.duration / 1000))
 		largeText, thumb, smallText, smallThumb = "", "", "", ""
 		if mediaType == "movie":
 			title = shortTitle = item.title
-			if config["display"]["year"] and item.year:
+			if config.config["display"]["year"] and item.year:
 				title += f" ({item.year})"
-			if config["display"]["genres"] and item.genres:
+			if config.config["display"]["genres"] and item.genres:
 				genres: list[Genre] = item.genres[:3]
 				stateStrings.append(f"{', '.join(genre.tag for genre in genres)}")
 			thumb = item.thumb
 		elif mediaType == "episode":
 			title = shortTitle = item.grandparentTitle
-			if config["display"]["year"]:
+			if config.config["display"]["year"]:
 				grandparent = self.server.fetchItem(item.grandparentRatingKey)
 				if grandparent.year:
 					title += f" ({grandparent.year})"
@@ -265,37 +268,37 @@ class PlexAlertListener(threading.Thread):
 			thumb = item.grandparentThumb
 		elif mediaType == "track":
 			title = shortTitle = item.title
-			if config["display"]["album"]:
+			if config.config["display"]["album"]:
 				largeText = item.parentTitle
-				if config["display"]["year"]:
+				if config.config["display"]["year"]:
 					parent = self.server.fetchItem(item.parentRatingKey)
 					if parent.year:
 						largeText = f"{truncate(largeText, 110)} ({parent.year})"
-			if config["display"]["albumImage"]:
+			if config.config["display"]["albumImage"]:
 				thumb = item.thumb
-			if config["display"]["artist"]:
+			if config.config["display"]["artist"]:
 				stateStrings.append(item.originalTitle or item.grandparentTitle)
-			if config["display"]["artistImage"]:
+			if config.config["display"]["artistImage"]:
 				smallText = item.grandparentTitle or item.originalTitle
 				smallThumb = item.grandparentThumb
 		else:
 			title = shortTitle = item.title
 			thumb = item.thumb
 		if state != "playing" and mediaType != "track":
-			if config["display"]["progressMode"] == "remaining":
+			if config.config["display"]["progressMode"] == "remaining":
 				stateStrings.append(f"{formatSeconds((item.duration - viewOffset) / 1000, ':')} left")
 			else:
 				stateStrings.append(f"{formatSeconds(viewOffset / 1000, ':')} elapsed")
-			if not config["display"]["statusIcon"]:
+			if not config.config["display"]["statusIcon"]:
 				stateStrings.append(state.capitalize())
 		stateText = " · ".join(stateString for stateString in stateStrings if stateString)
-		thumbUrl = self.uploadToImgur(thumb) if thumb and config["display"]["posters"]["enabled"] else ""
-		smallThumbUrl = self.uploadToImgur(smallThumb) if smallThumb and config["display"]["posters"]["enabled"] else ""
-		activity: models.discord.Activity = {
+		thumbUrl = self.uploadToImgur(thumb) if thumb and config.config["display"]["posters"]["enabled"] else ""
+		smallThumbUrl = self.uploadToImgur(smallThumb) if smallThumb and config.config["display"]["posters"]["enabled"] else ""
+		activity: discord.Activity = {
 			"type": mediaTypeActivityTypeMap[mediaType],
 			"details": truncate(title, 120),
 		}
-		if config["display"]["statusIcon"]:
+		if config.config["display"]["statusIcon"]:
 			smallText = smallText or state.capitalize()
 			smallThumbUrl = smallThumbUrl or state
 		if largeText or thumbUrl or smallText or smallThumbUrl:
@@ -310,15 +313,15 @@ class PlexAlertListener(threading.Thread):
 				activity["assets"]["small_image"] = smallThumbUrl
 		if stateText:
 			activity["state"] = truncate(stateText, 120)
-		if config["display"]["buttons"]:
+		if config.config["display"]["buttons"]:
 			guidsRaw: list[Guid] = []
 			if mediaType in ["movie", "track"]:
 				guidsRaw = item.guids
 			elif mediaType == "episode":
 				guidsRaw = self.server.fetchItem(item.grandparentRatingKey).guids
 			guids: dict[str, str] = { guidSplit[0]: guidSplit[1] for guidSplit in [guid.id.split("://") for guid in guidsRaw] if len(guidSplit) > 1 }
-			buttons: list[models.discord.ActivityButton] = []
-			for button in config["display"]["buttons"]:
+			buttons: list[discord.ActivityButton] = []
+			for button in config.config["display"]["buttons"]:
 				if "mediaTypes" in button and mediaType not in button["mediaTypes"]:
 					continue
 				label = truncate(button["label"].format(title = stripNonAscii(shortTitle)), 30)
@@ -354,7 +357,7 @@ class PlexAlertListener(threading.Thread):
 				activity["buttons"] = buttons[:2]
 		if state == "playing":
 			currentTimestamp = int(time.time() * 1000)
-			match config["display"]["progressMode"]:
+			match config.config["display"]["progressMode"]:
 				case "elapsed":
 					activity["timestamps"] = { "start": round(currentTimestamp - viewOffset) }
 				case "remaining":
@@ -367,3 +370,20 @@ class PlexAlertListener(threading.Thread):
 			self.discordIpcService.connect()
 		if self.discordIpcService.connected:
 			self.discordIpcService.setActivity(activity)
+
+def formatSeconds(seconds: int | float, joiner: Optional[str] = None) -> str:
+	seconds = round(seconds)
+	timeValues = { "h": seconds // 3600, "m": seconds // 60 % 60, "s": seconds % 60 }
+	if not joiner:
+		return "".join(str(v) + k for k, v in timeValues.items() if v > 0)
+	if timeValues["h"] == 0:
+		del timeValues["h"]
+	return joiner.join(str(v).rjust(2, "0") for v in timeValues.values())
+
+def truncate(text: str, maxLength: int) -> str:
+	if len(text) > maxLength:
+		text = text[:maxLength-3] + "..."
+	return text
+
+def stripNonAscii(text: str) -> str:
+	return re.sub(r"[^\x00-\x7f]", "", text)

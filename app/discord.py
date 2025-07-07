@@ -1,12 +1,38 @@
-from config.constants import discordClientID, isUnix, processID, ipcPipeBase
+from app import constants, logger
+from enum import IntEnum
 from typing import Any, Optional
-from utils.logging import logger
+from typing import TypedDict
 import asyncio
 import json
-import models.discord
 import os
 import struct
 import time
+
+class ActivityType(IntEnum):
+	LISTENING = 2
+	WATCHING = 3
+
+class ActivityAssets(TypedDict, total = False):
+	large_text: str
+	large_image: str
+	small_text: str
+	small_image: str
+
+class ActivityTimestamps(TypedDict, total = False):
+	start: int
+	end: int
+
+class ActivityButton(TypedDict):
+	label: str
+	url: str
+
+class Activity(TypedDict, total = False):
+	type: ActivityType
+	details: str
+	state: str
+	assets: ActivityAssets
+	timestamps: ActivityTimestamps
+	buttons: list[ActivityButton]
 
 class DiscordIpcService:
 
@@ -16,9 +42,11 @@ class DiscordIpcService:
 		self.pipes: list[str] = []
 		for pipeNumber in pipeNumbers:
 			pipeFilename = f"discord-ipc-{pipeNumber}"
-			self.pipes.append(os.path.join(ipcPipeBase, pipeFilename))
-			self.pipes.append(os.path.join(ipcPipeBase, "app", "com.discordapp.Discord", pipeFilename))
-			self.pipes.append(os.path.join(ipcPipeBase, ".flatpak", "com.discordapp.Discord", "xdg-run", pipeFilename))
+			self.pipes.append(os.path.join(constants.ipcPipeBase, pipeFilename))
+			if constants.isUnix:
+				self.pipes.append(os.path.join(constants.ipcPipeBase, "app", "com.discordapp.Discord", pipeFilename))
+				self.pipes.append(os.path.join(constants.ipcPipeBase, ".flatpak", "com.discordapp.Discord", "xdg-run", pipeFilename))
+				self.pipes.append(os.path.join(constants.ipcPipeBase, "snap.discord", pipeFilename))
 		self.loop: Optional[asyncio.AbstractEventLoop] = None
 		self.pipeReader: Optional[asyncio.StreamReader] = None
 		self.pipeWriter: Optional[asyncio.StreamWriter] = None
@@ -29,12 +57,12 @@ class DiscordIpcService:
 			return
 		for pipe in self.pipes:
 			try:
-				if isUnix:
+				if constants.isUnix:
 					self.pipeReader, self.pipeWriter = await asyncio.open_unix_connection(pipe) # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType]
 				else:
 					self.pipeReader = asyncio.StreamReader()
 					self.pipeWriter = (await self.loop.create_pipe_connection(lambda: asyncio.StreamReaderProtocol(self.pipeReader), pipe))[0] # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType,reportArgumentType]
-				self.write(0, { "v": 1, "client_id": discordClientID })
+				self.write(0, { "v": 1, "client_id": constants.discordClientID })
 				if await self.read():
 					self.connected = True
 					logger.info(f"Connected to Discord IPC pipe {pipe}")
@@ -98,7 +126,7 @@ class DiscordIpcService:
 			logger.exception("An unexpected error occured while closing the asyncio event loop")
 		self.connected = False
 
-	def setActivity(self, activity: models.discord.Activity) -> None:
+	def setActivity(self, activity: Activity) -> None:
 		if not self.connected:
 			logger.warning("Attempt to set activity while not connected to Discord IPC pipe")
 			return
@@ -108,7 +136,7 @@ class DiscordIpcService:
 		payload = {
 			"cmd": "SET_ACTIVITY",
 			"args": {
-				"pid": processID,
+				"pid": constants.processID,
 				"activity": activity,
 			},
 			"nonce": "{0:.2f}".format(time.time()),
