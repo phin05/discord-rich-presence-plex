@@ -77,31 +77,31 @@ config: Config = {
 	},
 	"users": [],
 }
-supportedFileExtensions = {
+supportedConfigFileExtensions = {
 	"yaml": "yaml",
 	"yml": "yaml",
 	"json": "json",
 }
-fileExtension = ""
-fileType = ""
-filePath = ""
+configFileExtension = ""
+configFileType = ""
+configFilePath = ""
 
 def load() -> None:
-	global fileExtension, fileType, filePath
+	global configFileExtension, configFileType, configFilePath
 	doesFileExist = False
-	for i, (fileExtension, fileType) in enumerate(supportedFileExtensions.items()):
+	for i, (fileExtension, fileType) in enumerate(supportedConfigFileExtensions.items()):
 		doesFileExist = os.path.isfile(f"{constants.configFilePathBase}.{fileExtension}")
 		isFirstItem = i == 0
 		if doesFileExist or isFirstItem:
-			fileExtension = fileExtension
-			fileType = fileType
-			filePath = f"{constants.configFilePathBase}.{fileExtension}"
+			configFileExtension = fileExtension
+			configFileType = fileType
+			configFilePath = f"{constants.configFilePathBase}.{configFileExtension}"
 			if doesFileExist:
 				break
 	if doesFileExist:
 		try:
-			with open(filePath, "r", encoding = "UTF-8") as configFile:
-				if fileType == "yaml":
+			with open(configFilePath, "r", encoding = "UTF-8") as configFile:
+				if configFileType == "yaml":
 					loadedConfig = yaml.safe_load(configFile) or {} # pyright: ignore[reportUnknownVariableType]
 				else:
 					loadedConfig = json.load(configFile) or {} # pyright: ignore[reportUnknownVariableType]
@@ -127,8 +127,8 @@ class YamlSafeDumper(yaml.SafeDumper):
 
 def save() -> None:
 	try:
-		with open(filePath, "w", encoding = "UTF-8") as configFile:
-			if fileType == "yaml":
+		with open(configFilePath, "w", encoding = "UTF-8") as configFile:
+			if configFileType == "yaml":
 				yaml.dump(config, configFile, sort_keys = False, Dumper = YamlSafeDumper, allow_unicode = True)
 			else:
 				json.dump(config, configFile, indent = "\t")
