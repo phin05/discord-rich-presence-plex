@@ -7,9 +7,9 @@ import requests
 import time
 
 def upload(key: str, url: str) -> Optional[str]:
-	cacheEntry = cache.get(key)
-	if cacheEntry and "expiry" in cacheEntry and cacheEntry["expiry"] > 0 and time.time() < cacheEntry["expiry"]:
-		return cacheEntry["value"]
+	cachedValue = cache.get(key)
+	if cachedValue:
+		return cachedValue
 	originalImageBytesIO = io.BytesIO(requests.get(url).content)
 	originalImage = Image.open(originalImageBytesIO).convert("RGBA")
 	newImage = Image.new("RGBA", originalImage.size)
