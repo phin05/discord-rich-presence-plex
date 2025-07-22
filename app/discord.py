@@ -46,6 +46,7 @@ class DiscordIpcService:
 			if constants.isUnix:
 				self.pipes.append(os.path.join(constants.ipcPipeBase, "app", "com.discordapp.Discord", pipeFilename))
 				self.pipes.append(os.path.join(constants.ipcPipeBase, ".flatpak", "com.discordapp.Discord", "xdg-run", pipeFilename))
+				self.pipes.append(os.path.join(constants.ipcPipeBase, ".flatpak", "dev.vencord.Vesktop", "xdg-run", pipeFilename))
 				self.pipes.append(os.path.join(constants.ipcPipeBase, "snap.discord", pipeFilename))
 		self.loop: Optional[asyncio.AbstractEventLoop] = None
 		self.pipeReader: Optional[asyncio.StreamReader] = None
