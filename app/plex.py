@@ -265,7 +265,7 @@ class PlexAlertListener(threading.Thread):
 				if config.config["display"]["year"]:
 					parent = self.server.fetchItem(item.parentRatingKey)
 					if parent.year:
-						largeText = f"{truncate(largeText, 110)} ({parent.year})"
+						largeText = f"{adjustTextLength(largeText, 110)} ({parent.year})"
 			if config.config["display"]["albumImage"]:
 				thumb = item.thumb
 			if config.config["display"]["artist"]:
@@ -288,7 +288,7 @@ class PlexAlertListener(threading.Thread):
 		smallThumbUrl = images.upload(smallThumb, self.server.url(smallThumb, True)) if smallThumb and config.config["display"]["posters"]["enabled"] else ""
 		activity: discord.Activity = {
 			"type": mediaTypeActivityTypeMap[mediaType],
-			"details": truncate(title, 120),
+			"details": adjustTextLength(title, 120, 2),
 		}
 		if config.config["display"]["statusIcon"]:
 			smallText = smallText or state.capitalize()
@@ -296,15 +296,15 @@ class PlexAlertListener(threading.Thread):
 		if largeText or thumbUrl or smallText or smallThumbUrl:
 			activity["assets"] = {}
 			if largeText:
-				activity["assets"]["large_text"] = truncate(largeText, 120)
+				activity["assets"]["large_text"] = adjustTextLength(largeText, 120, 2)
 			if thumbUrl:
 				activity["assets"]["large_image"] = thumbUrl
 			if smallText:
-				activity["assets"]["small_text"] = truncate(smallText, 120)
+				activity["assets"]["small_text"] = adjustTextLength(smallText, 120, 2)
 			if smallThumbUrl:
 				activity["assets"]["small_image"] = smallThumbUrl
 		if stateText:
-			activity["state"] = truncate(stateText, 120)
+			activity["state"] = adjustTextLength(stateText, 120, 2)
 		if config.config["display"]["buttons"]:
 			guidsRaw: list[Guid] = []
 			if mediaType in ["movie", "track"]:
@@ -316,7 +316,7 @@ class PlexAlertListener(threading.Thread):
 			for button in config.config["display"]["buttons"]:
 				if "mediaTypes" in button and mediaType not in button["mediaTypes"]:
 					continue
-				label = truncate(button["label"].format(title = stripNonAscii(shortTitle)), 30)
+				label = adjustTextLength(button["label"].format(title = stripNonAscii(shortTitle)), 30)
 				if not button["url"].startswith("dynamic:"):
 					buttons.append({ "label": label, "url": button["url"] })
 					continue
@@ -372,9 +372,11 @@ def formatSeconds(seconds: int | float, joiner: Optional[str] = None) -> str:
 		del timeValues["h"]
 	return joiner.join(str(v).rjust(2, "0") for v in timeValues.values())
 
-def truncate(text: str, maxLength: int) -> str:
+def adjustTextLength(text: str, maxLength: int, minLength: int = 0) -> str:
 	if len(text) > maxLength:
 		text = text[:maxLength-3] + "..."
+	if len(text) < minLength:
+		text = text.ljust(minLength, " ")
 	return text
 
 def stripNonAscii(text: str) -> str:
