@@ -65,6 +65,7 @@ config: Config = {
 		"artistImage": True,
 		"year": True,
 		"statusIcon": False,
+		"statusDisplayType": "state",
 		"progressMode": "bar",
 		"paused": False,
 		"posters": {

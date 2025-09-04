@@ -44,6 +44,7 @@ The config file is stored in a directory named `data`.
   - `artistImage` (boolean, default: `true`) - Displays the artist image. Applicable to music only.
   - `year` (boolean, default: `true`) - Displays the release year.
   - `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only.
+  - `statusDisplayType` (string, default: `state`) - Determines what is displayed in the status (displayed under your username in a member list). Valid options are `state` (e.g. Listening to **Pitbull**), `name` (e.g. Listening to **Plex**) and `details` (e.g. Listening to **Never Gonna Give You Up**)."
   - `progressMode` (string, default: `bar`) - Progress/timestamp display mode. Valid modes are `off`, `elapsed` (displays elapsed time), `remaining` (displays remaining time) and `bar` (displays a progress bar). The `off` and `remaining` modes are currently broken due to a Discord bug/limitation.
   - `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.
   - `posters`
@@ -104,6 +105,7 @@ display:
   artistImage: true
   year: true
   statusIcon: false
+  statusDisplayType: state
   progressMode: bar
   paused: false
   posters:
