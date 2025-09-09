@@ -45,6 +45,15 @@ The config file is stored in a directory named `data`.
   - `year` (boolean, default: `true`) - Displays the release year.
   - `statusIcon` (boolean, default: `false`) - Displays a status icon (playing, paused, buffering) at the bottom-right corner of the poster. Applicable to movies and TV shows only.
   - `progressMode` (string, default: `bar`) - Progress/timestamp display mode. Valid modes are `off`, `elapsed` (displays elapsed time), `remaining` (displays remaining time) and `bar` (displays a progress bar). The `off` and `remaining` modes are currently broken due to a Discord bug/limitation.
+  - `statusTextType`
+    - `watching` (string, default: `title`) - Type of status text to be shown while watching media. Valid types are:
+      - `app` - "Watching Plex"
+      - `title` - "Watching [Movie/Show Title]"
+    - `listening` (string, default: `artist`) - Type of status text to be shown while listening to music. Valid types are:
+      - `app` - "Listening to Plex"
+      - `title` - "Listening to [Track Title]"
+      - `artist` - "Listening to [Artist Name]"
+      - `album` - "Listening to [Album Name]"
   - `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.
   - `posters`
     - `enabled` (boolean, default: `true`) - Displays media posters (including album art and artist images). [Imgur](https://imgur.com/) is used if `imgurClientID` is set, otherwise [Litterbox](https://litterbox.catbox.moe/) is used.
@@ -54,14 +63,14 @@ The config file is stored in a directory named `data`.
   - `buttons` (list) - [Information](#buttons)
     - `label` (string) - The label to be displayed on the button.
     - `url` (string) - A web address or a [dynamic URL placeholder](#dynamic-button-urls).
-    - `mediaTypes` (list, optional) - If set, the button is displayed only for the specified media types. Valid media types are `movie`, `episode`, `live_episode`, `track` and `clip`.
+    - `mediaTypes` (string list, optional) - If set, the button is displayed only for the specified media types. Valid media types are `movie`, `episode`, `live_episode`, `track` and `clip`.
 - `users` (list)
   - `token` (string) - An access token associated with your Plex account. ([X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/), [Authenticating with Plex](https://forums.plex.tv/t/authenticating-with-plex/609370))
   - `servers` (list)
     - `name` (string) - Name of the Plex Media Server to connect to.
     - `listenForUser` (string, optional) - The script reacts to alerts originating only from this username. Defaults to the parent user's username if not set.
-    - `blacklistedLibraries` (list, optional) - Alerts originating from libraries in this list are ignored.
-    - `whitelistedLibraries` (list, optional) - If set, alerts originating from libraries that are not in this list are ignored.
+    - `blacklistedLibraries` (string list, optional) - Alerts originating from libraries in this list are ignored.
+    - `whitelistedLibraries` (string list, optional) - If set, alerts originating from libraries that are not in this list are ignored.
     - `ipcPipeNumber` (int, optional) - A number in the range of `0-9` to specify the Discord IPC pipe to connect to. Defaults to `-1`, which specifies that the first existing pipe in the range should be used. When a Discord client is launched, it binds to the first unbound pipe number, which is typically `0`.
 
 ### Obtaining an Imgur client ID
@@ -105,6 +114,9 @@ display:
   year: true
   statusIcon: false
   progressMode: bar
+  statusTextType:
+    watching: title
+    listening: artist
   paused: false
   posters:
     enabled: true

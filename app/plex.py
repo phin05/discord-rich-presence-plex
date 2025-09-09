@@ -33,6 +33,13 @@ mediaTypeActivityTypeMap = {
 	"clip": discord.ActivityType.WATCHING,
 }
 
+statusTextTypeActivityStatusDisplayTypeMap = {
+	"app": discord.ActivityStatusDisplayType.NAME,
+	"title": discord.ActivityStatusDisplayType.DETAILS,
+	"artist": discord.ActivityStatusDisplayType.STATE,
+	"album": discord.ActivityStatusDisplayType.STATE,
+}
+
 buttonTypeGuidTypeMap = {
 	"imdb": "imdb",
 	"tmdb": "tmdb",
@@ -268,8 +275,12 @@ class PlexAlertListener(threading.Thread):
 						largeText = f"{adjustTextLength(largeText, 110)} ({parent.year})"
 			if config.config["display"]["albumImage"]:
 				thumb = item.thumb
-			if config.config["display"]["artist"]:
+			if config.config["display"]["artist"] or config.config["display"]["statusTextType"]["listening"] == "artist":
 				stateStrings.append(item.originalTitle or item.grandparentTitle)
+			if config.config["display"]["statusTextType"]["listening"] == "album":
+				stateStrings = [largeText]
+				if config.config["display"]["artist"]:
+					largeText = item.originalTitle or item.grandparentTitle
 			if config.config["display"]["artistImage"]:
 				smallText = item.grandparentTitle or item.originalTitle
 				smallThumb = item.grandparentThumb
@@ -286,9 +297,13 @@ class PlexAlertListener(threading.Thread):
 		stateText = " · ".join(stateString for stateString in stateStrings if stateString)
 		thumbUrl = images.upload(thumb, self.server.url(thumb, True)) if thumb and config.config["display"]["posters"]["enabled"] else ""
 		smallThumbUrl = images.upload(smallThumb, self.server.url(smallThumb, True)) if smallThumb and config.config["display"]["posters"]["enabled"] else ""
+		statusTextTypeKey = "listening" if mediaType == "track" else "watching"
+		statusTextType = config.config["display"]["statusTextType"][statusTextTypeKey]
+		statusDisplayType = statusTextTypeActivityStatusDisplayTypeMap.get(statusTextType, discord.ActivityStatusDisplayType.NAME)
 		activity: discord.Activity = {
 			"type": mediaTypeActivityTypeMap[mediaType],
 			"details": adjustTextLength(title, 120, 2),
+			"status_display_type": statusDisplayType,
 		}
 		if config.config["display"]["statusIcon"]:
 			smallText = smallText or state.capitalize()

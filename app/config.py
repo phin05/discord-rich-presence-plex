@@ -1,5 +1,5 @@
 from app import constants, logger
-from typing import Any
+from typing import Any, Literal
 from typing import TypedDict
 import json
 import os
@@ -9,6 +9,10 @@ import yaml
 class Logging(TypedDict):
 	debug: bool
 	writeToFile: bool
+
+class StatusTextType(TypedDict):
+	watching: Literal["app", "title"]
+	listening: Literal["app", "title", "artist", "album"]
 
 class Posters(TypedDict):
 	enabled: bool
@@ -31,6 +35,7 @@ class Display(TypedDict):
 	year: bool
 	statusIcon: bool
 	progressMode: str
+	statusTextType: StatusTextType
 	paused: bool
 	posters: Posters
 	buttons: list[Button]
@@ -66,6 +71,10 @@ config: Config = {
 		"year": True,
 		"statusIcon": False,
 		"progressMode": "bar",
+		"statusTextType": {
+			"watching": "title",
+			"listening": "artist",
+		},
 		"paused": False,
 		"posters": {
 			"enabled": True,

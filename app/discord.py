@@ -12,6 +12,11 @@ class ActivityType(IntEnum):
 	LISTENING = 2
 	WATCHING = 3
 
+class ActivityStatusDisplayType(IntEnum):
+	NAME = 0
+	STATE = 1
+	DETAILS = 2
+
 class ActivityAssets(TypedDict, total = False):
 	large_text: str
 	large_image: str
@@ -28,6 +33,7 @@ class ActivityButton(TypedDict):
 
 class Activity(TypedDict, total = False):
 	type: ActivityType
+	status_display_type: ActivityStatusDisplayType
 	details: str
 	state: str
 	assets: ActivityAssets
