@@ -36,6 +36,7 @@ class Display(TypedDict):
 	statusIcon: bool
 	progressMode: str
 	statusTextType: StatusTextType
+	pauseTimeout: int
 	paused: bool
 	posters: Posters
 	buttons: list[Button]
@@ -75,6 +76,7 @@ config: Config = {
 			"watching": "title",
 			"listening": "artist",
 		},
+		"pauseTimeout": 0,
 		"paused": False,
 		"posters": {
 			"enabled": True,
@@ -128,6 +130,8 @@ def load() -> None:
 			del config["display"]["remainingTime"] # pyright: ignore[reportGeneralTypeIssues]
 		if config["display"]["progressMode"] not in ["off", "elapsed", "remaining", "bar"]:
 			config["display"]["progressMode"] = "bar"
+		if "pauseTimeout" in config["display"] and (not isinstance(config["display"]["pauseTimeout"], int) or config["display"]["pauseTimeout"] < 0):
+			config["display"]["pauseTimeout"] = 0
 	save()
 
 class YamlSafeDumper(yaml.SafeDumper):

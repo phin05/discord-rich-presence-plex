@@ -54,6 +54,7 @@ The config file is stored in a directory named `data`.
       - `title` - "Listening to [Track Title]"
       - `artist` - "Listening to [Artist Name]"
       - `album` - "Listening to [Album Name]"
+  - `pauseTimeout` (int, default: `0`) - Number of seconds to wait after media is paused before removing Rich Presence. Set to `0` to disable this feature.
   - `paused` (boolean, default: `false`) - Displays Rich Presence even while media is paused. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.
   - `posters`
     - `enabled` (boolean, default: `true`) - Displays media posters (including album art and artist images). [Imgur](https://imgur.com/) is used if `imgurClientID` is set, otherwise [Litterbox](https://litterbox.catbox.moe/) is used.

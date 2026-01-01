@@ -75,12 +75,14 @@ class PlexAlertListener(threading.Thread):
 		self.logger = logger.LoggerWithPrefix(f"[{self.serverConfig['name']}] ")
 		self.discordIpcService = discord.DiscordIpcService(self.serverConfig.get("ipcPipeNumber"))
 		self.updateTimeoutTimer: Optional[threading.Timer] = None
+		self.pauseTimeoutTimer: Optional[threading.Timer] = None
 		self.connectionCheckTimer: Optional[threading.Timer] = None
 		self.disconnectTimer: Optional[threading.Timer] = None
 		self.account: Optional[MyPlexAccount] = None
 		self.server: Optional[PlexServer] = None
 		self.alertListener: Optional[AlertListener] = None
 		self.lastState, self.lastSessionKey, self.lastRatingKey = "", 0, 0
+		self.pauseTimedOutSessionKey, self.pauseTimedOutRatingKey = 0, 0
 		self.listenForUser, self.isServerOwner, self.ignoreCount = "", False, 0
 		self.start()
 
@@ -141,6 +143,18 @@ class PlexAlertListener(threading.Thread):
 		if self.updateTimeoutTimer:
 			self.updateTimeoutTimer.cancel()
 			self.updateTimeoutTimer = None
+		if self.pauseTimeoutTimer:
+			self.pauseTimeoutTimer.cancel()
+			self.pauseTimeoutTimer = None
+
+	def pauseTimeout(self) -> None:
+		if self.lastState != "paused":
+			return
+		if not config.config["display"]["pauseTimeout"]:
+			return
+		self.logger.debug("Pause timeout reached for session key %s", self.lastSessionKey)
+		self.pauseTimedOutSessionKey, self.pauseTimedOutRatingKey = self.lastSessionKey, self.lastRatingKey
+		self.disconnectRpc()
 
 	def updateTimeout(self) -> None:
 		self.logger.debug("No recent updates from session key %s", self.lastSessionKey)
@@ -190,6 +204,16 @@ class PlexAlertListener(threading.Thread):
 		if "whitelistedLibraries" in self.serverConfig and libraryName not in self.serverConfig["whitelistedLibraries"]:
 			self.logger.debug("Library '%s' is not whitelisted, ignoring", libraryName)
 			return
+		self.logger.debug(f"pauseTimeout: {config.config["display"]["pauseTimeout"]}")
+		isPauseTimeoutEnabled = config.config["display"]["pauseTimeout"] > 0 and config.config["display"]["paused"]
+		if self.pauseTimedOutSessionKey == sessionKey and self.pauseTimedOutRatingKey == ratingKey:
+			if state == "paused" and isPauseTimeoutEnabled:
+				self.logger.debug("Pause timeout already reached for session key %s, ignoring", sessionKey)
+				return
+			self.pauseTimedOutSessionKey, self.pauseTimedOutRatingKey = 0, 0
+		if self.pauseTimeoutTimer and self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey and state != "paused":
+			self.pauseTimeoutTimer.cancel()
+			self.pauseTimeoutTimer = None
 		isIgnorableState = state == "stopped" or (state == "paused" and not config.config["display"]["paused"])
 		if self.lastSessionKey == sessionKey and self.lastRatingKey == ratingKey:
 			if self.updateTimeoutTimer:
@@ -238,7 +262,13 @@ class PlexAlertListener(threading.Thread):
 		if self.disconnectTimer:
 			self.disconnectTimer.cancel()
 			self.disconnectTimer = None
+		previousState, previousSessionKey, previousRatingKey = self.lastState, self.lastSessionKey, self.lastRatingKey
 		self.lastState, self.lastSessionKey, self.lastRatingKey = state, sessionKey, ratingKey
+		if isPauseTimeoutEnabled and state == "paused" and (previousState != "paused" or previousSessionKey != sessionKey or previousRatingKey != ratingKey):
+			if self.pauseTimeoutTimer:
+				self.pauseTimeoutTimer.cancel()
+			self.pauseTimeoutTimer = threading.Timer(config.config["display"]["pauseTimeout"], self.pauseTimeout)
+			self.pauseTimeoutTimer.start()
 		stateStrings: list[str] = []
 		if config.config["display"]["duration"] and item.duration and mediaType != "track":
 			stateStrings.append(formatSeconds(item.duration / 1000))
