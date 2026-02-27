@@ -2,4 +2,6 @@
 
 ## Contributing
 
-This repository does not accept pull requests.
+This project is maintained independently. Pull requests are not accepted.
+
+If you encounter a problem or have an idea, please open an issue instead.

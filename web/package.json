@@ -1,0 +1,34 @@
+{
+	"name": "drpp",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"lint": "eslint && tsc -b",
+		"build": "vite build"
+	},
+	"dependencies": {
+		"@mantine/core": "^8.3.15",
+		"@mantine/hooks": "^8.3.15",
+		"@mantine/notifications": "^8.3.15",
+		"@tabler/icons-react": "^3.37.1",
+		"@tanstack/react-query": "^5.90.21",
+		"react": "^19.2.4",
+		"react-dom": "^19.2.4",
+		"react-hook-form": "^7.71.2"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.39.3",
+		"@types/node": "^25.3.1",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"@vitejs/plugin-react-swc": "^4.2.3",
+		"eslint": "^9.39.3",
+		"eslint-plugin-react": "^7.37.5",
+		"eslint-plugin-react-hooks": "^7.0.1",
+		"eslint-plugin-react-refresh": "^0.5.2",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.56.1",
+		"vite": "^7.3.1"
+	}
+}

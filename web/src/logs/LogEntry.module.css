@@ -1,0 +1,56 @@
+.line {
+	padding-left: var(--mantine-spacing-xs);
+	border-left: 4px solid;
+	font-family: monospace;
+	background-color: rgba(79, 70, 229, 0.05);
+	font-size: var(--mantine-font-size-sm);
+	word-break: break-all;
+}
+
+.timestamp {
+	color: #6b7280;
+}
+
+.source {
+	color: #60a5fa;
+}
+
+.lineDEBUG {
+	border-left-color: #7c3aed;
+}
+
+.levelDEBUG {
+	color: #7c3aed;
+}
+
+.lineINFO {
+	border-left-color: #10b981;
+}
+
+.levelINFO {
+	color: #10b981;
+}
+
+.lineWARN {
+	border-left-color: #f59e0b;
+}
+
+.levelWARN {
+	color: #f59e0b;
+}
+
+.lineERROR {
+	border-left-color: #ef4444;
+}
+
+.levelERROR {
+	color: #ef4444;
+}
+
+.lineFATAL {
+	border-left-color: #b91c1c;
+}
+
+.levelFATAL {
+	color: #b91c1c;
+}

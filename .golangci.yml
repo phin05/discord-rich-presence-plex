@@ -1,0 +1,69 @@
+version: "2"
+linters:
+  default: all
+  disable:
+    - cyclop
+    - depguard
+    - err113
+    - exhaustruct
+    - funcorder
+    - funlen
+    - gochecknoglobals
+    - godot
+    - godox
+    - goprintffuncname
+    - lll
+    - mnd
+    - nestif
+    - nlreturn
+    - noinlineerr
+    - paralleltest
+    - tagalign
+    - varnamelen
+    - wrapcheck
+    - wsl
+    - wsl_v5
+    - whitespace
+    - containedctx
+    - embeddedstructfieldcheck
+    - gocognit
+    - goconst
+    - gocyclo
+    - godoclint
+    - iface
+    - interfacebloat
+    - ireturn
+    - testpackage
+    - unparam
+    - maintidx
+    - unqueryvet
+    - tagliatelle
+    - noctx
+    - exhaustive
+  settings:
+    errcheck:
+      check-type-assertions: true
+    perfsprint:
+      string-format: false
+    revive:
+      enable-default-rules: true
+      rules:
+        - name: package-comments
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+        - name: exported
+          disabled: true
+        - name: var-naming
+          disabled: true
+        - name: blank-imports
+          disabled: true
+  exclusions:
+    rules:
+      - source: "^\\s+defer\\s"
+        linters:
+          - errcheck
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: false

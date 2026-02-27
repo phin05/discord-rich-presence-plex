@@ -1,3 +1,5 @@
-__pycache__
-assets/readme/showcase.psd
-data
+/assets/readme/showcase.psd
+/out
+/web/dist
+/web/node_modules
+/local
