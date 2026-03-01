@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"text/template"
@@ -253,19 +252,19 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	switch activity.MediaType {
 	case "movie":
 		templateData["Title"] = activity.Item.Title
-		templateData["Year"] = strconv.FormatInt(activity.Item.Year, 10)
+		templateData["Year"] = activity.Item.Year
 		templateData["Duration"] = formatDuration(activity.Item.DurationMs, "")
 		templateData["Genres"] = formatGenres(activity.Item.Genres, ", ", 3)
 		templateData["Poster"] = activity.Item.Thumb
 		addGuidUrls(activity.Item.Guids, "")
 	case "episode":
 		templateData["ShowTitle"] = activity.GrandparentItem.Title
-		templateData["ShowYear"] = strconv.FormatInt(activity.GrandparentItem.Year, 10)
+		templateData["ShowYear"] = activity.GrandparentItem.Year
 		templateData["EpisodeDuration"] = formatDuration(activity.Item.DurationMs, "")
 		templateData["ShowGenres"] = formatGenres(activity.GrandparentItem.Genres, ", ", 3)
 		templateData["ShowPoster"] = activity.GrandparentItem.Thumb
-		templateData["SeasonNumber"] = strconv.FormatInt(activity.ParentItem.Index, 10)
-		templateData["EpisodeNumber"] = strconv.FormatInt(activity.Item.Index, 10)
+		templateData["SeasonNumber"] = activity.ParentItem.Index
+		templateData["EpisodeNumber"] = activity.Item.Index
 		templateData["EpisodeTitle"] = activity.Item.Title
 		addGuidUrls(activity.Item.Guids, "Episode")
 		addGuidUrls(activity.GrandparentItem.Guids, "Show")
@@ -277,7 +276,7 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 			templateData["Artist"] = activity.GrandparentItem.Title
 		}
 		templateData["Album"] = activity.ParentItem.Title
-		templateData["Year"] = strconv.FormatInt(activity.ParentItem.Year, 10)
+		templateData["Year"] = activity.ParentItem.Year
 		templateData["AlbumArtist"] = activity.GrandparentItem.Title
 		templateData["AlbumPoster"] = activity.ParentItem.Thumb
 		templateData["ArtistPoster"] = activity.GrandparentItem.Thumb
