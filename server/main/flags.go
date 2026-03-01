@@ -1,11 +1,20 @@
 package main
 
 import (
+	"drpp/server/config"
+	"drpp/server/logger"
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+)
+
+const (
+	dataDirName         = "drpp"
+	relativeDataDirName = "data"
+	envVarPrefix        = "DRPP_"
 )
 
 var (
@@ -19,9 +28,28 @@ var (
 )
 
 func parseFlags() {
+	var defaultDataDirPath string
+	if config.Containerised {
+		defaultDataDirPath = filepath.Join(containerCwd, relativeDataDirName)
+	} else {
+		exe, err := os.Executable()
+		if err != nil {
+			logger.Fatal(err, "Failed to get executable path")
+		}
+		legacyDataDirPath := filepath.Join(filepath.Dir(exe), relativeDataDirName)
+		if stat, err := os.Stat(legacyDataDirPath); err == nil && stat.IsDir() {
+			defaultDataDirPath = legacyDataDirPath
+		} else {
+			userConfigDir, err := os.UserConfigDir()
+			if err != nil {
+				logger.Fatal(err, "Failed to get user config directory")
+			}
+			defaultDataDirPath = filepath.Join(userConfigDir, dataDirName)
+		}
+	}
 	logFileFlag := stringFlagWithEnv("log-file", "", "Path to log file")
-	dataDirFlag := stringFlagWithEnv("data-dir", "", `Path to data directory. Defaults to "data" relative to executable.`)
-	configFileFlag := stringFlagWithEnv("config-file", "", `Path to config file. Defaults to "config.{yml,yaml,json}" inside data directory.`)
+	dataDirFlag := stringFlagWithEnv("data-dir", defaultDataDirPath, `Path to data directory`)
+	configFileFlag := stringFlagWithEnv("config-file", "", `Path to config file. Defaults to "config.yml" inside data directory.`)
 	cacheFileFlag := stringFlagWithEnv("cache-file", "", `Path to cache file. Defaults to "cache.json" inside data directory.`)
 	disableWebUiFlag := boolFlagWithEnv("disable-web-ui", false, "Disable web interface")
 	disableWebUiLaunchFlag := boolFlagWithEnv("disable-web-ui-launch", false, "Disable launching web interface on startup")
@@ -30,7 +58,13 @@ func parseFlags() {
 	logFilePath = *logFileFlag
 	dataDirPath = *dataDirFlag
 	configFilePath = *configFileFlag
+	if configFilePath == "" {
+		configFilePath = filepath.Join(dataDirPath, "config")
+	}
 	cacheFilePath = *cacheFileFlag
+	if cacheFilePath == "" {
+		cacheFilePath = filepath.Join(dataDirPath, "cache.json")
+	}
 	disableWebUi = *disableWebUiFlag
 	disableWebUiLaunch = *disableWebUiLaunchFlag
 	disableSystray = *disableSystrayFlag
@@ -55,5 +89,5 @@ func boolFlagWithEnv(name string, value bool, usage string) *bool {
 }
 
 func getEnvKey(name string) string {
-	return "DRPP_" + strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
+	return envVarPrefix + strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
 }

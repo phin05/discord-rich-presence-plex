@@ -23,7 +23,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -32,6 +31,8 @@ import (
 )
 
 var version = "0.0.0-dev"
+
+const containerCwd = "/app"
 
 func main() {
 
@@ -48,18 +49,8 @@ func main() {
 	}
 
 	logger.Info("Discord Rich Presence for Plex (DRPP) - v%s", version)
+	logger.Info("Data Directory: %s", dataDirPath)
 
-	if dataDirPath == "" {
-		exe, err := os.Executable()
-		if err != nil {
-			logger.Fatal(err, "Failed to get executable path")
-		}
-		dataDirPath = filepath.Join(filepath.Dir(exe), "data")
-	}
-
-	if configFilePath == "" {
-		configFilePath = filepath.Join(dataDirPath, "config")
-	}
 	configService, err := config.NewService(configFilePath)
 	if err != nil {
 		logger.Fatal(err, "Failed to load config")
@@ -67,9 +58,6 @@ func main() {
 	configController := config.NewController(configService)
 	cfg := configService.Config()
 
-	if cacheFilePath == "" {
-		cacheFilePath = filepath.Join(dataDirPath, "cache.json")
-	}
 	cacheService, err := cache.NewService(cacheFilePath)
 	if err != nil {
 		logger.Fatal(err, "Failed to load cache")

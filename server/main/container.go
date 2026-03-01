@@ -14,8 +14,6 @@ import (
 	"syscall"
 )
 
-const containerCwd = "/app"
-
 var (
 	uid               = getEnvInt("DRPP_UID", -1)
 	gid               = getEnvInt("DRPP_GID", -1)
