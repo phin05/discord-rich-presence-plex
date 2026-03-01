@@ -1,5 +1,6 @@
 import { apiBaseUrl } from "@/common/api";
 import { Box, Divider, Flex, Indicator, Skeleton, Switch, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import logEntryStyles from "./LogEntry.module.css";
 
@@ -17,8 +18,8 @@ export function LogStream() {
 	const [entries, setEntries] = useState<Entry[]>([]);
 	const [connected, setConnected] = useState(false);
 	const [connectedOnce, setConnectedOnce] = useState(false);
-	const [autoScroll, setAutoScroll] = useState(true);
-	const [wrapText, setWrapText] = useState(false);
+	const [autoScroll, setAutoScroll] = useLocalStorage({ key: "logs-auto-scroll", defaultValue: true });
+	const [wrapText, setWrapText] = useLocalStorage({ key: "logs-wrap-text", defaultValue: false });
 	const [search, setSearch] = useState("");
 	const [searchError, setSearchError] = useState("");
 	const [searchRegExp, setSearchRegExp] = useState<RegExp | null>(null);
