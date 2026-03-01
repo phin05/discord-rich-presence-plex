@@ -52,7 +52,7 @@ func parseFlags() {
 	configFileFlag := stringFlagWithEnv("config-file", "", `Path to config file. Defaults to "config.yml" inside data directory.`)
 	cacheFileFlag := stringFlagWithEnv("cache-file", "", `Path to cache file. Defaults to "cache.json" inside data directory.`)
 	disableWebUiFlag := boolFlagWithEnv("disable-web-ui", false, "Disable web interface")
-	disableWebUiLaunchFlag := boolFlagWithEnv("disable-web-ui-launch", false, "Disable launching web interface on startup")
+	disableWebUiLaunchFlag := boolFlagWithEnv("disable-web-ui-launch", false, "Disable launching web interface on startup (override flag meant for autostart)")
 	disableSystrayFlag := boolFlagWithEnv("disable-systray", false, "Disable system tray icon")
 	flag.Parse()
 	logFilePath = *logFileFlag

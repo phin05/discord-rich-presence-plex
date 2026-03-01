@@ -6,22 +6,39 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
+	"strings"
 
 	"golang.org/x/sys/windows/registry"
 )
 
 const (
-	registryKeyPath   = `Software\Microsoft\Windows\CurrentVersion\Run`
-	registryValueName = "DRPP"
+	registryKeyPath        = `Software\Microsoft\Windows\CurrentVersion\Run`
+	registryValueName      = "DRPP"
+	disableWebUiLaunchFlag = "disable-web-ui-launch"
 )
 
-var command = func() string {
-	exe, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	return fmt.Sprintf(`"%s" --disable-web-ui-launch`, exe)
-}()
+var (
+	exe = func() string {
+		exe, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+		return exe
+	}()
+	args = func() string {
+		var flags []string
+		for _, arg := range os.Args[1:] {
+			flag := strings.TrimLeft(arg, "-")
+			if flag == disableWebUiLaunchFlag || slices.Contains(flags, flag) {
+				continue
+			}
+			flags = append(flags, flag)
+		}
+		flags = append(flags, disableWebUiLaunchFlag)
+		return "--" + strings.Join(flags, " --")
+	}()
+)
 
 func isAutostartEnabled() (bool, error) {
 	key, err := registry.OpenKey(registry.CURRENT_USER, registryKeyPath, registry.QUERY_VALUE)
@@ -39,7 +56,13 @@ func isAutostartEnabled() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("get registry value: %w", err)
 	}
-	return value == command, nil
+	argsStartPos := 1 + len(exe) + 2
+	if len(value) < argsStartPos {
+		return false, nil
+	}
+	currentExe := value[1:][:len(exe)]
+	currentArgs := value[argsStartPos:]
+	return strings.EqualFold(currentExe, exe) && currentArgs == args, nil
 }
 
 func setAutostartEnabled(enabled bool) error {
@@ -49,7 +72,7 @@ func setAutostartEnabled(enabled bool) error {
 	}
 	defer key.Close()
 	if enabled {
-		return key.SetStringValue(registryValueName, command)
+		return key.SetStringValue(registryValueName, fmt.Sprintf(`"%s" %s`, exe, args))
 	}
 	if err := key.DeleteValue(registryValueName); err != nil && !errors.Is(err, registry.ErrNotExist) {
 		return err
