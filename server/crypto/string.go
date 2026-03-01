@@ -12,53 +12,35 @@ import (
 const encryptionPrefix = "encrypted:"
 
 type String struct {
-	encrypted *string // Should be a nil pointer if decrypted is empty, for validate:"required" to work correctly
+	encrypted string
 	decrypted string
 }
 
-func (s *String) Set(value string) {
-	// Encrypted value will be set during marshaling, so only allocate an empty string for it here when setting a new decrypted value
-	s.encrypted = new(string)
+func (s *String) Set(value string) error {
+	if value == "" {
+		s.encrypted = ""
+	} else {
+		encryptedBytes, err := aesGcmEncrypt([]byte(value))
+		if err != nil {
+			return err
+		}
+		s.encrypted = encryptionPrefix + base64.StdEncoding.EncodeToString(encryptedBytes)
+	}
 	s.decrypted = value
+	return nil
 }
 
 func (s *String) Value() string {
 	return s.decrypted
 }
 
-func marshal[T any](s String, done func(encrypted string) (T, error)) (T, error) {
-	if s.encrypted == nil || s.decrypted == "" {
-		return done("")
-	}
-	encrypted := *s.encrypted
-	if strings.HasPrefix(encrypted, encryptionPrefix) {
-		return done(encrypted)
-	}
-	encryptedBytes, err := aesGcmEncrypt([]byte(s.decrypted))
-	if err != nil {
-		var zero T
-		return zero, fmt.Errorf("encrypt: %w", err)
-	}
-	encrypted = encryptionPrefix + base64.StdEncoding.EncodeToString(encryptedBytes)
-	*s.encrypted = encrypted
-	return done(encrypted)
-}
-
-func (s String) MarshalJSON() ([]byte, error) {
-	return marshal(s, func(encrypted string) ([]byte, error) {
-		bytes, err := json.Marshal(encrypted)
-		if err != nil {
-			return nil, fmt.Errorf("marshal: %w", err)
-		}
-		return bytes, nil
-	})
+func (s *String) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.encrypted)
 }
 
 // Doesn't support pointer receiver
 func (s String) MarshalYAML() (any, error) {
-	return marshal(s, func(encrypted string) (any, error) {
-		return encrypted, nil
-	})
+	return s.encrypted, nil
 }
 
 func (s *String) unmarshal(encrypted string) error {
@@ -67,10 +49,12 @@ func (s *String) unmarshal(encrypted string) error {
 	}
 	if !strings.HasPrefix(encrypted, encryptionPrefix) {
 		// Value is not encrypted so set it as the decrypted value directly
-		s.Set(encrypted)
+		if err := s.Set(encrypted); err != nil {
+			return fmt.Errorf("set decrypted value: %w", err)
+		}
 		return nil
 	}
-	s.encrypted = &encrypted
+	s.encrypted = encrypted
 	encryptedBytes, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(encrypted, encryptionPrefix))
 	if err != nil {
 		return fmt.Errorf("base64 decode: %w", err)

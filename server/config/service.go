@@ -125,11 +125,13 @@ func (s *Service) migrate(configBytes []byte) error {
 						s.config.Images.Uploaders.Imgur.Enabled = true
 						s.config.Images.Uploaders.Litterbox.Enabled = false
 					}
-					s.config.Images.Uploaders.Imgur.ClientId.Set(oldConfig.Display.Posters.ImgurClientId)
+					if err := s.config.Images.Uploaders.Imgur.ClientId.Set(oldConfig.Display.Posters.ImgurClientId); err != nil {
+						return fmt.Errorf("set Imgur client ID: %w", err)
+					}
 				}
 				s.config.Images.FitInSquare = oldConfig.Display.Posters.Fit
 				s.config.Images.MaxSize = oldConfig.Display.Posters.MaxSize
-				for _, userV0 := range oldConfig.Users {
+				for i, userV0 := range oldConfig.Users {
 					var servers []Server
 					for _, serverV0 := range userV0.Servers {
 						servers = append(servers, Server{
@@ -144,7 +146,9 @@ func (s *Service) migrate(configBytes []byte) error {
 						})
 					}
 					user := User{Enabled: true, Servers: servers}
-					user.Token.Set(userV0.Token)
+					if err := user.Token.Set(userV0.Token); err != nil {
+						return fmt.Errorf("set token for user %d: %w", i, err)
+					}
 					s.config.Plex.Users = append(s.config.Plex.Users, user)
 				}
 			}
