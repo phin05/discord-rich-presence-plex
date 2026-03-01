@@ -12,31 +12,31 @@ Discord Rich Presence for Plex (DRPP) is an application that displays your [Plex
 - Automatically displays your Plex playback activity (movies, TV shows, music, clips) on Discord with poster artwork, progress, buttons, external links, and metadata.
 - Web-based user interface for managing all settings, interactive Plex authentication, and viewing live logs.
 - Ability to customise all fields shown in your Rich Presence for each media type using [Go template strings](https://pkg.go.dev/text/template).
-- Support for Windows (amd64), Linux (amd64, arm64, 386, arm/v7), macOS (amd64, arm64) and Docker (linux/amd64, linux/arm64, linux/386, linux/arm/v7).
+- Support for Windows (amd64), Linux (amd64, arm64, 386, arm/v7), macOS (amd64, arm64), and Docker (linux/amd64, linux/arm64, linux/386, linux/arm/v7).
 
 ## Usage
 
 ### Getting Started
 
-If you're using a Linux-based operating system, you can [run DRPP with Docker](#docker). Otherwise, follow these instructions:
+If you're on Linux, you can [run DRPP with Docker](#docker).
 
 1. Download the [latest release](https://github.com/phin05/discord-rich-presence-plex/releases/latest) for your platform and extract it.
 2. Run the executable file.
-3. Open the web interface to configure the application:
+3. Open the web interface to configure DRPP:
    - The web interface will launch automatically in your default browser, or
    - Navigate to [http://localhost:8040](http://localhost:8040), or
    - Click the DRPP icon in your system tray and select **Web UI**.
 4. Click **Add User** and complete the interactive Plex authentication flow.
 
+On Windows and Linux, DRPP has an icon in the system tray. Clicking this allows you to launch the web interface in your default browser.
+
 Information about each config property and templating is available in the web interface.
 
-DRPP must be running on the same machine as your Discord client.
-
-### System Tray
-
-On Windows and Linux, DRPP has an icon in the system tray. Click this tray icon to access the **Web UI** button to launch the web interface in your default browser.
+The web interface is meant for local access only and must not be exposed to the internet. Even if you expose it, all connections from external networks are blocked by default.
 
 ### Discord Setup
+
+Discord must be running on the same machine as DRPP.
 
 The **"Share my activity"** setting must be enabled in Discord for Rich Presence to work.
 
@@ -44,14 +44,14 @@ Navigate to **Discord Settings → Activity Settings → Activity Privacy** to e
 
 ### CLI Flags
 
-| Flag                | Environment Variable   | Default Value                              | Description              |
-| ------------------- | ---------------------- | ------------------------------------------ | ------------------------ |
-| `--data-dir`        | `DRPP_DATA_DIR`        | `data` (relative to executable)            | Path to data directory   |
-| `--config-file`     | `DRPP_CONFIG_FILE`     | `config.{yml,yaml,json}` (inside data dir) | Path to config file      |
-| `--cache-file`      | `DRPP_CACHE_FILE`      | `cache.json` (inside data dir)             | Path to cache file       |
-| `--log-file`        | `DRPP_LOG_FILE`        |                                            | Path to log file         |
-| `--disable-web-ui`  | `DRPP_DISABLE_WEB_UI`  | `false`                                    | Disable web interface    |
-| `--disable-systray` | `DRPP_DISABLE_SYSTRAY` | `false`                                    | Disable system tray icon |
+| Flag                | Environment Variable   | Default Value                   | Description              |
+| ------------------- | ---------------------- | ------------------------------- | ------------------------ |
+| `--data-dir`        | `DRPP_DATA_DIR`        | `data` (relative to executable) | Path to data directory   |
+| `--config-file`     | `DRPP_CONFIG_FILE`     | `config.yml` (inside data dir)  | Path to config file      |
+| `--cache-file`      | `DRPP_CACHE_FILE`      | `cache.json` (inside data dir)  | Path to cache file       |
+| `--log-file`        | `DRPP_LOG_FILE`        | (disabled)                      | Path to log file         |
+| `--disable-web-ui`  | `DRPP_DISABLE_WEB_UI`  | `false`                         | Disable web interface    |
+| `--disable-systray` | `DRPP_DISABLE_SYSTRAY` | `false`                         | Disable system tray icon |
 
 Environment variables take precedence over default values but are overridden by explicitly passed flags.
 
@@ -60,6 +60,28 @@ Environment variables take precedence over default values but are overridden by 
 ### Image
 
 [ghcr.io/phin05/discord-rich-presence-plex](https://ghcr.io/phin05/discord-rich-presence-plex)
+
+### Docker Compose Example
+
+```yaml
+services:
+  drpp:
+    container_name: drpp
+    image: ghcr.io/phin05/discord-rich-presence-plex:latest
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8040:8040
+    environment:
+      DRPP_UID: 1000
+      DRPP_GID: 1000
+    volumes:
+      - ./data:/app/data
+      - /run/user/1000:/run/app
+```
+
+Once DRPP is running, navigate to [http://localhost:8040](http://localhost:8040). Click **Add User** and complete the interactive Plex authentication flow.
+
+Make sure to bind the port only to `127.0.0.1` as shown above.
 
 ### Volumes
 
@@ -88,24 +110,6 @@ For example, if `XDG_RUNTIME_DIR` is `/run/user/1000`, mount that directory into
 | `DRPP_NO_RUNTIME_DIR_CHOWN` | Set to `true` to skip ownership change of `/run/app`   |
 
 When both `DRPP_UID` and `DRPP_GID` are set, DRPP changes ownership of `/run/app` and `/app` to match the specified UID and GID to prevent permission issues.
-
-### Docker Compose Example
-
-```yaml
-services:
-  drpp:
-    container_name: drpp
-    image: ghcr.io/phin05/discord-rich-presence-plex:latest
-    restart: unless-stopped
-    ports:
-      - 127.0.0.1:8040:8040
-    environment:
-      DRPP_UID: 1000
-      DRPP_GID: 1000
-    volumes:
-      - ./data:/app/data
-      - /run/user/1000:/run/app
-```
 
 ### Containerised Discord
 
@@ -153,7 +157,7 @@ DRPP's container image is Linux-based. Docker uses virtualisation to run Linux c
 
 ### Image Upload Providers
 
-DRPP downloads poster images from your Plex server and uploads them to an external image host for display in Discord. The following providers are available:
+DRPP downloads poster images from Plex and uploads them to an external image host for displaying in Discord. The following providers are available:
 
 - [Litterbox](https://litterbox.catbox.moe/) (default)
 - [ImgBB](https://imgbb.com/)
