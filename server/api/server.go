@@ -25,7 +25,7 @@ type Server struct {
 }
 
 func NewServer(ctx context.Context, bindAddress string, webBuildOutput fs.FS, devMode bool, allowedNetworks []string, trustedProxies []string) *Server {
-	logger.Info("Web UI: http://%s", bindAddress)
+	logger.Info("Bind Address: http://%s", bindAddress)
 	mux := http.NewServeMux()
 	mux.Handle("GET /", http.FileServerFS(&customFs{innerFs: webBuildOutput}))
 	var handler http.Handler = mux

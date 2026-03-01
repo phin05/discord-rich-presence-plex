@@ -16,7 +16,7 @@ jobs:
     env:
       DOCKER_IMAGE_NAME: ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
       IS_DEV_TAG: ${{ contains(github.ref_name, '-') }}
-      SHORT_NAME: DRPP
+      SHORT_NAME: drpp
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

@@ -356,7 +356,7 @@ function getDisplayRuleFields() {
 		statusType: {
 			type: "select",
 			label: "Status Type",
-			description: 'Controls which field is displayed in the status text in the member list: details text, state text, or the app name (Plex). For instance, if set to "details" and the details text above resolves to "Something", the status displayed will be "Watching Something".',
+			description: 'Controls which field is displayed in the status text in the member list: details text, state text, or the app name (Plex). For instance, if set to "Details" and the details text above resolves to "Something", the status displayed will be "Watching Something".',
 			options: [
 				{ label: "Details", value: "details" },
 				{ label: "State", value: "state" },
@@ -421,6 +421,7 @@ function getDisplayRuleFields() {
 			type: "number",
 			label: "Pause Timeout",
 			description: "Seconds to wait before clearing Rich Presence after playback is paused. Use -1 to show indefinitely and 0 to clear immediately. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.",
+			defaultValue: 0,
 		},
 		buttons: {
 			type: "array",

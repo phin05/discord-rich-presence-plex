@@ -1,6 +1,5 @@
-import { generatePlexPin, getPlexAuthToken, getPlexAuthUrl, getPlexResources } from "@/plex/client";
+import { generatePlexPin, getPlexAuthToken, getPlexAuthUrl, getPlexResources, type PlexResource } from "@/plex/client";
 import { PlexAuthContext, type PlexAuthOnAdd, type PlexAuthOnCancel } from "@/plex/PlexAuthContext";
-import { type PlexResource } from "@/plex/types";
 import { Button, Divider, Flex, Kbd, Loader, Modal, Select, Switch, Text, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";

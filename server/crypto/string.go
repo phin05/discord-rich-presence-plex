@@ -12,8 +12,7 @@ import (
 const encryptionPrefix = "encrypted:"
 
 type String struct {
-	// Should be a nil pointer if decrypted is empty, for validate:"required" to work correctly
-	encrypted *string
+	encrypted *string // Should be a nil pointer if decrypted is empty, for validate:"required" to work correctly
 	decrypted string
 }
 

@@ -5,7 +5,7 @@ Discord Rich Presence for Plex (DRPP) is an application that displays your [Plex
 [![Latest Release](https://img.shields.io/github/v/release/phin05/discord-rich-presence-plex?label=Latest%20Release)](https://github.com/phin05/discord-rich-presence-plex/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/phin05/discord-rich-presence-plex/release.yml?label=Build&logo=github)](https://github.com/phin05/discord-rich-presence-plex/actions/workflows/release.yml)
 
-![Showcase](assets/readme/showcase.png)
+<img width="646" height="276" alt="Showcase" src="https://github.com/user-attachments/assets/a8064002-0b3e-43d4-96d5-74864e514cf3" />
 
 ## Features
 

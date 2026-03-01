@@ -18,7 +18,7 @@ build-server-%:
 	$(eval OSARCH := $(subst -, ,$*))
 	$(eval export GOOS := $(word 1,$(OSARCH)))
 	$(eval export GOARCH := $(word 2,$(OSARCH)))
-	go build -ldflags "-buildid= -s -w$(if $(filter windows,$(GOOS)), -H windowsgui,) -X main.version=$(APP_VERSION)" -trimpath -o out/$(GOOS)-$(GOARCH)/$(if $(filter windows,$(GOOS)),DRPP.exe,drpp) ./server/main
+	go build -ldflags "-buildid= -s -w$(if $(filter windows,$(GOOS)), -H windowsgui,) -X main.version=$(APP_VERSION)" -trimpath -o out/$(GOOS)-$(GOARCH)/drpp$(if $(filter windows,$(GOOS)),.exe,) ./server/main
 
 clean: clean-web clean-server
 clean-web:

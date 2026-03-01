@@ -1,5 +1,3 @@
-import { type PlexPin, type PlexResource } from "@/plex/types";
-
 const productName = "Discord Rich Presence for Plex";
 const clientId = "discord-rich-presence-plex";
 const defaultHeaders = {
@@ -7,6 +5,12 @@ const defaultHeaders = {
 	"X-Plex-Client-Identifier": clientId,
 };
 const fetchTimeout = 10000;
+
+export interface PlexPin {
+	id: number;
+	code: string;
+	authToken: string;
+}
 
 export async function generatePlexPin() {
 	const response = await fetch("https://plex.tv/api/v2/pins?strong=true", {
@@ -38,6 +42,20 @@ export async function getPlexAuthToken(pin: PlexPin) {
 	}
 	pin = (await response.json()) as PlexPin;
 	return pin.authToken;
+}
+
+export interface PlexResource {
+	name: string;
+	product: string;
+	productVersion: string;
+	platform: string;
+	platformVersion: string;
+	device: string;
+	clientIdentifier: string;
+	provides: string;
+	createdAt: string;
+	lastSeenAt: string;
+	owned: boolean;
 }
 
 export async function getPlexResources(authToken: string) {

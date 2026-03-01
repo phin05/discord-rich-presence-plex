@@ -9,6 +9,7 @@ func newDefaultConfig() Config {
 	var bindAddress string
 	var allowedNetworks []string
 	if Containerised {
+		// TODO: Detect the container's interface and subnet
 		bindAddress = "0.0.0.0"
 		allowedNetworks = []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"}
 	} else {
@@ -20,7 +21,7 @@ func newDefaultConfig() Config {
 		Web: Web{
 			LaunchOnStartup: launchOnStartup,
 			BindAddress:     bindAddress,
-			BindPort:        8040,
+			BindPort:        8040, // TODO: Auto-select an available port if this is unavailable
 			AllowedNetworks: allowedNetworks,
 		},
 		Discord: Discord{

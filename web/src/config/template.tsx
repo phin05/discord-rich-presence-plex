@@ -128,7 +128,7 @@ export const templateFunctions: TemplateFunction[] = [
 		example: '{{ formatDuration .ElapsedDurationMs "%d:%02d:%02d" }}',
 		description: (
 			<span>
-				Formats a duration given in milliseconds. Format should be a <Code>fmt.Sprintf</Code> format string receiving hours, minutes and seconds as integer arguments (e.g. <Code>&quot;%d:%02d:%02d&quot;</Code> → <Code>&quot;1:30:00&quot;</Code>). If format is an empty string, Go&apos;s built-in duration format is used (e.g. <Code>&quot;1h30m0s&quot;</Code>).
+				Formats a duration given in milliseconds. Format should be a <Code>fmt.Sprintf</Code> format string receiving hours, minutes and seconds as integer arguments (e.g. <Code>&quot;%d:%02d:%02d&quot;</Code> → <Code>&quot;1:30:00&quot;</Code>). If format is an empty string, Go&apos;s default duration format is used (e.g. <Code>&quot;1h30m0s&quot;</Code>).
 			</span>
 		),
 	},

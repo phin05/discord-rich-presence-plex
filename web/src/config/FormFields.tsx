@@ -137,7 +137,7 @@ function ArrayField({ name, control, schema, label, error }: { name: FieldArrayP
 						<Button
 							leftSection={<IconPlus size={16} />}
 							onClick={() => {
-								document.getElementById("start-plex-auth")?.click();
+								document.getElementById("start-plex-auth")?.click(); // TODO: This is a bit hacky
 							}}
 							variant="outline"
 						>

@@ -29,13 +29,13 @@ export function TemplateModalProvider({ children }: PropsWithChildren) {
 function TemplateModal({ opened, close, mediaType }: { opened: boolean; close: () => void; mediaType: string }) {
 	return (
 		<Modal onClose={close} opened={opened} size="xl" title={<Text fw={500}>Template Variables and Functions</Text>}>
-			<Text c="dimmed" size="sm">
+			<Text size="sm">
 				Templating System:{" "}
 				<Anchor href="https://pkg.go.dev/text/template" target="_blank" underline="never">
 					https://pkg.go.dev/text/template
 				</Anchor>
 			</Text>
-			<Text c="dimmed" size="sm">
+			<Text size="sm">
 				The below template variables and functions can be used in fields marked with the <IconBraces color="#228be6" size={16} style={{ verticalAlign: "-3px" }} /> icon.
 			</Text>
 			<Tabs defaultValue={mediaType} mt="md">
@@ -54,7 +54,7 @@ function TemplateModal({ opened, close, mediaType }: { opened: boolean; close: (
 					</Tabs.Panel>
 				))}
 				<Tabs.Panel mt="md" value="functions">
-					<Table withColumnBorders withTableBorder>
+					<Table mb="md" withColumnBorders withTableBorder>
 						<Table.Thead>
 							<Table.Tr>
 								<Table.Th>Name / Signature</Table.Th>
@@ -76,6 +76,12 @@ function TemplateModal({ opened, close, mediaType }: { opened: boolean; close: (
 							))}
 						</Table.Tbody>
 					</Table>
+					<Text size="sm">
+						Built-in Go template functions:{" "}
+						<Anchor href="https://pkg.go.dev/text/template#hdr-Functions" target="_blank" underline="never">
+							https://pkg.go.dev/text/template#hdr-Functions
+						</Anchor>
+					</Text>
 				</Tabs.Panel>
 			</Tabs>
 		</Modal>

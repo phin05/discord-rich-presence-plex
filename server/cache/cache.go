@@ -39,8 +39,7 @@ func NewService(filePath string) (*Service, error) {
 	if err := s.save(); err != nil {
 		return nil, fmt.Errorf("save: %w", err)
 	}
-	// TODO: Graceful shutdown
-	// Cache service is used as a singleton and never stopped/disposed in this app, so this is safe for now
+	// TODO: Graceful shutdown - Cache service is used as a singleton and never stopped/disposed in this app, so this is safe for now
 	go s.cleaner()
 	return s, nil
 }

@@ -120,9 +120,7 @@ function Form({ config }: { config: UseQueryResult<Config> }) {
 								<IconAlertTriangle color="orange" size={16} style={{ marginTop: 2 }} />
 								<Text fw={500}>Setup Incomplete</Text>
 							</Flex>
-							<Text c="dimmed" size="sm">
-								Add a Plex user and server to finish setting up.
-							</Text>
+							<Text size="sm">Add a Plex user and server to finish setting up.</Text>
 						</Flex>
 						<Button leftSection={<IconPlus size={16} />} onClick={initiatePlexAuth}>
 							Add User

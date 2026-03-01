@@ -108,7 +108,7 @@ func main() {
 			}
 		}
 		if len(plexServices) == 0 {
-			logger.Warning("Plex connection not configured. Add a Plex user and server to finish setting up.")
+			logger.Warning("No active Plex servers found. Add a Plex user and server to finish setting up.")
 		}
 		var imageService mediator.ImageService
 		switch {

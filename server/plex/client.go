@@ -122,24 +122,24 @@ type MediaContainer struct {
 }
 
 type Metadata struct {
-	Type                 string  `json:"type"`
-	LibrarySectionTitle  string  `json:"librarySectionTitle"`
-	Key                  string  `json:"key"`
-	RatingKey            string  `json:"ratingKey"`
-	ParentRatingKey      string  `json:"parentRatingKey"`
-	GrandparentRatingKey string  `json:"grandparentRatingKey"`
-	Title                string  `json:"title"`
-	OriginalTitle        string  `json:"originalTitle"`
-	Year                 int64   `json:"year"`
-	Index                int64   `json:"index"`
-	Thumb                string  `json:"thumb"`
-	DurationMs           int64   `json:"duration"`
-	Genres               []Genre `json:"Genre"`
-	Guids                []Guid  `json:"Guid"`
-	SessionKey           string  `json:"sessionKey"`
-	User                 User    `json:"User"`
-	GrandparentThumb     string  `json:"grandparentThumb"` // For live episodes
-	GrandparentTitle     string  `json:"grandparentTitle"` // FOr live episodes
+	Type                 string  `json:"type,omitzero"`
+	LibrarySectionTitle  string  `json:"librarySectionTitle,omitzero"`
+	Key                  string  `json:"key,omitzero"`
+	RatingKey            string  `json:"ratingKey,omitzero"`
+	ParentRatingKey      string  `json:"parentRatingKey,omitzero"`
+	GrandparentRatingKey string  `json:"grandparentRatingKey,omitzero"`
+	Title                string  `json:"title,omitzero"`
+	OriginalTitle        string  `json:"originalTitle,omitzero"`
+	Year                 int64   `json:"year,omitzero"`
+	Index                int64   `json:"index,omitzero"`
+	Thumb                string  `json:"thumb,omitzero"`
+	DurationMs           int64   `json:"duration,omitzero"`
+	Genres               []Genre `json:"Genre,omitempty"`
+	Guids                []Guid  `json:"Guid,omitempty"`
+	SessionKey           string  `json:"sessionKey,omitzero"`
+	User                 User    `json:"User,omitzero"`
+	GrandparentThumb     string  `json:"grandparentThumb,omitzero"` // For live episodes
+	GrandparentTitle     string  `json:"grandparentTitle,omitzero"` // FOr live episodes
 }
 
 type Genre struct {

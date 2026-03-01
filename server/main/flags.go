@@ -47,7 +47,7 @@ func parseFlags() {
 			defaultDataDirPath = filepath.Join(userConfigDir, dataDirName)
 		}
 	}
-	logFileFlag := stringFlagWithEnv("log-file", "", "Path to log file")
+	logFileFlag := stringFlagWithEnv("log-file", "", "Path to log file. Disabled if empty.")
 	dataDirFlag := stringFlagWithEnv("data-dir", defaultDataDirPath, `Path to data directory`)
 	configFileFlag := stringFlagWithEnv("config-file", "", `Path to config file. Defaults to "config.yml" inside data directory.`)
 	cacheFileFlag := stringFlagWithEnv("cache-file", "", `Path to cache file. Defaults to "cache.json" inside data directory.`)

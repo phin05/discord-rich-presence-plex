@@ -19,8 +19,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Last element in the array will be the default extension if no config file exists
-var extensions = []string{".json", ".yaml", ".yml"}
+const defaultExtension = ".yml"
+
+var extensions = []string{".yml", ".yaml", ".json"}
 
 type Service struct {
 	filePath            string
@@ -34,14 +35,18 @@ func NewService(filePath string) (*Service, error) {
 	finalFilePath := filePath
 	extension := filepath.Ext(finalFilePath)
 	if extension == "" {
-		for _, extension = range extensions {
-			finalFilePath = filePath + extension
-			if _, err := os.Stat(finalFilePath); err == nil {
+		for _, ext := range extensions {
+			if _, err := os.Stat(filePath + ext); err == nil {
+				extension = ext
 				break
 			}
 		}
+		if extension == "" {
+			extension = defaultExtension
+		}
+		finalFilePath = filePath + extension
 	} else if !slices.Contains(extensions, extension) {
-		return nil, fmt.Errorf("unsupported config file extension %q", extension)
+		return nil, fmt.Errorf("unsupported config file extension %q, supported extensions are: %s", extension, strings.Join(extensions, ", "))
 	}
 	s := &Service{
 		filePath: finalFilePath,
