@@ -111,7 +111,7 @@ export function LogStream() {
 					value={search}
 				/>
 				<Text c="dimmed" size="sm">
-					{`${filteredEntries.length} log ${filteredEntries.length === 1 ? "entry" : "entries"}${entries.length !== filteredEntries.length ? ` (${entries.length} total)` : ""}`}
+					{`${filteredEntries.length} ${filteredEntries.length === 1 ? "entry" : "entries"}${entries.length !== filteredEntries.length ? ` (${entries.length} total)` : ""}`}
 				</Text>
 			</Flex>
 			<Divider />

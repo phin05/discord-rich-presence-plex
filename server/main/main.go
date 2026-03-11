@@ -63,8 +63,8 @@ func main() {
 		logger.Fatal(err, "Failed to load cache")
 	}
 
-	var fatalExit atomic.Bool
 	shutdownCtx, shutdown := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	var fatalExit atomic.Bool
 	fatalShutdown := func() {
 		fatalExit.Store(true)
 		shutdown()

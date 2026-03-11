@@ -50,10 +50,10 @@ func isAutostartEnabled() (bool, error) {
 	}
 	defer key.Close()
 	value, _, err := key.GetStringValue(registryValueName)
-	if errors.Is(err, registry.ErrNotExist) {
-		return false, nil
-	}
 	if err != nil {
+		if errors.Is(err, registry.ErrNotExist) {
+			return false, nil
+		}
 		return false, fmt.Errorf("get registry value: %w", err)
 	}
 	argsStartPos := 1 + len(exe) + 2

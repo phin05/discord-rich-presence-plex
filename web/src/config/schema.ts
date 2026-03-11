@@ -340,16 +340,16 @@ export const configSchema: ObjectSchema = {
 };
 
 function getDisplayRuleFields() {
-	return {
+	const fields: Fields = {
 		details: {
 			type: "string",
-			label: "Details",
+			label: "Details Text",
 			template: true,
 			description: "First line in Rich Presence",
 		},
 		state: {
 			type: "string",
-			label: "State",
+			label: "State Text",
 			template: true,
 			description: "Second line in Rich Presence",
 		},
@@ -357,7 +357,7 @@ function getDisplayRuleFields() {
 			type: "autocomplete",
 			label: "Status Type",
 			template: true,
-			description: 'Field to display in the status in the member list: "details" (details text), "state" (state text), or "name" (Plex). For instance, if set to "details" and the details text above resolves to "Something", the status displayed will be "Watching Something".',
+			description: 'Field to display in the status in the member list: "details" (details text), "state" (state text), or "name" (Plex). For instance, if set to "details" and the details text above resolves to "XYZ", the status displayed will be "Watching XYZ" or "Listening to XYZ".',
 			options: ["details", "state", "name"],
 		},
 		largeImage: {
@@ -424,7 +424,7 @@ function getDisplayRuleFields() {
 		buttons: {
 			type: "array",
 			label: "Buttons",
-			description: "Discord can show up to 2 buttons. Buttons are visible to only other users and not yourself due to a Discord bug/limitation.",
+			description: "Discord can show up to 2 buttons. If a button's URL resolves to an empty string, the button is skipped. Buttons are visible to only other users and not yourself due to a Discord bug/limitation.",
 			itemSchema: {
 				type: "object",
 				label: "Button",
@@ -444,5 +444,6 @@ function getDisplayRuleFields() {
 				},
 			},
 		},
-	} as Fields;
+	};
+	return fields;
 }

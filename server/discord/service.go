@@ -108,7 +108,7 @@ func (s *Service) SetActivity(activity *Activity, timeout time.Duration) error {
 		1,
 		&frame{
 			Cmd: frameCmdSetActivity,
-			Args: &args{
+			Args: &frameArgs{
 				Pid:      processId,
 				Activity: activity,
 			},
@@ -138,10 +138,9 @@ func (s *Service) connect(deadline time.Time) error {
 		var err error
 		s.conn, err = dial(pipe, time.Second)
 		if err != nil {
-			if errors.Is(err, fs.ErrNotExist) {
-				continue
+			if !errors.Is(err, fs.ErrNotExist) {
+				logger.Error(err, "Failed to connect on pipe %q", pipe)
 			}
-			logger.Error(err, "Failed to connect on pipe %q", pipe)
 			continue
 		}
 		s.connected = true

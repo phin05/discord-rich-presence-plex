@@ -1,5 +1,11 @@
 {
 	"go.toolsEnvVars": {
 		"GOEXPERIMENT": "jsonv2"
+	},
+	"terminal.integrated.env.windows": {
+		"GOEXPERIMENT": "jsonv2"
+	},
+	"terminal.integrated.env.linux": {
+		"GOEXPERIMENT": "jsonv2"
 	}
 }

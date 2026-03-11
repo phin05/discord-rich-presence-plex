@@ -117,7 +117,7 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 		return errors.New("no servers found")
 	}
 
-	serverIndex := slices.IndexFunc(servers, func(server *Resource) bool {
+	serverIndex := slices.IndexFunc(servers, func(server Resource) bool {
 		return strings.EqualFold(server.Name, s.serverConfig.Name)
 	})
 	if serverIndex == -1 {

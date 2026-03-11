@@ -128,7 +128,7 @@ export const templateFunctions: TemplateFunction[] = [
 		example: '{{ formatDuration .ElapsedDurationMs "%d:%02d:%02d" }}',
 		description: (
 			<span>
-				Formats a duration given in milliseconds. Format should be a <Code>fmt.Sprintf</Code> format string receiving hours, minutes and seconds as integer arguments (e.g. <Code>&quot;%d:%02d:%02d&quot;</Code> → <Code>&quot;1:30:00&quot;</Code>). If format is an empty string, Go&apos;s default duration format is used (e.g. <Code>&quot;1h30m0s&quot;</Code>).
+				Formats a duration given in milliseconds. <Code>format</Code> should be a <Code>fmt.Sprintf</Code> format string receiving hours, minutes and seconds as integer arguments (e.g. <Code>&quot;%d:%02d:%02d&quot;</Code> → <Code>&quot;1:30:00&quot;</Code>). If <Code>format</Code> is an empty string, Go&apos;s default duration format is used (e.g. <Code>&quot;1h30m0s&quot;</Code>).
 			</span>
 		),
 	},
@@ -149,19 +149,19 @@ export const templateFunctions: TemplateFunction[] = [
 		description: "Capitalises the first character of the given string.",
 	},
 	{
-		name: "stripNonAscii",
-		signature: "stripNonAscii(text string)",
-		example: "{{ stripNonAscii .Title }}",
-		description: "Removes all non-ASCII characters from the given string.",
-	},
-	{
 		name: "adjustLength",
 		signature: "adjustLength(text string, maxLength int, minLength int)",
 		example: "{{ adjustLength .Title 32 2 }}",
 		description: (
 			<span>
-				Truncates the given string to <Code>maxLength</Code> characters and pads with spaces if shorter than <Code>minLength</Code>.
+				Truncates the given string to <Code>maxLength</Code> characters, or pads with spaces if shorter than <Code>minLength</Code>.
 			</span>
 		),
+	},
+	{
+		name: "stripNonAscii",
+		signature: "stripNonAscii(text string)",
+		example: "{{ stripNonAscii .Title }}",
+		description: "Removes all non-ASCII characters from the given string.",
 	},
 ];

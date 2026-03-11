@@ -6,16 +6,18 @@ type handshake struct {
 }
 
 type frame struct {
-	Cmd   string `json:"cmd"`
-	Args  *args  `json:"args"`
-	Nonce string `json:"nonce"`
+	Cmd   frameCmd   `json:"cmd"`
+	Args  *frameArgs `json:"args"`
+	Nonce string     `json:"nonce"`
 }
 
+type frameCmd string
+
 const (
-	frameCmdSetActivity = "SET_ACTIVITY"
+	frameCmdSetActivity frameCmd = "SET_ACTIVITY"
 )
 
-type args struct {
+type frameArgs struct {
 	Pid      int       `json:"pid"`
 	Activity *Activity `json:"activity"`
 }
@@ -40,9 +42,9 @@ type Activity struct {
 	DetailsUrl        string                    `json:"details_url,omitzero"`
 	State             string                    `json:"state,omitzero"`
 	StateUrl          string                    `json:"state_url,omitzero"`
-	Assets            *ActivityAssets           `json:"assets,omitempty"`
-	Timestamps        *ActivityTimestamps       `json:"timestamps,omitempty"`
-	Buttons           []*ActivityButton         `json:"buttons,omitempty"`
+	Assets            ActivityAssets            `json:"assets,omitzero"`
+	Timestamps        ActivityTimestamps        `json:"timestamps,omitzero"`
+	Buttons           []ActivityButton          `json:"buttons,omitempty"`
 }
 
 type ActivityType uint8

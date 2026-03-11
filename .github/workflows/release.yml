@@ -66,6 +66,7 @@ jobs:
           push: true
           provenance: false
           tags: ${{ steps.docker-meta.outputs.tags }}
+          annotations: ${{ steps.docker-meta.outputs.annotations }}
       - name: Generate signed build provenance attestation
         uses: actions/attest-build-provenance@v3
         with:
@@ -76,8 +77,9 @@ jobs:
           cd out
           for filename in *; do
             if [[ -d $filename ]]; then
-              mv $filename ${{ env.SHORT_NAME }}
-              zip -rm ${{ env.SHORT_NAME }}-${{ github.ref_name }}-$filename.zip ${{ env.SHORT_NAME }}
+              cd $filename
+              zip -rm ../${{ env.SHORT_NAME }}-${{ github.ref_name }}-$filename.zip *
+              cd ..
             fi
           done
       - name: Release on GitHub

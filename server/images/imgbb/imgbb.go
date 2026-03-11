@@ -49,14 +49,14 @@ func (s *Service) Upload(ctx context.Context, pngBytes []byte) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("upload: %w", err)
 	}
-	var response response
-	if err := json.Unmarshal(bodyBytes, &response); err != nil {
+	var resp response
+	if err := json.Unmarshal(bodyBytes, &resp); err != nil {
 		return "", fmt.Errorf("unmarshal: %w", err)
 	}
-	if !response.Success {
-		return "", fmt.Errorf("status %d: %s", response.Status, string(bodyBytes))
+	if !resp.Success {
+		return "", fmt.Errorf("status %d: %s", resp.Status, string(bodyBytes))
 	}
-	return response.Data.Url, nil
+	return resp.Data.Url, nil
 }
 
 func (s *Service) Lifespan() time.Duration {

@@ -37,10 +37,11 @@ func NewClient(baseUrl string, token string, timeout time.Duration) *Client {
 	}
 }
 
-func httpGetJson[T any](ctx context.Context, httpClient *http.Client, token string, url string) (*T, error) {
+func httpGetJson[T any](ctx context.Context, httpClient *http.Client, token string, url string) (T, error) {
+	var result T
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("new request: %w", err)
+		return result, fmt.Errorf("new request: %w", err)
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("X-Plex-Client-Identifier", clientId)
@@ -48,19 +49,18 @@ func httpGetJson[T any](ctx context.Context, httpClient *http.Client, token stri
 	req.Header.Set("X-Plex-Token", token)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("send request: %w", err)
+		return result, fmt.Errorf("send request: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, maxRespBodyBytes))
 		logger.Debug("GET %s, HTTP %d, %s, %s", url, resp.StatusCode, resp.Header, string(bodyBytes))
-		return nil, fmt.Errorf("HTTP status %s", resp.Status)
+		return result, fmt.Errorf("HTTP status %s", resp.Status)
 	}
-	var result T
 	if err := json.UnmarshalRead(io.LimitReader(resp.Body, maxRespBodyBytes), &result); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
+		return result, fmt.Errorf("unmarshal: %w", err)
 	}
-	return &result, nil
+	return result, nil
 }
 
 type Account struct {
@@ -72,7 +72,7 @@ type User struct {
 }
 
 func (c *Client) GetAccount(ctx context.Context) (*Account, error) {
-	return httpGetJson[Account](ctx, c.httpClient, c.Token, "https://plex.tv/users/account.json")
+	return httpGetJson[*Account](ctx, c.httpClient, c.Token, "https://plex.tv/users/account.json")
 }
 
 type Resource struct {
@@ -90,13 +90,13 @@ type Connection struct {
 	Uri      string `json:"uri"`
 }
 
-func (c *Client) GetServers(ctx context.Context) ([]*Resource, error) {
-	resources, err := httpGetJson[[]*Resource](ctx, c.httpClient, c.Token, "https://clients.plex.tv/api/v2/resources?includeHttps=1&includeRelay=1&includeIPv6=1")
+func (c *Client) GetServers(ctx context.Context) ([]Resource, error) {
+	resources, err := httpGetJson[[]Resource](ctx, c.httpClient, c.Token, "https://clients.plex.tv/api/v2/resources?includeHttps=1&includeRelay=1&includeIPv6=1")
 	if err != nil {
 		return nil, err
 	}
-	var servers []*Resource
-	for _, resource := range *resources {
+	var servers []Resource
+	for _, resource := range resources {
 		if resource.Provides == "server" {
 			servers = append(servers, resource)
 		}
@@ -151,7 +151,7 @@ type Guid struct {
 }
 
 func (c *Client) GetSessions(ctx context.Context) ([]Metadata, error) {
-	resp, err := httpGetJson[MetadataResponse](ctx, c.httpClient, c.Token, c.BaseUrl+"/status/sessions")
+	resp, err := httpGetJson[*MetadataResponse](ctx, c.httpClient, c.Token, c.BaseUrl+"/status/sessions")
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func (c *Client) GetSessions(ctx context.Context) ([]Metadata, error) {
 }
 
 func (c *Client) GetMetadata(ctx context.Context, ratingKey string) (*Metadata, error) {
-	resp, err := httpGetJson[MetadataResponse](ctx, c.httpClient, c.Token, fmt.Sprintf("%s/library/metadata/%s", c.BaseUrl, ratingKey))
+	resp, err := httpGetJson[*MetadataResponse](ctx, c.httpClient, c.Token, fmt.Sprintf("%s/library/metadata/%s", c.BaseUrl, ratingKey))
 	if err != nil {
 		return nil, fmt.Errorf("fetch metadata: %w", err)
 	}

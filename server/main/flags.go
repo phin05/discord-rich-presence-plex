@@ -47,10 +47,10 @@ func parseFlags() {
 			defaultDataDirPath = filepath.Join(userConfigDir, dataDirName)
 		}
 	}
-	logFileFlag := stringFlagWithEnv("log-file", "", "Path to log file. Disabled if empty.")
+	logFileFlag := stringFlagWithEnv("log-file", "", "Path to log file")
 	dataDirFlag := stringFlagWithEnv("data-dir", defaultDataDirPath, `Path to data directory`)
-	configFileFlag := stringFlagWithEnv("config-file", "", `Path to config file. Defaults to "config.yml" inside data directory.`)
-	cacheFileFlag := stringFlagWithEnv("cache-file", "", `Path to cache file. Defaults to "cache.json" inside data directory.`)
+	configFileFlag := stringFlagWithEnv("config-file", "", `Path to config file. Defaults to "config.yml" in data directory.`)
+	cacheFileFlag := stringFlagWithEnv("cache-file", "", `Path to cache file. Defaults to "cache.json" in data directory.`)
 	disableWebUiFlag := boolFlagWithEnv("disable-web-ui", false, "Disable web interface")
 	disableWebUiLaunchFlag := boolFlagWithEnv("disable-web-ui-launch", false, "Disable launching web interface on startup (override flag meant for autostart)")
 	disableSystrayFlag := boolFlagWithEnv("disable-systray", false, "Disable system tray icon")

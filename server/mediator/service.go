@@ -1,7 +1,6 @@
 package mediator
 
 import (
-	"bytes"
 	"context"
 	"drpp/server/cache"
 	"drpp/server/config"
@@ -12,10 +11,7 @@ import (
 	"encoding/json/v2"
 	"fmt"
 	"net/url"
-	"regexp"
-	"strings"
 	"sync"
-	"text/template"
 	"time"
 )
 
@@ -153,7 +149,7 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	activityJson, _ := json.Marshal(activity)
 	logger.Info("Activity: %s", activityJson)
 	var rule config.DisplayRule
-	ok := func() bool {
+	if ok := func() bool {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		if activity.State == "stopped" {
@@ -178,6 +174,7 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 		case "liveEpisode":
 			rule = s.displayRules.LiveEpisode
 		default:
+			logger.Error(nil, "Invalid media type %q", activity.MediaType)
 			return false
 		}
 		if activity.State == "paused" && rule.PauseTimeoutSeconds >= 0 {
@@ -196,109 +193,30 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 			s.clearStopTimer()
 		}
 		return true
-	}()
-	if !ok {
+	}(); !ok {
 		return
 	}
-	templateData := make(map[string]any)
-	templateData["MediaType"] = activity.MediaType
-	templateData["State"] = activity.State
-	templateData["LibraryName"] = activity.Item.LibrarySectionTitle
-	templateData["ElapsedDurationMs"] = activity.ElapsedDurationMs
-	addGuidUrls := func(guids []plex.Guid, prefix string) {
-		guidMap := make(map[string]string)
-		for _, guid := range guids {
-			parts := strings.SplitN(guid.Id, "://", 2)
-			if len(parts) == 2 {
-				guidMap[parts[0]] = parts[1]
-			}
-		}
-		if id, ok := guidMap["imdb"]; ok {
-			templateData[prefix+"ImdbUrl"] = "https://www.imdb.com/title/" + id
-		}
-		if id, ok := guidMap["tmdb"]; ok {
-			var tmdbPathSegment, traktIdType string
-			if activity.MediaType == "movie" { //nolint:gocritic
-				tmdbPathSegment = "movie"
-				traktIdType = "movie"
-			} else if prefix == "Episode" {
-				tmdbPathSegment = "episode"
-				traktIdType = "episode"
-			} else {
-				tmdbPathSegment = "tv"
-				traktIdType = "show"
-			}
-			templateData[prefix+"TmdbUrl"] = "https://www.themoviedb.org/" + tmdbPathSegment + "/" + id
-			templateData[prefix+"TraktUrl"] = "https://trakt.tv/search/tmdb/" + id + "?id_type=" + traktIdType
-			if activity.MediaType == "movie" {
-				templateData[prefix+"LetterboxdUrl"] = "https://letterboxd.com/tmdb/" + id
-			}
-		}
-		if id, ok := guidMap["tvdb"]; ok {
-			var tvdbPathSegment string
-			if activity.MediaType == "movie" { //nolint:gocritic
-				tvdbPathSegment = "movie"
-			} else if prefix == "Episode" {
-				tvdbPathSegment = "episode"
-			} else {
-				tvdbPathSegment = "series"
-			}
-			templateData[prefix+"TvdbUrl"] = "https://www.thetvdb.com/dereferrer/" + tvdbPathSegment + "/" + id
-		}
-		if id, ok := guidMap["mbid"]; ok {
-			templateData[prefix+"MusicBrainzUrl"] = "https://musicbrainz.org/" + strings.ToLower(prefix) + "/" + id
-		}
-	}
-	switch activity.MediaType {
-	case "movie":
-		templateData["Title"] = activity.Item.Title
-		templateData["Year"] = activity.Item.Year
-		templateData["Duration"] = formatDuration(activity.Item.DurationMs, "")
-		templateData["Genres"] = formatGenres(activity.Item.Genres, ", ", 3)
-		templateData["Poster"] = activity.Item.Thumb
-		addGuidUrls(activity.Item.Guids, "")
-	case "episode":
-		templateData["ShowTitle"] = activity.GrandparentItem.Title
-		templateData["ShowYear"] = activity.GrandparentItem.Year
-		templateData["EpisodeDuration"] = formatDuration(activity.Item.DurationMs, "")
-		templateData["ShowGenres"] = formatGenres(activity.GrandparentItem.Genres, ", ", 3)
-		templateData["ShowPoster"] = activity.GrandparentItem.Thumb
-		templateData["SeasonNumber"] = activity.ParentItem.Index
-		templateData["EpisodeNumber"] = activity.Item.Index
-		templateData["EpisodeTitle"] = activity.Item.Title
-		addGuidUrls(activity.Item.Guids, "Episode")
-		addGuidUrls(activity.GrandparentItem.Guids, "Show")
-	case "track":
-		templateData["Title"] = activity.Item.Title
-		if activity.Item.OriginalTitle != "" {
-			templateData["Artist"] = activity.Item.OriginalTitle
-		} else {
-			templateData["Artist"] = activity.GrandparentItem.Title
-		}
-		templateData["Album"] = activity.ParentItem.Title
-		templateData["Year"] = activity.ParentItem.Year
-		templateData["AlbumArtist"] = activity.GrandparentItem.Title
-		templateData["AlbumPoster"] = activity.ParentItem.Thumb
-		templateData["ArtistPoster"] = activity.GrandparentItem.Thumb
-		templateData["Duration"] = formatDuration(activity.Item.DurationMs, "")
-		templateData["AlbumGenres"] = formatGenres(activity.ParentItem.Genres, ", ", 3)
-		templateData["ArtistGenres"] = formatGenres(activity.GrandparentItem.Genres, ", ", 3)
-		addGuidUrls(activity.Item.Guids, "Track")
-		addGuidUrls(activity.ParentItem.Guids, "Album")
-		addGuidUrls(activity.GrandparentItem.Guids, "Artist")
-	case "clip":
-		templateData["Title"] = activity.Item.Title
-		templateData["Duration"] = formatDuration(activity.Item.DurationMs, "")
-		templateData["Poster"] = activity.Item.Thumb
-	case "liveEpisode":
-		templateData["ShowTitle"] = activity.Item.GrandparentTitle
-		templateData["EpisodeTitle"] = activity.Item.Title
-		templateData["ShowPoster"] = activity.Item.GrandparentThumb
-	}
-	templateData["Item"] = activity.Item
-	templateData["ParentItem"] = activity.ParentItem
-	templateData["GrandparentItem"] = activity.GrandparentItem
+	templateData := buildTemplateData(activity)
 	logger.Debug("Template: %#v", templateData)
+	var activityType discord.ActivityType
+	if activity.MediaType == "track" {
+		activityType = discord.ActivityTypeListening
+	} else {
+		activityType = discord.ActivityTypeWatching
+	}
+	var activityStatusDisplayType discord.ActivityStatusDisplayType
+	statusType := renderTemplate(rule.StatusType, templateData)
+	switch statusType {
+	case "details":
+		activityStatusDisplayType = discord.ActivityStatusDisplayTypeDetails
+	case "state":
+		activityStatusDisplayType = discord.ActivityStatusDisplayTypeState
+	case "name":
+		activityStatusDisplayType = discord.ActivityStatusDisplayTypeName
+	default:
+		logger.Error(nil, "Invalid status type %q, defaulting to %q", statusType, "name")
+		activityStatusDisplayType = discord.ActivityStatusDisplayTypeName
+	}
 	resolveImage := func(tmpl string) string {
 		thumb := renderTemplate(tmpl, templateData)
 		if thumb == "" {
@@ -321,27 +239,14 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	imageWg.Go(func() { largeImage = resolveImage(rule.LargeImage) })
 	imageWg.Go(func() { smallImage = resolveImage(rule.SmallImage) })
 	imageWg.Wait()
-	var activityStatusDisplayType discord.ActivityStatusDisplayType
-	statusType := renderTemplate(rule.StatusType, templateData)
-	switch statusType {
-	case "details":
-		activityStatusDisplayType = discord.ActivityStatusDisplayTypeDetails
-	case "state":
-		activityStatusDisplayType = discord.ActivityStatusDisplayTypeState
-	case "name":
-		activityStatusDisplayType = discord.ActivityStatusDisplayTypeName
-	default:
-		logger.Error(nil, "Invalid status type %q, defaulting to %q", statusType, "name")
-		activityStatusDisplayType = discord.ActivityStatusDisplayTypeName
-	}
 	discordActivity := &discord.Activity{
-		Type:              mapActivityType(activity.MediaType),
+		Type:              activityType,
 		StatusDisplayType: activityStatusDisplayType,
 		Details:           adjustLength(renderTemplate(rule.Details, templateData), 128, 2),
 		DetailsUrl:        adjustLength(renderTemplate(rule.DetailsUrl, templateData), 256, 0),
 		State:             adjustLength(renderTemplate(rule.State, templateData), 128, 2),
 		StateUrl:          adjustLength(renderTemplate(rule.StateUrl, templateData), 256, 0),
-		Assets: &discord.ActivityAssets{
+		Assets: discord.ActivityAssets{
 			LargeImage: adjustLength(largeImage, 300, 0),
 			LargeText:  adjustLength(renderTemplate(rule.LargeText, templateData), 128, 2),
 			LargeUrl:   adjustLength(renderTemplate(rule.LargeUrl, templateData), 256, 0),
@@ -349,17 +254,6 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 			SmallText:  adjustLength(renderTemplate(rule.SmallText, templateData), 128, 2),
 			SmallUrl:   adjustLength(renderTemplate(rule.SmallUrl, templateData), 256, 0),
 		},
-	}
-	for _, button := range rule.Buttons {
-		label := adjustLength(stripNonAscii(renderTemplate(button.Label, templateData)), 32, 2)
-		url := adjustLength(renderTemplate(button.Url, templateData), 512, 0)
-		if url == "" {
-			continue
-		}
-		discordActivity.Buttons = append(discordActivity.Buttons, &discord.ActivityButton{Label: label, Url: url})
-		if len(discordActivity.Buttons) == 2 {
-			break
-		}
 	}
 	progressMode := renderTemplate(rule.ProgressMode, templateData)
 	switch progressMode {
@@ -370,12 +264,22 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	}
 	if progressMode != "off" {
 		now := time.Now().UnixMilli()
-		discordActivity.Timestamps = new(discord.ActivityTimestamps)
 		if progressMode == "bar" || progressMode == "elapsed" {
 			discordActivity.Timestamps.StartMs = now - activity.ElapsedDurationMs
 		}
 		if progressMode == "bar" || progressMode == "remaining" {
 			discordActivity.Timestamps.EndMs = now + activity.Item.DurationMs - activity.ElapsedDurationMs
+		}
+	}
+	for _, button := range rule.Buttons {
+		label := adjustLength(stripNonAscii(renderTemplate(button.Label, templateData)), 32, 2)
+		url := adjustLength(renderTemplate(button.Url, templateData), 512, 0)
+		if url == "" {
+			continue
+		}
+		discordActivity.Buttons = append(discordActivity.Buttons, discord.ActivityButton{Label: label, Url: url})
+		if len(discordActivity.Buttons) == 2 {
+			break
 		}
 	}
 	ipcTimeout := s.ipcTimeout
@@ -395,12 +299,13 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	s.lastState = activity.State
 }
 
+// TODO: Maybe use https://pkg.go.dev/golang.org/x/sync/singleflight instead of the custom implementation below
+
 type pendingUpload struct {
 	done chan struct{}
 	url  string
 }
 
-// Can use singleflight instead of this custom implementation
 var pendingUploads = map[string]*pendingUpload{}
 var pendingUploadsMu sync.Mutex
 
@@ -416,17 +321,17 @@ func (s *Service) getUploadedImageUrl(ctx context.Context, thumb string, sourceU
 		pendingUploadsMu.Lock()
 		result, ok := pendingUploads[cacheKey]
 		if !ok {
-			logger.Debug("Initiating upload for image %q (attempt %d)", thumb, attempt)
+			logger.Debug("Initiating upload for image %q", thumb)
 			result = &pendingUpload{done: make(chan struct{}), url: ""}
 			pendingUploads[cacheKey] = result
 			imgCtx, cancel := context.WithTimeout(context.Background(), time.Duration(s.imagesConfig.UploadTimeoutSeconds)*time.Second)
 			go func() {
 				defer cancel()
 				defer func() {
-					close(result.done)
 					pendingUploadsMu.Lock()
 					delete(pendingUploads, cacheKey)
 					pendingUploadsMu.Unlock()
+					close(result.done)
 				}()
 				pngBytes, err := images.GetPngBytes(imgCtx, sourceUrl, s.imagesConfig.FitInSquare, s.imagesConfig.MaxSize, headers)
 				if err != nil {
@@ -455,105 +360,4 @@ func (s *Service) getUploadedImageUrl(ctx context.Context, thumb string, sourceU
 		}
 	}
 	return ""
-}
-
-func mapActivityType(mediaType string) discord.ActivityType {
-	switch mediaType {
-	case "track":
-		return discord.ActivityTypeListening
-	default:
-		return discord.ActivityTypeWatching
-	}
-}
-
-func mapStatusDisplayType(statusType string) discord.ActivityStatusDisplayType {
-	switch statusType {
-	case "state":
-		return discord.ActivityStatusDisplayTypeState
-	case "details":
-		return discord.ActivityStatusDisplayTypeDetails
-	default:
-		return discord.ActivityStatusDisplayTypeName
-	}
-}
-
-var templateCache sync.Map // map[string]*template.Template
-
-func renderTemplate(tmpl string, data map[string]any) string {
-	var t *template.Template
-	if val, ok := templateCache.Load(tmpl); ok {
-		t = val.(*template.Template) //nolint:errcheck,forcetypeassert
-	} else {
-		var err error
-		t, err = template.New("").Funcs(template.FuncMap{
-			"formatDuration": formatDuration,
-			"formatGenres":   formatGenres,
-			"toSentenceCase": toSentenceCase,
-			"stripNonAscii":  stripNonAscii,
-			"adjustLength":   adjustLength,
-		}).Parse(tmpl)
-		if err != nil {
-			logger.Error(err, "Failed to parse template %q", tmpl)
-			return tmpl
-		}
-		templateCache.Store(tmpl, t)
-	}
-	var buffer bytes.Buffer
-	if err := t.Execute(&buffer, data); err != nil {
-		logger.Error(err, "Failed to execute template %q", tmpl)
-		return tmpl
-	}
-	return strings.ReplaceAll(buffer.String(), "<no value>", "")
-}
-
-func formatDuration(milliseconds int64, format string) string {
-	duration := time.Duration(milliseconds) * time.Millisecond
-	if format == "" {
-		return duration.Round(time.Second).String()
-	}
-	hours := int(duration.Hours())
-	minutes := int(duration.Minutes()) % 60
-	seconds := int(duration.Seconds()) % 60
-	return fmt.Sprintf(format, hours, minutes, seconds)
-}
-
-func formatGenres(genres []plex.Genre, delimiter string, maxGenres int) string {
-	var genreNames []string
-	for _, genre := range genres {
-		genreNames = append(genreNames, genre.Tag)
-		if len(genreNames) == maxGenres {
-			break
-		}
-	}
-	return strings.Join(genreNames, delimiter)
-}
-
-func toSentenceCase(text string) string {
-	if text == "" {
-		return text
-	}
-	chars := []rune(text)
-	chars[0] = []rune(strings.ToUpper(string(chars[0])))[0]
-	return string(chars)
-}
-
-func adjustLength(text string, maxLength int, minLength int) string {
-	if text == "" {
-		return text
-	}
-	chars := []rune(text)
-	if len(chars) > maxLength {
-		marginLength := min(maxLength, 3)
-		return string(chars[:maxLength-marginLength]) + strings.Repeat(".", marginLength)
-	}
-	if len(chars) < minLength {
-		return text + strings.Repeat(" ", minLength-len(chars))
-	}
-	return text
-}
-
-var nonAsciiRegex = regexp.MustCompile(`[^\x00-\x7f]`)
-
-func stripNonAscii(text string) string {
-	return nonAsciiRegex.ReplaceAllString(text, "")
 }

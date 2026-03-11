@@ -11,8 +11,8 @@ Discord Rich Presence for Plex (DRPP) is an application that displays your [Plex
 
 - Automatically displays your Plex playback activity (movies, TV shows, music, clips) on Discord with poster artwork, progress, buttons, external links, and metadata.
 - Web-based user interface for managing all settings, interactive Plex authentication, and viewing live logs.
-- Ability to customise all fields shown in your Rich Presence for each media type using [Go template strings](https://pkg.go.dev/text/template).
-- Support for Windows (amd64), Linux (amd64, arm64, 386, arm/v7), macOS (amd64, arm64), and Docker (linux/amd64, linux/arm64, linux/386, linux/arm/v7).
+- Ability to customise all fields shown in your Rich Presence for each media type using template strings. [[Example](https://github.com/user-attachments/assets/eb3fa89d-eca3-4b81-81c4-60e33517b57b)]
+- Support for Windows, Linux (including Docker), and macOS.
 
 ## Usage
 
@@ -115,9 +115,11 @@ When both `DRPP_UID` and `DRPP_GID` are set, DRPP changes ownership of `/run/app
 
 To run Discord in a container as well, mount a shared directory from the host into both the Discord container (as Discord's runtime directory) and the DRPP container (at `/run/app`). Ensure that the shared directory is owned by the user the containerised Discord process runs as.
 
-Depending on the Discord container image being used, there might be significant resource usage overhead and other complications.
+<details>
 
-#### Docker Compose example using [kasmweb/discord](https://hub.docker.com/r/kasmweb/discord)
+<summary>Example</summary>
+
+**Docker Compose example using [kasmweb/discord](https://hub.docker.com/r/kasmweb/discord)**
 
 ```yaml
 services:
@@ -148,6 +150,8 @@ services:
     depends_on:
       - kasmweb-discord
 ```
+
+</details>
 
 ### Docker on Windows and macOS
 

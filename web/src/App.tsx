@@ -51,7 +51,7 @@ function Header() {
 					</Text>
 					{latestRelease.data ? (
 						`v${APP_VERSION}` !== latestRelease.data.tag_name && (
-							<Button color="blue" component="a" href="https://github.com/phin05/discord-rich-presence-plex/releases/latest" rightSection={<IconExternalLink size={16} />} target="_blank" variant="light">
+							<Button color="blue" component="a" href="https://github.com/phin05/discord-rich-presence-plex/releases/latest" rel="noopener noreferrer" rightSection={<IconExternalLink size={16} />} target="_blank" variant="light">
 								Update Available
 							</Button>
 						)
@@ -82,7 +82,7 @@ function Header() {
 					</ActionIcon>
 				</Tooltip>
 				<Tooltip label="GitHub" position="bottom">
-					<ActionIcon component="a" href="https://github.com/phin05/discord-rich-presence-plex" size="xl" target="_blank" variant="default">
+					<ActionIcon component="a" href="https://github.com/phin05/discord-rich-presence-plex" rel="noopener noreferrer" size="xl" target="_blank" variant="default">
 						<IconBrandGithub size={24} />
 					</ActionIcon>
 				</Tooltip>

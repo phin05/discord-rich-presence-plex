@@ -18,20 +18,13 @@ export const FormFields = memo(function FormFields({ control }: { control: Contr
 	);
 });
 
-function getFieldDescription(schema: Schema) {
-	const showDefault = schema.defaultValue !== undefined && !schema.hideDefaultValue;
-	const defaultText = showDefault ? `[default: ${schema.type === "object" ? JSON.stringify(schema.defaultValue) : String(schema.defaultValue)}]` : "";
-	const description = [schema.description, defaultText].filter(Boolean).join(" ");
-	return description;
-}
-
 function FormField({ name, control, schema, label }: { name: FieldPath<Config>; control: Control<Config>; schema: Schema; label?: ReactNode }) {
 	const openTemplateModal = useTemplateModal();
 
-	const fieldLabel =
-		(schema.type === "string" || schema.type === "autocomplete") && schema.template ? (
-			<Flex align="center" gap={4}>
-				{label ?? schema.label}
+	const fieldLabel = (
+		<Flex align="center" gap={4}>
+			{label ?? schema.label}
+			{(schema.type === "string" || schema.type === "autocomplete") && schema.template && (
 				<Tooltip label="Template String" withArrow>
 					<ActionIcon
 						onClick={() => {
@@ -43,12 +36,13 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 						<IconBraces size={16} />
 					</ActionIcon>
 				</Tooltip>
-			</Flex>
-		) : (
-			(label ?? schema.label)
-		);
+			)}
+		</Flex>
+	);
 
-	const fieldDescription = getFieldDescription(schema);
+	const showDefault = schema.defaultValue !== undefined && !schema.hideDefaultValue;
+	const defaultText = showDefault ? `[default: ${schema.type === "object" ? JSON.stringify(schema.defaultValue) : String(schema.defaultValue)}]` : "";
+	const fieldDescription = [schema.description, defaultText].filter(Boolean).join(" ");
 
 	if (schema.type === "object") {
 		return (
@@ -82,7 +76,7 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 				const error = fieldState.error?.message;
 
 				if (schema.type === "array") {
-					return <ArrayField control={control} error={error} label={fieldLabel} name={name as FieldArrayPath<Config>} schema={schema} />;
+					return <ArrayField control={control} description={fieldDescription} error={error} label={fieldLabel} name={name as FieldArrayPath<Config>} schema={schema} />;
 				}
 
 				if (schema.type === "boolean") {
@@ -114,7 +108,7 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 	);
 }
 
-function ArrayField({ name, control, schema, label, error }: { name: FieldArrayPath<Config>; control: Control<Config>; schema: ArraySchema; label: ReactNode; error?: string }) {
+function ArrayField({ name, control, schema, label, error, description }: { name: FieldArrayPath<Config>; control: Control<Config>; schema: ArraySchema; label: ReactNode; error?: string; description?: string }) {
 	const { fields, append, remove } = useFieldArray({
 		control,
 		name,
@@ -122,15 +116,13 @@ function ArrayField({ name, control, schema, label, error }: { name: FieldArrayP
 
 	// TODO: Add button to initiate the server selection part of the auth flow for adding additional servers to an existing user
 
-	const fieldDescription = getFieldDescription(schema);
-
 	return (
 		<Flex bd={error ? "1px solid red" : undefined} direction="column" gap="sm">
 			<Flex align="center" gap="md" justify="space-between">
 				<Box>
 					<Input.Label>{label}</Input.Label>
-					<Input.Description>{fieldDescription}</Input.Description>
-					<Input.Error>{error}</Input.Error>
+					<Input.Description>{description}</Input.Description>
+					{error && <Input.Error mt="xs">{error}</Input.Error>}
 				</Box>
 				<Flex align="center" gap="md">
 					{name === "plex.users" && (
@@ -167,7 +159,8 @@ function ArrayField({ name, control, schema, label, error }: { name: FieldArrayP
 									<ActionIcon
 										color="red"
 										component="div"
-										onClick={() => {
+										onClick={(e) => {
+											e.stopPropagation();
 											remove(index);
 										}}
 										size="sm"

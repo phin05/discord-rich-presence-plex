@@ -31,7 +31,7 @@ function TemplateModal({ opened, close, mediaType }: { opened: boolean; close: (
 		<Modal onClose={close} opened={opened} size="xl" title={<Text fw={500}>Template Variables and Functions</Text>}>
 			<Text size="sm">
 				Templating System:{" "}
-				<Anchor href="https://pkg.go.dev/text/template" target="_blank" underline="never">
+				<Anchor href="https://pkg.go.dev/text/template" rel="noopener noreferrer" target="_blank" underline="never">
 					https://pkg.go.dev/text/template
 				</Anchor>
 			</Text>
@@ -78,7 +78,7 @@ function TemplateModal({ opened, close, mediaType }: { opened: boolean; close: (
 					</Table>
 					<Text size="sm">
 						Built-in Go template functions:{" "}
-						<Anchor href="https://pkg.go.dev/text/template#hdr-Functions" target="_blank" underline="never">
+						<Anchor href="https://pkg.go.dev/text/template#hdr-Functions" rel="noopener noreferrer" target="_blank" underline="never">
 							https://pkg.go.dev/text/template#hdr-Functions
 						</Anchor>
 					</Text>
