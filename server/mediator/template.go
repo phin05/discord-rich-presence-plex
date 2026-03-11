@@ -65,14 +65,14 @@ func buildTemplateData(activity *plex.Activity) map[string]any {
 	}
 	switch activity.MediaType {
 	case "movie":
-		data["Title"] = activity.Item.Title
+		data["Title"] = cleanTitle(activity.Item.Title)
 		data["Year"] = activity.Item.Year
 		data["Duration"] = formatDuration(activity.Item.DurationMs, "")
 		data["Genres"] = formatGenres(activity.Item.Genres, ", ", 3)
 		data["Poster"] = activity.Item.Thumb
 		addGuidUrls(activity.Item.Guids, "")
 	case "episode":
-		data["ShowTitle"] = activity.GrandparentItem.Title
+		data["ShowTitle"] = cleanTitle(activity.GrandparentItem.Title)
 		data["ShowYear"] = activity.GrandparentItem.Year
 		data["EpisodeDuration"] = formatDuration(activity.Item.DurationMs, "")
 		data["ShowGenres"] = formatGenres(activity.GrandparentItem.Genres, ", ", 3)
@@ -89,7 +89,7 @@ func buildTemplateData(activity *plex.Activity) map[string]any {
 		} else {
 			data["Artist"] = activity.GrandparentItem.Title
 		}
-		data["Album"] = activity.ParentItem.Title
+		data["Album"] = cleanTitle(activity.ParentItem.Title)
 		data["Year"] = activity.ParentItem.Year
 		data["AlbumArtist"] = activity.GrandparentItem.Title
 		data["AlbumPoster"] = activity.ParentItem.Thumb
@@ -113,6 +113,14 @@ func buildTemplateData(activity *plex.Activity) map[string]any {
 	data["ParentItem"] = activity.ParentItem
 	data["GrandparentItem"] = activity.GrandparentItem
 	return data
+}
+
+var yearSuffixRegex = regexp.MustCompile(`\s\(\d{4}\)$`)
+
+func cleanTitle(title string) string {
+	title = strings.TrimSpace(title)
+	title = yearSuffixRegex.ReplaceAllString(title, "")
+	return title
 }
 
 var templateCache sync.Map // map[string]*template.Template
