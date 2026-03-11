@@ -2,7 +2,7 @@ import { type ArraySchema, getDefaultValueForSchema, type Schema } from "@/commo
 import { configSchema } from "@/config/schema";
 import { useTemplateModal } from "@/config/TemplateModalContext";
 import { type Config } from "@/config/types";
-import { Accordion, ActionIcon, Box, Button, Flex, Input, NumberInput, PasswordInput, Select, Switch, Text, TextInput, Tooltip } from "@mantine/core";
+import { Accordion, ActionIcon, Autocomplete, Box, Button, Flex, Input, NumberInput, PasswordInput, Switch, Text, TextInput, Tooltip } from "@mantine/core";
 import { IconBraces, IconPlus, IconTrash } from "@tabler/icons-react";
 import { memo, type ReactNode } from "react";
 import { type Control, Controller, type FieldArray, type FieldArrayPath, type FieldPath, useFieldArray } from "react-hook-form";
@@ -29,7 +29,7 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 	const openTemplateModal = useTemplateModal();
 
 	const fieldLabel =
-		schema.type === "string" && schema.template ? (
+		(schema.type === "string" || schema.type === "autocomplete") && schema.template ? (
 			<Flex align="center" gap={4}>
 				{label ?? schema.label}
 				<Tooltip label="Template String" withArrow>
@@ -99,8 +99,8 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 					);
 				}
 
-				if (schema.type === "select") {
-					return <Select allowDeselect={false} data={schema.options} description={fieldDescription} error={error} label={fieldLabel} onChange={field.onChange} value={field.value as string} />;
+				if (schema.type === "autocomplete") {
+					return <Autocomplete data={schema.options} description={fieldDescription} error={error} filter={({ options }) => options} label={fieldLabel} onChange={field.onChange} value={field.value as string} />;
 				}
 
 				if (schema.type === "number") {

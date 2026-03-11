@@ -354,14 +354,11 @@ function getDisplayRuleFields() {
 			description: "Second line in Rich Presence",
 		},
 		statusType: {
-			type: "select",
+			type: "autocomplete",
 			label: "Status Type",
-			description: 'Controls which field is displayed in the status text in the member list: details text, state text, or the app name (Plex). For instance, if set to "Details" and the details text above resolves to "Something", the status displayed will be "Watching Something".',
-			options: [
-				{ label: "Details", value: "details" },
-				{ label: "State", value: "state" },
-				{ label: "Name", value: "name" },
-			],
+			template: true,
+			description: 'Field to display in the status in the member list: "details" (details text), "state" (state text), or "name" (Plex). For instance, if set to "details" and the details text above resolves to "Something", the status displayed will be "Watching Something".',
+			options: ["details", "state", "name"],
 		},
 		largeImage: {
 			type: "string",
@@ -412,10 +409,11 @@ function getDisplayRuleFields() {
 			description: "Link to open when the small image is clicked",
 		},
 		progressMode: {
-			type: "string",
+			type: "autocomplete",
 			label: "Progress Mode",
 			template: true,
-			description: 'Progress/timestamp display mode: "off" (disabled), "elapsed" (displays elapsed time), "remaining" (displays remaining time), or "bar" (displays a progress bar). The "off" mode is currently broken due to a Discord bug/limitation.',
+			description: 'Progress/timestamp display mode: "off" (disabled), "elapsed" (elapsed time), "remaining" (remaining time), or "bar" (progress bar). The "off" mode is currently broken due to a Discord bug/limitation.',
+			options: ["off", "elapsed", "remaining", "bar"],
 		},
 		pauseTimeoutSeconds: {
 			type: "number",

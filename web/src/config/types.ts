@@ -40,7 +40,7 @@ export interface DisplayRules {
 export interface DisplayRule {
 	details: string;
 	state: string;
-	statusType: "details" | "state" | "name";
+	statusType: string;
 	largeImage: string;
 	largeText: string;
 	smallImage: string;

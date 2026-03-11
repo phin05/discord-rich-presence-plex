@@ -53,7 +53,7 @@ type DisplayRules struct {
 type DisplayRule struct {
 	Details             string   `yaml:"details" json:"details"`
 	State               string   `yaml:"state" json:"state"`
-	StatusType          string   `yaml:"statusType" json:"statusType" validate:"oneof='details' 'state' 'name'"`
+	StatusType          string   `yaml:"statusType" json:"statusType" validate:"required"`
 	LargeImage          string   `yaml:"largeImage" json:"largeImage"`
 	LargeText           string   `yaml:"largeText" json:"largeText"`
 	SmallImage          string   `yaml:"smallImage" json:"smallImage"`

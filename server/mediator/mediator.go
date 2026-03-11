@@ -321,9 +321,22 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	imageWg.Go(func() { largeImage = resolveImage(rule.LargeImage) })
 	imageWg.Go(func() { smallImage = resolveImage(rule.SmallImage) })
 	imageWg.Wait()
+	var activityStatusDisplayType discord.ActivityStatusDisplayType
+	statusType := renderTemplate(rule.StatusType, templateData)
+	switch statusType {
+	case "details":
+		activityStatusDisplayType = discord.ActivityStatusDisplayTypeDetails
+	case "state":
+		activityStatusDisplayType = discord.ActivityStatusDisplayTypeState
+	case "name":
+		activityStatusDisplayType = discord.ActivityStatusDisplayTypeName
+	default:
+		logger.Error(nil, "Invalid status type %q, defaulting to %q", statusType, "name")
+		activityStatusDisplayType = discord.ActivityStatusDisplayTypeName
+	}
 	discordActivity := &discord.Activity{
 		Type:              mapActivityType(activity.MediaType),
-		StatusDisplayType: mapStatusDisplayType(rule.StatusType),
+		StatusDisplayType: activityStatusDisplayType,
 		Details:           adjustLength(renderTemplate(rule.Details, templateData), 128, 2),
 		DetailsUrl:        adjustLength(renderTemplate(rule.DetailsUrl, templateData), 256, 0),
 		State:             adjustLength(renderTemplate(rule.State, templateData), 128, 2),

@@ -23,9 +23,10 @@ export interface BooleanSchema extends BaseSchema {
 	defaultValue?: boolean;
 }
 
-export interface SelectSchema extends BaseSchema {
-	type: "select";
-	options: Array<{ label: string; value: string }>;
+export interface AutocompleteSchema extends BaseSchema {
+	type: "autocomplete";
+	options: string[];
+	template?: boolean;
 	defaultValue?: string;
 }
 
@@ -41,7 +42,7 @@ export interface ArraySchema extends BaseSchema {
 	defaultValue?: unknown[];
 }
 
-export type Schema = StringSchema | NumberSchema | BooleanSchema | SelectSchema | ObjectSchema | ArraySchema;
+export type Schema = StringSchema | NumberSchema | BooleanSchema | AutocompleteSchema | ObjectSchema | ArraySchema;
 
 export function getDefaultValueForSchema(schema: Schema): unknown {
 	if (schema.defaultValue !== undefined) {
