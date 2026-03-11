@@ -3,6 +3,7 @@ export type Fields = Record<string, Schema>;
 export interface BaseSchema {
 	label: string;
 	description?: string;
+	link?: string;
 	hideDefaultValue?: boolean;
 }
 

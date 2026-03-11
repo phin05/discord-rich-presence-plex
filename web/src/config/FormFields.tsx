@@ -3,7 +3,7 @@ import { configSchema } from "@/config/schema";
 import { useTemplateModal } from "@/config/TemplateModalContext";
 import { type Config } from "@/config/types";
 import { Accordion, ActionIcon, Autocomplete, Box, Button, Flex, Input, NumberInput, PasswordInput, Switch, Text, TextInput, Tooltip } from "@mantine/core";
-import { IconBraces, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconBraces, IconExternalLink, IconPlus, IconTrash } from "@tabler/icons-react";
 import { memo, type ReactNode } from "react";
 import { type Control, Controller, type FieldArray, type FieldArrayPath, type FieldPath, useFieldArray } from "react-hook-form";
 
@@ -34,6 +34,23 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 						variant="subtle"
 					>
 						<IconBraces size={16} />
+					</ActionIcon>
+				</Tooltip>
+			)}
+			{schema.link && (
+				<Tooltip label={schema.link} withArrow>
+					<ActionIcon
+						component="a"
+						href={schema.link}
+						onClick={(e) => {
+							e.stopPropagation();
+						}}
+						rel="noopener noreferrer"
+						size="sm"
+						target="_blank"
+						variant="subtle"
+					>
+						<IconExternalLink size={16} />
 					</ActionIcon>
 				</Tooltip>
 			)}

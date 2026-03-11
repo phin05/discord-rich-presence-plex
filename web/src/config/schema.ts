@@ -151,12 +151,13 @@ export const configSchema: ObjectSchema = {
 				},
 				uploaders: {
 					type: "object",
-					label: "Uploaders",
-					description: "The first enabled uploader will be used. Images are disabled if no uploaders are enabled.",
+					label: "Upload Providers",
+					description: "The first enabled upload provider will be used. Images are disabled if no upload providers are enabled.",
 					fields: {
 						litterbox: {
 							type: "object",
 							label: "Litterbox",
+							link: "https://litterbox.catbox.moe/",
 							fields: {
 								enabled: {
 									type: "boolean",
@@ -175,6 +176,7 @@ export const configSchema: ObjectSchema = {
 						imgBb: {
 							type: "object",
 							label: "ImgBB",
+							link: "https://api.imgbb.com/",
 							fields: {
 								enabled: {
 									type: "boolean",
@@ -197,6 +199,7 @@ export const configSchema: ObjectSchema = {
 						imgur: {
 							type: "object",
 							label: "Imgur",
+							link: "https://api.imgur.com/oauth2/addclient",
 							fields: {
 								enabled: {
 									type: "boolean",
@@ -213,6 +216,7 @@ export const configSchema: ObjectSchema = {
 						copyparty: {
 							type: "object",
 							label: "Copyparty",
+							link: "https://github.com/9001/copyparty",
 							fields: {
 								enabled: {
 									type: "boolean",
