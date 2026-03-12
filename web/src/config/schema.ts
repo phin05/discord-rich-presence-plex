@@ -1,6 +1,7 @@
 import { type Fields, type ObjectSchema } from "@/common/schema";
+import type { Config, DisplayRule } from "@/config/types";
 
-export const configSchema: ObjectSchema = {
+export const configSchema: ObjectSchema<Config> = {
 	type: "object",
 	label: "Configuration",
 	fields: {
@@ -344,7 +345,7 @@ export const configSchema: ObjectSchema = {
 };
 
 function getDisplayRuleFields() {
-	const fields: Fields = {
+	const fields: Fields<DisplayRule> = {
 		details: {
 			type: "string",
 			label: "Details Text",

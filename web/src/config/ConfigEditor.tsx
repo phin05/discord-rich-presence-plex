@@ -4,13 +4,13 @@ import { AutostartSwitch } from "@/config/AutostartSwitch";
 import { FormFields } from "@/config/FormFields";
 import { configSchema } from "@/config/schema";
 import { TemplateModalProvider } from "@/config/TemplateModalProvider";
-import { type Config, type Server, type User } from "@/config/types";
+import { type Config } from "@/config/types";
 import { usePlexAuth } from "@/plex/PlexAuthContext";
 import { PlexAuthProvider } from "@/plex/PlexAuthProvider";
 import { Alert, Button, Divider, Flex, Paper, Skeleton, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconAlertTriangle, IconInfoCircle, IconPlus } from "@tabler/icons-react";
-import { useMutation, useQuery, type UseQueryResult } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { type FieldPath, useForm, useWatch } from "react-hook-form";
 
 export function ConfigEditor() {
@@ -21,7 +21,7 @@ export function ConfigEditor() {
 	return config.data ? (
 		<PlexAuthProvider>
 			<TemplateModalProvider>
-				<Form config={config} />
+				<Form config={config.data} />
 			</TemplateModalProvider>
 		</PlexAuthProvider>
 	) : config.isError ? (
@@ -33,9 +33,9 @@ export function ConfigEditor() {
 	);
 }
 
-function Form({ config }: { config: UseQueryResult<Config> }) {
+function Form({ config }: { config: Config }) {
 	const { control, handleSubmit, reset, formState, setError, setValue, getValues } = useForm({
-		defaultValues: config.data,
+		defaultValues: config,
 	});
 
 	// Note: setConfig changes on every render - https://github.com/TanStack/query/issues/1858
@@ -85,9 +85,9 @@ function Form({ config }: { config: UseQueryResult<Config> }) {
 		// Using getValues and setValues, because using useFieldArray in this component creates an independent state instead of sharing state with the field array in the nested ArrayField component
 		// https://github.com/orgs/react-hook-form/discussions/10141
 		const users = getValues("plex.users");
-		const user = getDefaultValueForSchema((configSchema as any).fields.plex.fields.users.itemSchema) as User; // eslint-disable-line
+		const user = getDefaultValueForSchema(configSchema.fields.plex.fields.users.itemSchema);
 		user.token = token;
-		const server = getDefaultValueForSchema((configSchema as any).fields.plex.fields.users.itemSchema.fields.servers.itemSchema) as Server; // eslint-disable-line
+		const server = getDefaultValueForSchema(configSchema.fields.plex.fields.users.itemSchema.fields.servers.itemSchema);
 		server.name = serverName;
 		user.servers.push(server);
 		setValue("plex.users", [...users, user], { shouldDirty: true });

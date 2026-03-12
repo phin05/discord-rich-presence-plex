@@ -1,69 +1,76 @@
-export type Fields = Record<string, Schema>;
-
-export interface BaseSchema {
+export interface BaseSchema<T> {
 	label: string;
 	description?: string;
 	link?: string;
+	defaultValue?: T;
 	hideDefaultValue?: boolean;
 }
 
-export interface StringSchema extends BaseSchema {
+export interface StringSchema<T extends string> extends BaseSchema<T> {
 	type: "string";
 	masked?: boolean;
 	template?: boolean;
-	defaultValue?: string;
 }
 
-export interface NumberSchema extends BaseSchema {
+export interface NumberSchema<T extends number> extends BaseSchema<T> {
 	type: "number";
-	defaultValue?: number;
 }
 
-export interface BooleanSchema extends BaseSchema {
+export interface BooleanSchema<T extends boolean> extends BaseSchema<T> {
 	type: "boolean";
-	defaultValue?: boolean;
 }
 
-export interface AutocompleteSchema extends BaseSchema {
+export interface AutocompleteSchema<T extends string> extends BaseSchema<T> {
 	type: "autocomplete";
 	options: string[];
 	template?: boolean;
-	defaultValue?: string;
 }
 
-export interface ObjectSchema extends BaseSchema {
-	type: "object";
-	fields: Fields;
-	defaultValue?: Record<string, unknown>;
-}
-
-export interface ArraySchema extends BaseSchema {
+export interface ArraySchema<T extends unknown[]> extends BaseSchema<T> {
 	type: "array";
-	itemSchema: Schema;
-	defaultValue?: unknown[];
+	itemSchema: Schema<T[number]>;
 }
 
-export type Schema = StringSchema | NumberSchema | BooleanSchema | AutocompleteSchema | ObjectSchema | ArraySchema;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Object = Record<string, any>;
 
-export function getDefaultValueForSchema(schema: Schema): unknown {
+export interface ObjectSchema<T extends Object> extends BaseSchema<T> {
+	type: "object";
+	fields: Fields<T>;
+}
+
+export type Fields<T extends Object> = {
+	[K in keyof T]: Schema<T[K]>;
+};
+
+export function eachField<T extends Object>(fields: Fields<T>) {
+	return Object.entries(fields) as Array<[keyof T & string, Schema<T[keyof T]>]>;
+}
+
+export type Schema<T> = [T] extends [string] ? StringSchema<T> | AutocompleteSchema<T> : [T] extends [number] ? NumberSchema<T> : [T] extends [boolean] ? BooleanSchema<T> : [T] extends [unknown[]] ? ArraySchema<T> : [T] extends [Object] ? ObjectSchema<T> : never;
+
+export function getDefaultValueForSchema<T>(schema: Schema<T>): T {
 	if (schema.defaultValue !== undefined) {
 		return schema.defaultValue;
 	}
-	if (schema.type === "object") {
-		const obj: Record<string, unknown> = {};
-		for (const [key, prop] of Object.entries(schema.fields)) {
-			obj[key] = getDefaultValueForSchema(prop);
+	switch (schema.type) {
+		case "object": {
+			const obj: Object = {};
+			for (const [fieldName, fieldSchema] of eachField(schema.fields)) {
+				obj[fieldName] = getDefaultValueForSchema(fieldSchema);
+			}
+			return obj as T;
 		}
-		return obj;
+		case "array":
+			return [] as T;
+		case "boolean":
+			return false as T;
+		case "number":
+			return 0 as T;
+		case "string":
+		case "autocomplete":
+			return "" as T;
+		default:
+			throw new Error("Unsupported schema type");
 	}
-	if (schema.type === "array") {
-		return [];
-	}
-	if (schema.type === "boolean") {
-		return false;
-	}
-	if (schema.type === "number") {
-		return 0;
-	}
-	return "";
 }

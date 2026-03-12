@@ -1,5 +1,4 @@
 export interface Config {
-	version: number;
 	web: Web;
 	logger: Logger;
 	discord: Discord;

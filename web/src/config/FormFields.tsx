@@ -1,24 +1,24 @@
-import { type ArraySchema, getDefaultValueForSchema, type Schema } from "@/common/schema";
+import { type ArraySchema, eachField, getDefaultValueForSchema, type Schema } from "@/common/schema";
 import { configSchema } from "@/config/schema";
 import { useTemplateModal } from "@/config/TemplateModalContext";
 import { type Config } from "@/config/types";
 import { Accordion, ActionIcon, Autocomplete, Box, Button, Flex, Input, NumberInput, PasswordInput, Switch, Text, TextInput, Tooltip } from "@mantine/core";
 import { IconBraces, IconExternalLink, IconPlus, IconTrash } from "@tabler/icons-react";
 import { memo, type ReactNode } from "react";
-import { type Control, Controller, type FieldArray, type FieldArrayPath, type FieldPath, useFieldArray } from "react-hook-form";
+import { type Control, Controller, type FieldArray, type FieldArrayPath, type FieldPath, type FieldValues, useFieldArray } from "react-hook-form";
 
 // eslint-disable-next-line prefer-arrow-callback
 export const FormFields = memo(function FormFields({ control }: { control: Control<Config> }) {
 	return (
 		<Flex direction="column" gap="md" p="md" style={{ overflowY: "auto" }}>
-			{Object.entries(configSchema.fields).map(([key, schema]) => (
-				<FormField control={control} key={key} name={key as FieldPath<Config>} schema={schema} />
+			{eachField(configSchema.fields).map(([name, schema]) => (
+				<FormField control={control} key={name} name={name} schema={schema} />
 			))}
 		</Flex>
 	);
 });
 
-function FormField({ name, control, schema, label }: { name: FieldPath<Config>; control: Control<Config>; schema: Schema; label?: ReactNode }) {
+function FormField<T extends FieldValues, S>({ name, control, schema, label }: { name: FieldPath<T>; control: Control<T>; schema: Schema<S>; label?: ReactNode }) {
 	const openTemplateModal = useTemplateModal();
 
 	const fieldLabel = (
@@ -58,7 +58,7 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 	);
 
 	const showDefault = schema.defaultValue !== undefined && !schema.hideDefaultValue;
-	const defaultText = showDefault ? `[default: ${schema.type === "object" ? JSON.stringify(schema.defaultValue) : String(schema.defaultValue)}]` : "";
+	const defaultText = showDefault ? `[default: ${schema.type === "array" || schema.type === "object" ? JSON.stringify(schema.defaultValue) : String(schema.defaultValue)}]` : "";
 	const fieldDescription = [schema.description, defaultText].filter(Boolean).join(" ");
 
 	if (schema.type === "object") {
@@ -75,8 +75,8 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 					</Accordion.Control>
 					<Accordion.Panel>
 						<Flex direction="column" gap="sm">
-							{Object.entries(schema.fields).map(([key, propertySchema]) => (
-								<FormField control={control} key={key} name={`${name}.${key}` as FieldPath<Config>} schema={propertySchema} />
+							{eachField(schema.fields).map(([fieldName, fieldSchema]) => (
+								<FormField control={control} key={fieldName} name={`${name}.${fieldName}` as FieldPath<T>} schema={fieldSchema} />
 							))}
 						</Flex>
 					</Accordion.Panel>
@@ -93,13 +93,13 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 				const error = fieldState.error?.message;
 
 				if (schema.type === "array") {
-					return <ArrayField control={control} description={fieldDescription} error={error} label={fieldLabel} name={name as FieldArrayPath<Config>} schema={schema} />;
+					return <ArrayField control={control} description={fieldDescription} error={error} label={fieldLabel} name={name as FieldArrayPath<T>} schema={schema} />;
 				}
 
 				if (schema.type === "boolean") {
 					return (
 						<Switch
-							checked={field.value as boolean}
+							checked={field.value}
 							description={fieldDescription}
 							error={error}
 							label={fieldLabel}
@@ -111,21 +111,21 @@ function FormField({ name, control, schema, label }: { name: FieldPath<Config>; 
 				}
 
 				if (schema.type === "autocomplete") {
-					return <Autocomplete data={schema.options} description={fieldDescription} error={error} filter={({ options }) => options} label={fieldLabel} onChange={field.onChange} value={field.value as string} />;
+					return <Autocomplete data={schema.options} description={fieldDescription} error={error} filter={({ options }) => options} label={fieldLabel} onChange={field.onChange} value={field.value} />;
 				}
 
 				if (schema.type === "number") {
-					return <NumberInput description={fieldDescription} error={error} label={fieldLabel} onChange={field.onChange} value={field.value as number} />;
+					return <NumberInput description={fieldDescription} error={error} label={fieldLabel} onChange={field.onChange} value={field.value} />;
 				}
 
 				const TextInputComponent = schema.masked ? PasswordInput : TextInput;
-				return <TextInputComponent description={fieldDescription} error={error} label={fieldLabel} onChange={field.onChange} value={field.value as string} />;
+				return <TextInputComponent description={fieldDescription} error={error} label={fieldLabel} onChange={field.onChange} value={field.value} />;
 			}}
 		/>
 	);
 }
 
-function ArrayField({ name, control, schema, label, error, description }: { name: FieldArrayPath<Config>; control: Control<Config>; schema: ArraySchema; label: ReactNode; error?: string; description?: string }) {
+function ArrayField<T extends FieldValues, S extends unknown[]>({ name, control, schema, label, error, description }: { name: FieldArrayPath<T>; control: Control<T>; schema: ArraySchema<S>; label: ReactNode; error?: string; description?: string }) {
 	const { fields, append, remove } = useFieldArray({
 		control,
 		name,
@@ -156,7 +156,7 @@ function ArrayField({ name, control, schema, label, error, description }: { name
 					<Button
 						leftSection={<IconPlus size={16} />}
 						onClick={() => {
-							append(getDefaultValueForSchema(schema.itemSchema) as FieldArray<Config>);
+							append(getDefaultValueForSchema(schema.itemSchema) as FieldArray<T>);
 						}}
 						variant="outline"
 					>
@@ -187,7 +187,7 @@ function ArrayField({ name, control, schema, label, error, description }: { name
 									</ActionIcon>
 								</Flex>
 							}
-							name={`${name}.${index}`}
+							name={`${name}.${index}` as FieldPath<T>}
 							schema={schema.itemSchema}
 						/>
 					))}
