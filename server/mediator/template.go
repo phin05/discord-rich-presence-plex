@@ -17,7 +17,7 @@ func buildTemplateData(activity *plex.Activity) map[string]any {
 	data := make(map[string]any)
 	data["MediaType"] = activity.MediaType
 	data["State"] = activity.State
-	data["LibraryName"] = activity.Item.LibrarySectionTitle
+	data["LibraryName"] = strings.TrimSpace(activity.Item.LibrarySectionTitle)
 	data["ElapsedDurationMs"] = activity.ElapsedDurationMs
 	addGuidUrls := func(guids []plex.Guid, prefix string) {
 		guidMap := make(map[string]string)
@@ -65,33 +65,34 @@ func buildTemplateData(activity *plex.Activity) map[string]any {
 	}
 	switch activity.MediaType {
 	case "movie":
-		data["Title"] = cleanTitle(activity.Item.Title)
+		data["Title"] = stripYearSuffix(strings.TrimSpace(activity.Item.Title))
 		data["Year"] = activity.Item.Year
 		data["Duration"] = formatDuration(activity.Item.DurationMs, "")
 		data["Genres"] = formatGenres(activity.Item.Genres, ", ", 3)
 		data["Poster"] = activity.Item.Thumb
 		addGuidUrls(activity.Item.Guids, "")
 	case "episode":
-		data["ShowTitle"] = cleanTitle(activity.GrandparentItem.Title)
+		data["ShowTitle"] = stripYearSuffix(strings.TrimSpace(activity.GrandparentItem.Title))
 		data["ShowYear"] = activity.GrandparentItem.Year
 		data["EpisodeDuration"] = formatDuration(activity.Item.DurationMs, "")
 		data["ShowGenres"] = formatGenres(activity.GrandparentItem.Genres, ", ", 3)
 		data["ShowPoster"] = activity.GrandparentItem.Thumb
 		data["SeasonNumber"] = activity.ParentItem.Index
 		data["EpisodeNumber"] = activity.Item.Index
-		data["EpisodeTitle"] = activity.Item.Title
+		data["EpisodeTitle"] = strings.TrimSpace(activity.Item.Title)
 		addGuidUrls(activity.Item.Guids, "Episode")
 		addGuidUrls(activity.GrandparentItem.Guids, "Show")
 	case "track":
-		data["Title"] = activity.Item.Title
-		if activity.Item.OriginalTitle != "" {
-			data["Artist"] = activity.Item.OriginalTitle
+		data["Title"] = strings.TrimSpace(activity.Item.Title)
+		artist := strings.TrimSpace(activity.Item.OriginalTitle)
+		if artist != "" {
+			data["Artist"] = artist
 		} else {
-			data["Artist"] = activity.GrandparentItem.Title
+			data["Artist"] = strings.TrimSpace(activity.GrandparentItem.Title)
 		}
-		data["Album"] = cleanTitle(activity.ParentItem.Title)
+		data["Album"] = stripYearSuffix(strings.TrimSpace(activity.ParentItem.Title))
 		data["Year"] = activity.ParentItem.Year
-		data["AlbumArtist"] = activity.GrandparentItem.Title
+		data["AlbumArtist"] = strings.TrimSpace(activity.GrandparentItem.Title)
 		data["AlbumPoster"] = activity.ParentItem.Thumb
 		data["ArtistPoster"] = activity.GrandparentItem.Thumb
 		data["Duration"] = formatDuration(activity.Item.DurationMs, "")
@@ -101,12 +102,12 @@ func buildTemplateData(activity *plex.Activity) map[string]any {
 		addGuidUrls(activity.ParentItem.Guids, "Album")
 		addGuidUrls(activity.GrandparentItem.Guids, "Artist")
 	case "clip":
-		data["Title"] = activity.Item.Title
+		data["Title"] = strings.TrimSpace(activity.Item.Title)
 		data["Duration"] = formatDuration(activity.Item.DurationMs, "")
 		data["Poster"] = activity.Item.Thumb
 	case "liveEpisode":
-		data["ShowTitle"] = activity.Item.GrandparentTitle
-		data["EpisodeTitle"] = activity.Item.Title
+		data["ShowTitle"] = strings.TrimSpace(activity.Item.GrandparentTitle)
+		data["EpisodeTitle"] = strings.TrimSpace(activity.Item.Title)
 		data["ShowPoster"] = activity.Item.GrandparentThumb
 	}
 	data["Item"] = activity.Item
@@ -117,10 +118,8 @@ func buildTemplateData(activity *plex.Activity) map[string]any {
 
 var yearSuffixRegex = regexp.MustCompile(`\s\(\d{4}\)$`)
 
-func cleanTitle(title string) string {
-	title = strings.TrimSpace(title)
-	title = yearSuffixRegex.ReplaceAllString(title, "")
-	return title
+func stripYearSuffix(text string) string {
+	return yearSuffixRegex.ReplaceAllString(text, "")
 }
 
 var templateCache sync.Map // map[string]*template.Template
@@ -168,7 +167,7 @@ func formatDuration(milliseconds int64, format string) string {
 func formatGenres(genres []plex.Genre, delimiter string, maxGenres int) string {
 	var genreNames []string
 	for _, genre := range genres {
-		genreNames = append(genreNames, genre.Tag)
+		genreNames = append(genreNames, strings.TrimSpace(genre.Tag))
 		if len(genreNames) == maxGenres {
 			break
 		}

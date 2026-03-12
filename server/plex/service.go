@@ -221,7 +221,7 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 			return
 		}
 
-		libraryName := item.LibrarySectionTitle
+		libraryName := strings.TrimSpace(item.LibrarySectionTitle)
 		if libraryName == "" {
 			s.logger.Debug("Library name is empty, ignoring blacklist/whitelist")
 		} else {

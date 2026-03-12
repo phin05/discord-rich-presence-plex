@@ -11,6 +11,7 @@ import (
 	"encoding/json/v2"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
@@ -300,6 +301,7 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 }
 
 func activityText(text string, maxLength int) string {
+	text = strings.TrimSpace(text)
 	if text == "" {
 		return text
 	}
@@ -307,6 +309,10 @@ func activityText(text string, maxLength int) string {
 }
 
 func activityUrl(url string, maxLength int) string {
+	url = strings.TrimSpace(url)
+	if url == "" {
+		return url
+	}
 	return adjustLength(url, maxLength, "", 0, "")
 }
 

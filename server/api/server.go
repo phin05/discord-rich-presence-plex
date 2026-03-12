@@ -71,6 +71,14 @@ var tolerantIntUnmarshaler = json.UnmarshalFunc(func(data []byte, v *int) error 
 	return nil
 })
 
+var trimSpaceStringUnmarshaler = json.UnmarshalFunc(func(data []byte, v *string) error {
+	if err := json.Unmarshal(data, v); err != nil {
+		return err
+	}
+	*v = strings.TrimSpace(*v)
+	return nil
+})
+
 var (
 	anyType    = reflect.TypeFor[any]()
 	anyPtrType = reflect.TypeFor[*any]()
@@ -95,7 +103,7 @@ func RegisterRoute[I any, O any](s *Server, handler func(ctx context.Context, in
 		r.Body = http.MaxBytesReader(w, r.Body, maxReqBodyBytes)
 		var input I
 		if inputType != nil {
-			if err := json.UnmarshalRead(r.Body, &input, json.RejectUnknownMembers(true), json.WithUnmarshalers(tolerantIntUnmarshaler)); err != nil {
+			if err := json.UnmarshalRead(r.Body, &input, json.RejectUnknownMembers(true), json.WithUnmarshalers(json.JoinUnmarshalers(tolerantIntUnmarshaler, trimSpaceStringUnmarshaler))); err != nil {
 				// Make the error user-facing only if it's a JSON syntax/semantic error
 				_, isSynErr := errors.AsType[*jsontext.SyntacticError](err)
 				_, isSemErr := errors.AsType[*json.SemanticError](err)
