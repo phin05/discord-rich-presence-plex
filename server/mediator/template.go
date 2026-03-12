@@ -185,19 +185,34 @@ func toSentenceCase(text string) string {
 	return string(chars)
 }
 
-func adjustLength(text string, maxLength int, minLength int) string {
-	if text == "" {
-		return text
+func adjustLength(text string, maxLength int, ellipsis string, minLength int, padding string) string {
+	if maxLength < 0 {
+		maxLength = 0
 	}
-	chars := []rune(text)
-	if len(chars) > maxLength {
-		marginLength := min(maxLength, 3)
-		return string(chars[:maxLength-marginLength]) + strings.Repeat(".", marginLength)
+	runes := []rune(text)
+	length := len(runes)
+	if length > maxLength {
+		ellipsisRunes := []rune(ellipsis)
+		ellipsisLength := len(ellipsisRunes)
+		if maxLength <= ellipsisLength {
+			runes = ellipsisRunes[:maxLength]
+		} else {
+			runes = append(runes[:maxLength-ellipsisLength], ellipsisRunes...)
+		}
+		length = maxLength
 	}
-	if len(chars) < minLength {
-		return text + strings.Repeat(" ", minLength-len(chars))
+	if length < minLength {
+		if padding == "" {
+			padding = " "
+		}
+		paddingRunes := []rune(padding)
+		paddingLength := len(paddingRunes)
+		missingLength := minLength - length
+		for i := range missingLength {
+			runes = append(runes, paddingRunes[i%paddingLength])
+		}
 	}
-	return text
+	return string(runes)
 }
 
 var nonAsciiRegex = regexp.MustCompile(`[^\x00-\x7f]`)

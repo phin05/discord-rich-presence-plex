@@ -150,11 +150,11 @@ export const templateFunctions: TemplateFunction[] = [
 	},
 	{
 		name: "adjustLength",
-		signature: "adjustLength(text string, maxLength int, minLength int)",
-		example: "{{ adjustLength .Title 32 2 }}",
+		signature: "adjustLength(text string, maxLength int, ellipsis string, minLength int, padding string)",
+		example: '{{ adjustLength .Title 32 "…" 2 " " }}',
 		description: (
 			<span>
-				Truncates the given string to <Code>maxLength</Code> characters, or pads with spaces if shorter than <Code>minLength</Code>.
+				Truncates the given string to <Code>maxLength</Code> characters with an <Code>ellipsis</Code>, or right-pads with <Code>padding</Code> if shorter than <Code>minLength</Code>.
 			</span>
 		),
 	},

@@ -242,17 +242,17 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	discordActivity := &discord.Activity{
 		Type:              activityType,
 		StatusDisplayType: activityStatusDisplayType,
-		Details:           adjustLength(renderTemplate(rule.Details, templateData), 128, 2),
-		DetailsUrl:        adjustLength(renderTemplate(rule.DetailsUrl, templateData), 256, 0),
-		State:             adjustLength(renderTemplate(rule.State, templateData), 128, 2),
-		StateUrl:          adjustLength(renderTemplate(rule.StateUrl, templateData), 256, 0),
+		Details:           activityText(renderTemplate(rule.Details, templateData), 128),
+		DetailsUrl:        activityUrl(renderTemplate(rule.DetailsUrl, templateData), 256),
+		State:             activityText(renderTemplate(rule.State, templateData), 128),
+		StateUrl:          activityUrl(renderTemplate(rule.StateUrl, templateData), 256),
 		Assets: discord.ActivityAssets{
-			LargeImage: adjustLength(largeImage, 300, 0),
-			LargeText:  adjustLength(renderTemplate(rule.LargeText, templateData), 128, 2),
-			LargeUrl:   adjustLength(renderTemplate(rule.LargeUrl, templateData), 256, 0),
-			SmallImage: adjustLength(smallImage, 300, 0),
-			SmallText:  adjustLength(renderTemplate(rule.SmallText, templateData), 128, 2),
-			SmallUrl:   adjustLength(renderTemplate(rule.SmallUrl, templateData), 256, 0),
+			LargeImage: activityUrl(largeImage, 300),
+			LargeText:  activityText(renderTemplate(rule.LargeText, templateData), 128),
+			LargeUrl:   activityUrl(renderTemplate(rule.LargeUrl, templateData), 256),
+			SmallImage: activityUrl(smallImage, 300),
+			SmallText:  activityText(renderTemplate(rule.SmallText, templateData), 128),
+			SmallUrl:   activityUrl(renderTemplate(rule.SmallUrl, templateData), 256),
 		},
 	}
 	progressMode := renderTemplate(rule.ProgressMode, templateData)
@@ -272,8 +272,8 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 		}
 	}
 	for _, button := range rule.Buttons {
-		label := adjustLength(stripNonAscii(renderTemplate(button.Label, templateData)), 32, 2)
-		url := adjustLength(renderTemplate(button.Url, templateData), 512, 0)
+		label := activityText(renderTemplate(button.Label, templateData), 32)
+		url := activityUrl(renderTemplate(button.Url, templateData), 512)
 		if url == "" {
 			continue
 		}
@@ -297,6 +297,17 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 		s.setStopTimer(s.idleTimeout)
 	}
 	s.lastState = activity.State
+}
+
+func activityText(text string, maxLength int) string {
+	if text == "" {
+		return text
+	}
+	return adjustLength(text, maxLength, "…", 2, " ")
+}
+
+func activityUrl(url string, maxLength int) string {
+	return adjustLength(url, maxLength, "", 0, "")
 }
 
 // TODO: Maybe use https://pkg.go.dev/golang.org/x/sync/singleflight instead of the custom implementation below
