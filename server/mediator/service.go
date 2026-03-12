@@ -37,10 +37,11 @@ type Service struct {
 	lastState string
 	stopTimer *time.Timer
 
-	mu      sync.Mutex
-	running bool
-	cancel  context.CancelFunc
-	wg      sync.WaitGroup
+	mu       sync.Mutex
+	running  bool
+	stopping bool
+	cancel   context.CancelFunc
+	wg       sync.WaitGroup
 }
 
 func NewService(
@@ -67,7 +68,7 @@ func NewService(
 func (s *Service) Start() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.running {
+	if s.running || s.stopping {
 		return
 	}
 	s.running = true
@@ -83,17 +84,23 @@ func (s *Service) Stop() {
 		return
 	}
 	s.running = false
+	s.stopping = true
+	// Unlock mu because plexService.Stop() will wait for plexCallback, which needs to acquire mu
+	s.mu.Unlock()
 	for _, plexService := range s.plexServices {
 		plexService.Stop()
 	}
+	s.mu.Lock()
 	if s.cancel == nil {
 		return
 	}
 	s.cancel()
+	// Unlock mu before waiting for handlePlexActivity (wg), which needs to acquire mu
 	s.mu.Unlock()
 	s.wg.Wait()
 	s.mu.Lock()
 	s.stopActivity()
+	s.stopping = false
 }
 
 func (s *Service) stopActivity() {
@@ -132,6 +139,7 @@ func (s *Service) plexCallback(activity *plex.Activity) {
 	}
 	if s.cancel != nil {
 		s.cancel()
+		// Unlock mu before waiting for handlePlexActivity (wg), which needs to acquire mu
 		s.mu.Unlock()
 		s.wg.Wait()
 		s.mu.Lock()
