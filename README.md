@@ -44,14 +44,14 @@ Navigate to **Discord Settings → Activity Settings → Activity Privacy** to e
 
 ### CLI Flags
 
-| Flag                | Environment Variable   | Default Value                   | Description              |
-| ------------------- | ---------------------- | ------------------------------- | ------------------------ |
-| `--data-dir`        | `DRPP_DATA_DIR`        | `data` (relative to executable) | Path to data directory   |
-| `--config-file`     | `DRPP_CONFIG_FILE`     | `config.yml` (inside data dir)  | Path to config file      |
-| `--cache-file`      | `DRPP_CACHE_FILE`      | `cache.json` (inside data dir)  | Path to cache file       |
-| `--log-file`        | `DRPP_LOG_FILE`        | (disabled)                      | Path to log file         |
-| `--disable-web-ui`  | `DRPP_DISABLE_WEB_UI`  | `false`                         | Disable web interface    |
-| `--disable-systray` | `DRPP_DISABLE_SYSTRAY` | `false`                         | Disable system tray icon |
+| Flag                | Environment Variable   | Default Value                                                                                                                                                                                                               | Description              |
+| ------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `--data-dir`        | `DRPP_DATA_DIR`        | `drpp` in user config directory<details><summary>User config directory path</summary>`%APPDATA%` on Windows<br />`$XDG_CONFIG_HOME` or `$HOME/.config` on Linux<br />`$HOME/Library/Application Support` on macOS</details> | Path to data directory   |
+| `--config-file`     | `DRPP_CONFIG_FILE`     | `config.yml` in data directory                                                                                                                                                                                              | Path to config file      |
+| `--cache-file`      | `DRPP_CACHE_FILE`      | `cache.json` in data directory                                                                                                                                                                                              | Path to cache file       |
+| `--log-file`        | `DRPP_LOG_FILE`        |                                                                                                                                                                                                                             | Path to log file         |
+| `--disable-web-ui`  | `DRPP_DISABLE_WEB_UI`  | `false`                                                                                                                                                                                                                     | Disable web interface    |
+| `--disable-systray` | `DRPP_DISABLE_SYSTRAY` | `false`                                                                                                                                                                                                                     | Disable system tray icon |
 
 Environment variables take precedence over default values but are overridden by explicitly passed flags.
 
