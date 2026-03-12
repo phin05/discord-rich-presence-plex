@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	registryKeyPath        = `Software\Microsoft\Windows\CurrentVersion\Run`
-	registryValueName      = "DRPP"
-	disableWebUiLaunchFlag = "disable-web-ui-launch"
+	registryKeyPath       = `Software\Microsoft\Windows\CurrentVersion\Run`
+	registryValueName     = "DRPP"
+	disableWebUiLaunchArg = "--disable-web-ui-launch"
 )
 
 var (
@@ -27,16 +27,11 @@ var (
 		return exe
 	}()
 	args = func() string {
-		var flags []string
-		for _, arg := range os.Args[1:] {
-			flag := strings.TrimLeft(arg, "-")
-			if flag == disableWebUiLaunchFlag || slices.Contains(flags, flag) {
-				continue
-			}
-			flags = append(flags, flag)
+		args := os.Args[1:]
+		if !slices.Contains(args, disableWebUiLaunchArg) {
+			args = append([]string{disableWebUiLaunchArg}, args...)
 		}
-		flags = append(flags, disableWebUiLaunchFlag)
-		return "--" + strings.Join(flags, " --")
+		return strings.Join(args, " ")
 	}()
 )
 
