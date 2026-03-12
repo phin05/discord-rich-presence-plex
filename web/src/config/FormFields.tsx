@@ -63,8 +63,8 @@ function FormField<T extends FieldValues, S>({ name, control, schema, label }: {
 
 	if (schema.type === "object") {
 		return (
-			<Accordion defaultValue={name} variant="separated">
-				<Accordion.Item value={name}>
+			<Accordion defaultValue="item" variant="separated">
+				<Accordion.Item value="item">
 					<Accordion.Control>
 						{fieldLabel}
 						{fieldDescription && (
