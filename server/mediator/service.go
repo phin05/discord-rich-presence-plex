@@ -309,19 +309,24 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 }
 
 func activityText(text string, maxLength int) string {
+	return activityField(text, maxLength, "...", 2, " ")
+}
+
+func activityUrl(text string, maxLength int) string {
+	return activityField(text, maxLength, "", 0, "")
+}
+
+func activityField(text string, maxLength int, ellipsis string, minLength int, padding string) string {
 	text = strings.TrimSpace(text)
 	if text == "" {
 		return text
 	}
-	return adjustLength(text, maxLength, "…", 2, " ")
-}
-
-func activityUrl(url string, maxLength int) string {
-	url = strings.TrimSpace(url)
-	if url == "" {
-		return url
+	text = adjustLength(text, maxLength, ellipsis, minLength, padding)
+	// Discord sometimes counts bytes, not runes, so truncate to maxLength bytes without breaking UTF-8 encoding
+	if maxLength <= 0 || len(text) <= maxLength {
+		return text
 	}
-	return adjustLength(url, maxLength, "", 0, "")
+	return strings.ToValidUTF8(text[:maxLength], "")
 }
 
 // TODO: Maybe use https://pkg.go.dev/golang.org/x/sync/singleflight instead of the custom implementation below
