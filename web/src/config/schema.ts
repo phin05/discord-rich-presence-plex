@@ -5,6 +5,11 @@ export const configSchema: ObjectSchema<Config> = {
 	type: "object",
 	label: "Configuration",
 	fields: {
+		version: {
+			type: "number",
+			label: "Configuration Version",
+			hide: true,
+		},
 		web: {
 			type: "object",
 			label: "Web Settings",
@@ -14,6 +19,7 @@ export const configSchema: ObjectSchema<Config> = {
 					label: "Launch web interface on app startup",
 					defaultValue: true,
 					hideDefaultValue: true,
+					hide: CONTAINERISED_BUILD,
 				},
 				bindAddress: {
 					type: "string",

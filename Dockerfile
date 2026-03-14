@@ -1,6 +1,7 @@
 FROM --platform=$BUILDPLATFORM node:24 AS web-builder
 WORKDIR /app
 COPY . .
+ENV CONTAINERISED_BUILD=true
 RUN make install-deps-web build-web
 
 FROM --platform=$BUILDPLATFORM golang:1.26 AS server-builder

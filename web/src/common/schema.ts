@@ -4,6 +4,7 @@ export interface BaseSchema<T> {
 	link?: string;
 	defaultValue?: T;
 	hideDefaultValue?: boolean;
+	hide?: boolean;
 }
 
 export interface StringSchema<T extends string> extends BaseSchema<T> {

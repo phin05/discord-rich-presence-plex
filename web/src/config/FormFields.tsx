@@ -21,6 +21,10 @@ export const FormFields = memo(function FormFields({ control }: { control: Contr
 function FormField<T extends FieldValues, S>({ name, control, schema, label }: { name: FieldPath<T>; control: Control<T>; schema: Schema<S>; label?: ReactNode }) {
 	const openTemplateModal = useTemplateModal();
 
+	if (schema.hide) {
+		return null;
+	}
+
 	const fieldLabel = (
 		<Flex align="center" gap={4}>
 			{label ?? schema.label}
