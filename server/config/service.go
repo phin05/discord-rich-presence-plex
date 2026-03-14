@@ -46,7 +46,7 @@ func NewService(filePath string) (*Service, error) {
 		}
 		finalFilePath = filePath + extension
 	} else if !slices.Contains(extensions, extension) {
-		return nil, fmt.Errorf("unsupported config file extension %q, supported extensions are: %s", extension, strings.Join(extensions, ", "))
+		return nil, fmt.Errorf("unsupported extension %q, use one of: %s", extension, strings.Join(extensions, ", "))
 	}
 	s := &Service{
 		filePath: finalFilePath,

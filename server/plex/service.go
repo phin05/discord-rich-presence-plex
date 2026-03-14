@@ -288,6 +288,7 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 	var errs []error
 	for _, serverUrl := range serverUrls {
 		client.BaseUrl = strings.TrimRight(serverUrl, "/")
+		s.logger.Debug("Connecting to %s", client.BaseUrl)
 		if err := client.StartNotificationListener(localCtx, &wg, handler, errorHandler); err != nil {
 			errs = append(errs, err)
 			continue

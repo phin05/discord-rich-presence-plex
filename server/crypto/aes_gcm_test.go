@@ -39,11 +39,11 @@ func TestAesGcm(t *testing.T) {
 	t.Run("Non-Deterministic Encryption", func(t *testing.T) {
 		encryptedData1, err := aesGcmEncrypt(data)
 		if err != nil {
-			t.Fatalf("encrypt: %v", err)
+			t.Fatalf("encrypt 1: %v", err)
 		}
 		encryptedData2, err := aesGcmEncrypt(data)
 		if err != nil {
-			t.Fatalf("encrypt: %v", err)
+			t.Fatalf("encrypt 2: %v", err)
 		}
 		if bytes.Equal(encryptedData1, encryptedData2) {
 			t.Error("expected different outputs for multiple encryptions of the same data")
