@@ -123,6 +123,7 @@ type User struct {
 type Server struct {
 	Enabled               bool     `yaml:"enabled" json:"enabled"`
 	Name                  string   `yaml:"name" json:"name" validate:"required"`
+	Url                   string   `yaml:"url" json:"url" validate:"omitempty,http_url"`
 	ListenForUser         string   `yaml:"listenForUser" json:"listenForUser"`
 	BlacklistedLibraries  []string `yaml:"blacklistedLibraries" json:"blacklistedLibraries" validate:"unique,dive,required"`
 	WhitelistedLibraries  []string `yaml:"whitelistedLibraries" json:"whitelistedLibraries" validate:"unique,dive,required"`

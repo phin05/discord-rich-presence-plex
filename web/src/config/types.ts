@@ -109,6 +109,7 @@ export interface User {
 export interface Server {
 	enabled: boolean;
 	name: string;
+	url: string;
 	listenForUser: string;
 	blacklistedLibraries: string[];
 	whitelistedLibraries: string[];

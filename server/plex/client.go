@@ -88,6 +88,8 @@ type Connection struct {
 	Address  string `json:"address"`
 	Port     int64  `json:"port"`
 	Uri      string `json:"uri"`
+	Local    bool   `json:"local"`
+	Relay    bool   `json:"relay"`
 }
 
 func (c *Client) GetServers(ctx context.Context) ([]Resource, error) {

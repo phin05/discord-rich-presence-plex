@@ -292,6 +292,11 @@ export const configSchema: ObjectSchema<Config> = {
 											label: "Name",
 											description: "Friendly name of the server. Can be found/set in the Plex Web App under Settings > Server Settings > General > Friendly Name.",
 										},
+										url: {
+											type: "string",
+											label: "URL",
+											description: "URL of the server. Auto-detected if left empty. Example: http://127.0.0.1:32400",
+										},
 										listenForUser: {
 											type: "string",
 											label: "Target Username",

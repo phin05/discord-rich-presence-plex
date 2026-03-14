@@ -126,18 +126,29 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 	server := servers[serverIndex]
 
 	client.Token = server.AccessToken
-	var errs []error
-	for _, connection := range server.Connections {
-		client.BaseUrl = connection.Uri
-		if err := client.TestServerConnection(localCtx); err != nil {
-			errs = append(errs, err)
-			continue
+
+	var serverUrls []string
+	if s.serverConfig.Url == "" {
+		slices.SortStableFunc(server.Connections, func(c1, c2 Connection) int {
+			if c1.Local != c2.Local {
+				if c1.Local {
+					return -1
+				}
+				return 1
+			}
+			if c1.Relay != c2.Relay {
+				if c1.Relay {
+					return 1
+				}
+				return -1
+			}
+			return 0
+		})
+		for _, connection := range server.Connections {
+			serverUrls = append(serverUrls, connection.Uri)
 		}
-		errs = nil
-		break
-	}
-	if len(errs) > 0 {
-		return fmt.Errorf("test server connection: %w", errors.Join(errs...))
+	} else {
+		serverUrls = append(serverUrls, s.serverConfig.Url)
 	}
 
 	activityCh := make(chan *Activity, 1)
@@ -274,8 +285,18 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 
 	var wg sync.WaitGroup
 
-	if err := client.StartNotificationListener(localCtx, &wg, handler, errorHandler); err != nil {
-		return fmt.Errorf("start notification listener: %w", err)
+	var errs []error
+	for _, serverUrl := range serverUrls {
+		client.BaseUrl = strings.TrimRight(serverUrl, "/")
+		if err := client.StartNotificationListener(localCtx, &wg, handler, errorHandler); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		errs = nil
+		break
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("start notification listener: %w", errors.Join(errs...))
 	}
 	s.logger.Info("Connected to server")
 
