@@ -27,6 +27,7 @@ type Client struct {
 	BaseUrl    string
 	Token      string
 	httpClient *http.Client
+	wsDialer   *websocket.Dialer
 }
 
 func NewClient(baseUrl string, token string, timeout time.Duration) *Client {
@@ -34,6 +35,7 @@ func NewClient(baseUrl string, token string, timeout time.Duration) *Client {
 		BaseUrl:    baseUrl,
 		Token:      token,
 		httpClient: &http.Client{Timeout: timeout},
+		wsDialer:   &websocket.Dialer{HandshakeTimeout: timeout},
 	}
 }
 
@@ -206,7 +208,7 @@ func (c *Client) StartNotificationListener(ctx context.Context, wg *sync.WaitGro
 		"X-Plex-Client-Identifier": []string{clientId},
 		"X-Plex-Token":             []string{c.Token},
 	}
-	conn, resp, err := websocket.DefaultDialer.DialContext(ctx, wsUrl.String(), wsHeaders)
+	conn, resp, err := c.wsDialer.DialContext(ctx, wsUrl.String(), wsHeaders)
 	if err != nil {
 		return fmt.Errorf("connect websocket: %w", err)
 	}
