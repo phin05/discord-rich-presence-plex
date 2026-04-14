@@ -48,7 +48,7 @@ func parseFlags() {
 		}
 	}
 	logFileFlag := stringFlagWithEnv("log-file", "", "Path to log file")
-	dataDirFlag := stringFlagWithEnv("data-dir", defaultDataDirPath, `Path to data directory`)
+	dataDirFlag := stringFlagWithEnv("data-dir", defaultDataDirPath, "Path to data directory")
 	configFileFlag := stringFlagWithEnv("config-file", "", `Path to config file. Defaults to "config.yml" in data directory.`)
 	cacheFileFlag := stringFlagWithEnv("cache-file", "", `Path to cache file. Defaults to "cache.json" in data directory.`)
 	disableWebUiFlag := boolFlagWithEnv("disable-web-ui", false, "Disable web interface")

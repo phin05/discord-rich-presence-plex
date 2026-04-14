@@ -22,7 +22,7 @@ const (
 	maxDownloadRespBodyBytes = 16 * 1024 * 1024 // 16 MB
 )
 
-var httpClient = http.Client{}
+var httpClient http.Client
 
 func Upload(ctx context.Context, pngBytes []byte, postEndpoint string, imageFieldName string, formFields map[string]string, headers map[string]string) ([]byte, error) {
 	logger.Info("Uploading image")

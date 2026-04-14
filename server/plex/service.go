@@ -279,6 +279,9 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 	}
 
 	errorHandler := func(err error) {
+		if localCtx.Err() != nil {
+			return
+		}
 		s.logger.Error(err, "Restarting due to notification listener error")
 		cancel()
 	}

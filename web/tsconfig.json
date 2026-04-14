@@ -6,7 +6,6 @@
 		"allowUnreachableCode": false,
 		"allowUnusedLabels": false,
 		"alwaysStrict": true,
-		"baseUrl": ".",
 		"erasableSyntaxOnly": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,

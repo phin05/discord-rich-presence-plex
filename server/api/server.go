@@ -86,10 +86,6 @@ var (
 
 // https://github.com/golang/go/issues/49085
 func RegisterRoute[I any, O any](s *Server, handler func(ctx context.Context, input I) (O, error), method string, path string, statusCode int) {
-	if handler == nil || method == "" || path == "" || statusCode == 0 {
-		logger.Error(nil, "Invalid route registration for endpoint %s %s", method, path)
-		return
-	}
 	inputType := reflect.TypeFor[I]()
 	if inputType == anyType || inputType == anyPtrType {
 		inputType = nil
@@ -124,10 +120,6 @@ func RegisterRoute[I any, O any](s *Server, handler func(ctx context.Context, in
 }
 
 func (s *Server) RegisterCustomRoute(handler http.HandlerFunc, method string, path string) {
-	if handler == nil || method == "" || path == "" {
-		logger.Error(nil, "Invalid custom route registration for endpoint %s %s", method, path)
-		return
-	}
 	s.mux.HandleFunc(method+" /api/"+path, func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxReqBodyBytes)
 		handler(w, r)

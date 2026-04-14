@@ -141,7 +141,7 @@ type Metadata struct {
 	SessionKey           string  `json:"sessionKey,omitzero"`
 	User                 User    `json:"User,omitzero"`
 	GrandparentThumb     string  `json:"grandparentThumb,omitzero"` // For live episodes
-	GrandparentTitle     string  `json:"grandparentTitle,omitzero"` // FOr live episodes
+	GrandparentTitle     string  `json:"grandparentTitle,omitzero"` // For live episodes
 }
 
 type Genre struct {

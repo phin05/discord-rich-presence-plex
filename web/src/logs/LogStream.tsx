@@ -69,7 +69,7 @@ export function LogStream() {
 				<Divider orientation="vertical" />
 				<Switch
 					checked={autoScroll}
-					label="Auto-Scroll"
+					label="Auto Scroll"
 					onChange={(event) => {
 						setAutoScroll(event.currentTarget.checked);
 					}}
