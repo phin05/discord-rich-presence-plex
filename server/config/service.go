@@ -59,8 +59,12 @@ func NewService(filePath string) (*Service, error) {
 	if err := s.save(); err != nil {
 		return nil, fmt.Errorf("save: %w", err)
 	}
-	if errs := s.config.validate(); len(errs) != 0 {
-		return nil, fmt.Errorf("invalid fields (%d):\n%s", len(errs), strings.Join(errs, "\n"))
+	invalidFields, err := s.config.validate()
+	if err != nil {
+		return nil, fmt.Errorf("validate: %w", err)
+	}
+	if len(invalidFields) > 0 {
+		return nil, fmt.Errorf("invalid fields (%d):\n%s", len(invalidFields), strings.Join(invalidFields, "\n"))
 	}
 	return s, nil
 }
@@ -182,8 +186,12 @@ func (s *Service) save() error {
 
 func (s *Service) SetConfig(config Config) error {
 	config.Version = currentVersion
-	if errs := config.validate(); len(errs) != 0 {
-		return api.ErrBadRequest(fmt.Sprintf("Invalid input fields (%d)", len(errs)), errs)
+	invalidFields, err := config.validate()
+	if err != nil {
+		return fmt.Errorf("validate: %w", err)
+	}
+	if len(invalidFields) > 0 {
+		return api.ErrBadRequest(fmt.Sprintf("Invalid input fields (%d)", len(invalidFields)), invalidFields)
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()

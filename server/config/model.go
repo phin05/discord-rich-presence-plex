@@ -134,26 +134,26 @@ type Server struct {
 
 var validate = validator.New(validator.WithRequiredStructEnabled())
 
-func (c *Config) validate() []string {
+func (c *Config) validate() ([]string, error) {
 	err := validate.Struct(c)
 	if err == nil {
-		return nil
+		return nil, nil
 	}
 	if _, ok := errors.AsType[*validator.InvalidValidationError](err); ok {
-		return []string{"Root object is invalid"}
+		return nil, fmt.Errorf("invalid root object: %w", err)
 	}
-	validationErrs, ok := errors.AsType[validator.ValidationErrors](err)
+	fieldErrs, ok := errors.AsType[validator.ValidationErrors](err)
 	if !ok {
-		return []string{"Validation failed due to an unexpected error"}
+		return nil, err
 	}
-	errs := make([]string, len(validationErrs))
-	for i, fieldErr := range validationErrs {
-		_, namespace, _ := strings.Cut(fieldErr.Namespace(), ".")
+	invalidFields := make([]string, len(fieldErrs))
+	for i, fieldErr := range fieldErrs {
+		_, path, _ := strings.Cut(fieldErr.Namespace(), ".") // Strip struct name
 		tag := fieldErr.Tag()
 		if param := fieldErr.Param(); param != "" {
 			tag += "=" + param
 		}
-		errs[i] = fmt.Sprintf("%s;%s", namespace, tag)
+		invalidFields[i] = fmt.Sprintf("%s;%s", path, tag)
 	}
-	return errs
+	return invalidFields, nil
 }
