@@ -170,7 +170,7 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 		return item
 	}
 
-	var lastSessionKey string
+	var lastSessionKey, lastState string
 
 	handler := func(n *NotificationContainer) {
 
@@ -208,10 +208,15 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 					return
 				}
 			}
+			if notification.State != "playing" && lastState == "playing" {
+				s.logger.Debug("Ignoring transition to non-playing state while a different playing session is active")
+				return
+			}
 			clear(itemCache)
 		}
 
 		lastSessionKey = notification.SessionKey
+		lastState = notification.State
 
 		item := getItem(notification.RatingKey, "main")
 		if item == nil {
