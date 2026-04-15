@@ -213,7 +213,7 @@ func launchUrl(url string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+		cmd = exec.Command("explorer", url)
 	case "linux":
 		cmd = exec.Command("xdg-open", url)
 	case "darwin":
@@ -222,10 +222,14 @@ func launchUrl(url string) {
 		logger.Error(nil, "Unsupported OS %q for launching URL", runtime.GOOS)
 		return
 	}
-	if err := cmd.Start(); err != nil {
+	if err := cmd.Run(); err != nil {
+		if runtime.GOOS == "windows" {
+			if exitErr, ok := errors.AsType[*exec.ExitError](err); ok && exitErr.ExitCode() == 1 {
+				// explorer.exe always returns exit code 1
+				// https://github.com/microsoft/WSL/issues/6565
+				return
+			}
+		}
 		logger.Error(err, "Failed to launch URL")
-	}
-	if err := cmd.Wait(); err != nil {
-		logger.Error(err, "Failed to wait for URL launch")
 	}
 }
