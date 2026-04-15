@@ -249,6 +249,7 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	imageWg.Go(func() { smallImage = resolveImage(rule.SmallImage) })
 	imageWg.Wait()
 	discordActivity := &discord.Activity{
+		Name:              activityText(renderTemplate(rule.Name, templateData), 128),
 		Type:              activityType,
 		StatusDisplayType: activityStatusDisplayType,
 		Details:           activityText(renderTemplate(rule.Details, templateData), 128),

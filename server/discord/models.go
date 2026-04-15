@@ -36,6 +36,7 @@ type ipcResponse struct {
 // https://docs.discord.com/developers/events/gateway-events#activity-object
 // https://discord.com/developers/docs/social-sdk/classdiscordpp_1_1Activity.html
 type Activity struct {
+	Name              string                    `json:"name,omitzero"`
 	Type              ActivityType              `json:"type"`
 	StatusDisplayType ActivityStatusDisplayType `json:"status_display_type"`
 	Details           string                    `json:"details,omitzero"`

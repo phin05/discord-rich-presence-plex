@@ -51,6 +51,7 @@ type DisplayRules struct {
 }
 
 type DisplayRule struct {
+	Name                string   `yaml:"name" json:"name"`
 	Details             string   `yaml:"details" json:"details"`
 	State               string   `yaml:"state" json:"state"`
 	StatusType          string   `yaml:"statusType" json:"statusType" validate:"required"`

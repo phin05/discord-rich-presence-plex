@@ -38,6 +38,7 @@ export interface DisplayRules {
 }
 
 export interface DisplayRule {
+	name: string;
 	details: string;
 	state: string;
 	statusType: string;
