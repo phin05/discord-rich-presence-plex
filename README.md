@@ -167,3 +167,23 @@ DRPP downloads poster images from Plex and uploads them to an external image hos
 - [ImgBB](https://imgbb.com/)
 - [Imgur](https://imgur.com/)
 - [Copyparty](https://github.com/9001/copyparty) (self-hosted)
+
+### Antivirus False Positives
+
+DRPP is written in [Go](https://go.dev/), and unfortunately, antivirus programs frequently misidentify compiled Go binaries.
+
+This issue is directly addressed in Go's [official documentation](https://go.dev/doc/faq#virus):
+
+> **Why does my virus-scanning software think my Go distribution or compiled binary is infected?**
+>
+> This is a common occurrence, especially on Windows machines, and is almost always a false positive. Commercial virus scanning programs are often confused by the structure of Go binaries, which they don’t see as often as those compiled from other languages.
+>
+> In any case, if you believe the report is in error, please report a bug to the supplier of your virus scanner. Maybe in time virus scanners can learn to understand Go programs.
+
+If you encounter this false positive issue, add an exception for DRPP's executable in your antivirus settings.
+
+If you'd like to verify the safety of DRPP, everything is fully transparent:
+
+- You can inspect the complete source code in this repository.
+- The released executables are built automatically using GitHub Actions. [[Workflow Runs](https://github.com/phin05/discord-rich-presence-plex/actions/workflows/release.yml)]
+- GitHub generates attestations to prove that the released executables are built using the exact code and automated workflow you see in this repository. [[Attestations](https://github.com/phin05/discord-rich-presence-plex/attestations)]
