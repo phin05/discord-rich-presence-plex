@@ -5,7 +5,6 @@ import "os"
 var Containerised = os.Getenv("DRPP_CONTAINERISED") == "true"
 
 func newDefaultConfig() Config {
-	var launchOnStartup bool
 	var bindAddress string
 	var allowedNetworks []string
 	if Containerised {
@@ -14,12 +13,10 @@ func newDefaultConfig() Config {
 		allowedNetworks = []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"}
 	} else {
 		bindAddress = "127.0.0.1"
-		launchOnStartup = true
 	}
 	return Config{
 		Version: currentVersion,
 		Web: Web{
-			LaunchOnStartup: launchOnStartup,
 			BindAddress:     bindAddress,
 			BindPort:        8040, // TODO: Auto-select an available port if this is unavailable
 			AllowedNetworks: allowedNetworks,

@@ -23,9 +23,9 @@ If you're on Linux, you can [run DRPP with Docker](#docker).
 1. Download the [latest release](https://github.com/phin05/discord-rich-presence-plex/releases/latest) for your platform and extract it.
 2. Run the executable file.
 3. Open the web interface to configure DRPP:
-   - The web interface will launch automatically in your default browser, or
+   - Click the DRPP icon in your system tray and select **Web UI**, or
    - Navigate to [http://localhost:8040](http://localhost:8040), or
-   - Click the DRPP icon in your system tray and select **Web UI**.
+   - Run the executable file again.
 4. Click **Add User** and complete the interactive Plex authentication flow.
 
 On Windows and Linux, DRPP has an icon in the system tray. Clicking this allows you to launch the web interface in your default browser.
