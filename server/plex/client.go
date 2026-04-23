@@ -70,7 +70,15 @@ type Account struct {
 }
 
 type User struct {
-	Title string `json:"title"`
+	Username string `json:"username"`
+	Title    string `json:"title"`
+}
+
+func (u *User) UsernameOrTitle() string {
+	if u.Username == "" {
+		return u.Title
+	}
+	return u.Username
 }
 
 func (c *Client) GetAccount(ctx context.Context) (*Account, error) {

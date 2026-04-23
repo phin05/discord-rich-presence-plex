@@ -107,7 +107,10 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 	if err != nil {
 		return fmt.Errorf("fetch account details: %w", err)
 	}
-	s.logger.Info("Signed in as user %q", account.User.Title)
+	if s.serverConfig.ListenForUser == "" {
+		s.serverConfig.ListenForUser = account.User.UsernameOrTitle()
+	}
+	s.logger.Info("Signed in as user %q, listening for user %q", account.User.UsernameOrTitle(), s.serverConfig.ListenForUser)
 
 	servers, err := client.GetServers(localCtx)
 	if err != nil {
@@ -194,17 +197,17 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 					s.logger.Error(err, "Failed to fetch sessions")
 					return
 				}
-				var username string
-				if s.serverConfig.ListenForUser == "" {
-					username = account.User.Title
-				} else {
-					username = s.serverConfig.ListenForUser
+				sessionIndex := slices.IndexFunc(sessions, func(session Metadata) bool {
+					return session.SessionKey == notification.SessionKey
+				})
+				if sessionIndex == -1 {
+					s.logger.Debug("Session key %q not found in sessions list, ignoring", notification.SessionKey)
+					return
 				}
-				isOwnSession := slices.IndexFunc(sessions, func(session Metadata) bool {
-					return session.SessionKey == notification.SessionKey && strings.EqualFold(session.User.Title, username)
-				}) != -1
+				sessionUsername := sessions[sessionIndex].User.UsernameOrTitle()
+				isOwnSession := strings.EqualFold(sessionUsername, s.serverConfig.ListenForUser)
 				if !isOwnSession {
-					s.logger.Debug("Session key %q doesn't belong to target user, ignoring", notification.SessionKey)
+					s.logger.Debug("Session key %q belongs to user %q, not %q, ignoring", notification.SessionKey, sessionUsername, s.serverConfig.ListenForUser)
 					return
 				}
 			}
