@@ -434,13 +434,13 @@ function getDisplayRuleFields() {
 			type: "autocomplete",
 			label: "Progress Mode",
 			template: true,
-			description: 'Progress/timestamp display mode: "off" (disabled), "elapsed" (elapsed time), "remaining" (remaining time), or "bar" (progress bar). The "off" mode is currently broken due to a Discord bug/limitation.',
-			options: ["off", "elapsed", "remaining", "bar"],
+			description: 'Media progress display mode: "off" (disabled), "elapsed" (elapsed time), "remaining" (remaining time), "bar" (progress bar), or "state" (time elapsed since last state change). The "off" mode omits timestamps, which causes Discord to display time elapsed since last activity update.',
+			options: ["off", "elapsed", "remaining", "bar", "state"],
 		},
 		pauseTimeoutSeconds: {
 			type: "number",
 			label: "Pause Timeout",
-			description: "Seconds to wait before clearing Rich Presence after playback is paused. Use -1 to show indefinitely and 0 to clear immediately. Progress/timestamp display while paused is currently broken due to a Discord bug/limitation.",
+			description: "Seconds to wait before clearing Rich Presence after playback is paused. Use -1 to show indefinitely and 0 to clear immediately.",
 			defaultValue: 0,
 		},
 		buttons: {

@@ -34,8 +34,9 @@ type Service struct {
 	stopTimeout    time.Duration
 	idleTimeout    time.Duration
 
-	lastState string
-	stopTimer *time.Timer
+	lastState        string
+	stateChangedAtMs int64
+	stopTimer        *time.Timer
 
 	mu       sync.Mutex
 	running  bool
@@ -158,9 +159,15 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	activityJson, _ := json.Marshal(activity)
 	logger.Info("Activity: %s", activityJson)
 	var rule config.DisplayRule
+	var stateChangedAtMs int64
 	if ok := func() bool {
 		s.mu.Lock()
 		defer s.mu.Unlock()
+		if s.lastState != activity.State {
+			stateChangedAtMs = time.Now().UnixMilli()
+		} else {
+			stateChangedAtMs = s.stateChangedAtMs
+		}
 		if activity.State == "stopped" {
 			if s.lastState == "" || s.lastState == "stopped" {
 				// Stopped without a previous state or timer already set, ignore
@@ -267,18 +274,22 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 	}
 	progressMode := renderTemplate(rule.ProgressMode, templateData)
 	switch progressMode {
-	case "off", "elapsed", "remaining", "bar":
+	case "off", "elapsed", "remaining", "bar", "state":
 	default:
 		logger.Error(nil, "Invalid progress mode %q, defaulting to %q", progressMode, "off")
 		progressMode = "off"
 	}
 	if progressMode != "off" {
-		now := time.Now().UnixMilli()
-		if progressMode == "bar" || progressMode == "elapsed" {
-			discordActivity.Timestamps.StartMs = now - activity.ElapsedDurationMs
-		}
-		if progressMode == "bar" || progressMode == "remaining" {
-			discordActivity.Timestamps.EndMs = now + activity.Item.DurationMs - activity.ElapsedDurationMs
+		if progressMode == "state" {
+			discordActivity.Timestamps.StartMs = stateChangedAtMs
+		} else {
+			now := time.Now().UnixMilli()
+			if progressMode == "bar" || progressMode == "elapsed" {
+				discordActivity.Timestamps.StartMs = now - activity.ElapsedDurationMs
+			}
+			if progressMode == "bar" || progressMode == "remaining" {
+				discordActivity.Timestamps.EndMs = now + activity.Item.DurationMs - activity.ElapsedDurationMs
+			}
 		}
 	}
 	for _, button := range rule.Buttons {
@@ -307,6 +318,7 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 		s.setStopTimer(s.idleTimeout)
 	}
 	s.lastState = activity.State
+	s.stateChangedAtMs = stateChangedAtMs
 }
 
 func activityText(text string, maxLength int) string {
