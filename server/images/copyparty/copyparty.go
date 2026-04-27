@@ -50,10 +50,14 @@ func (s *Service) Upload(ctx context.Context, pngBytes []byte) (string, error) {
 		return "", fmt.Errorf("upload: %w", err)
 	}
 	result := string(bodyBytes)
-	if parsed, err := url.Parse(result); err != nil || !parsed.IsAbs() || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+	parsed, err := url.Parse(result)
+	if err != nil || !parsed.IsAbs() || (parsed.Scheme != "http" && parsed.Scheme != "https") {
 		return "", fmt.Errorf("invalid response: %s", result)
 	}
-	return result, nil
+	query := parsed.Query()
+	query.Set("raw", "")
+	parsed.RawQuery = query.Encode()
+	return parsed.String(), nil
 }
 
 func (s *Service) Lifespan() time.Duration {
