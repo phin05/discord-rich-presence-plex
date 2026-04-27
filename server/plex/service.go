@@ -29,10 +29,9 @@ type Service struct {
 	fatalShutdown context.CancelFunc
 	logger        *prefixedLogger
 
-	mu      sync.Mutex
-	running bool
-	cancel  context.CancelFunc
-	wg      sync.WaitGroup
+	mu     sync.Mutex
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
 }
 
 func NewService(userToken string, serverConfig config.Server, fatalShutdown context.CancelFunc) *Service {
@@ -44,27 +43,24 @@ func NewService(userToken string, serverConfig config.Server, fatalShutdown cont
 	}
 }
 
-var errRestart = errors.New("restart")
-
 func (s *Service) Start(callback func(activity *Activity)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.running {
+	if s.cancel != nil {
 		return
 	}
-	s.running = true
 	var ctx context.Context
 	ctx, s.cancel = context.WithCancel(context.Background())
 	s.wg.Go(func() {
 		var retries int
 		for {
 			err := s.run(ctx, callback)
-			if err == nil {
+			if ctx.Err() != nil {
 				return
 			}
-			if err == errRestart { //nolint:errorlint
-				retries = 0
+			if err == nil {
 				s.logger.Info("Reconnecting in %d seconds", s.serverConfig.RetryIntervalSeconds)
+				retries = 0
 			} else {
 				s.logger.Error(err, "Failed to initialise")
 				if s.serverConfig.MaxRetriesBeforeExit > -1 && retries >= s.serverConfig.MaxRetriesBeforeExit {
@@ -87,11 +83,11 @@ func (s *Service) Start(callback func(activity *Activity)) {
 func (s *Service) Stop() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if !s.running {
+	if s.cancel == nil {
 		return
 	}
-	s.running = false
 	s.cancel()
+	s.cancel = nil
 	s.wg.Wait()
 	s.logger.Info("Disconnected")
 }
@@ -342,9 +338,6 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 
 	wg.Wait()
 
-	if ctx.Err() == nil {
-		return errRestart
-	}
 	return nil
 
 }
