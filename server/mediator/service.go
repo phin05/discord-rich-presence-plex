@@ -400,6 +400,11 @@ func (s *Service) getUploadedImageUrl(ctx context.Context, thumb string, sourceU
 			if result.url != "" {
 				return result.url
 			}
+			select {
+			case <-ctx.Done():
+				return ""
+			case <-time.After(1 * time.Second):
+			}
 		}
 	}
 	return ""
