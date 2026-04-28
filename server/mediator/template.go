@@ -116,20 +116,15 @@ func buildTemplateData(activity *plex.Activity) map[string]any {
 	return data
 }
 
-var yearSuffixRegex = regexp.MustCompile(`\s\(\d{4}\)$`)
-
-func stripYearSuffix(text string) string {
-	return yearSuffixRegex.ReplaceAllString(text, "")
-}
-
 var templateCache sync.Map // map[string]*template.Template
 
 var templateFuncs = template.FuncMap{
-	"formatDuration": formatDuration,
-	"formatGenres":   formatGenres,
-	"toSentenceCase": toSentenceCase,
-	"adjustLength":   adjustLength,
-	"stripNonAscii":  stripNonAscii,
+	"formatDuration":  formatDuration,
+	"formatGenres":    formatGenres,
+	"toSentenceCase":  toSentenceCase,
+	"adjustLength":    adjustLength,
+	"stripNonAscii":   stripNonAscii,
+	"stripYearSuffix": stripYearSuffix,
 }
 
 func renderTemplate(tmpl string, data map[string]any) string {
@@ -218,4 +213,10 @@ var nonAsciiRegex = regexp.MustCompile(`[^\x00-\x7f]`)
 
 func stripNonAscii(text string) string {
 	return nonAsciiRegex.ReplaceAllString(text, "")
+}
+
+var yearSuffixRegex = regexp.MustCompile(`\s\(\d{4}\)$`)
+
+func stripYearSuffix(text string) string {
+	return yearSuffixRegex.ReplaceAllString(text, "")
 }

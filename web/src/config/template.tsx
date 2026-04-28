@@ -164,4 +164,14 @@ export const templateFunctions: TemplateFunction[] = [
 		example: "{{ stripNonAscii .Title }}",
 		description: "Removes all non-ASCII characters from the given string.",
 	},
+	{
+		name: "stripYearSuffix",
+		signature: "stripYearSuffix(text string)",
+		example: "{{ stripYearSuffix .Item.Title }}",
+		description: (
+			<span>
+				Removes a 4-digit year suffix from the given string (e.g. <Code>&quot;ABC (1999)&quot;</Code> → <Code>&quot;ABC&quot;</Code>).
+			</span>
+		),
+	},
 ];
