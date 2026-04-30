@@ -180,7 +180,7 @@ func (s *Service) run(ctx context.Context, callback func(activity *Activity)) er
 		s.logger.Debug("Notification: %#v", notification)
 
 		switch notification.State {
-		case "playing", "paused", "buffering", "stopped":
+		case "playing", "paused", "stopped":
 		default:
 			s.logger.Debug("Unrecognised state %q, ignoring", notification.State)
 			return
