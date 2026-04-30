@@ -94,7 +94,7 @@ func main() {
 				}
 			}()
 		}
-		discordService := discord.NewService(cfg.Discord.ClientId, cfg.Discord.IpcPipeNumber, cfg.Discord.RateLimit)
+		discordService := discord.NewService(cfg.Discord.ClientId, cfg.Discord.IpcPipeNumber, cfg.Discord.RateLimit, cfg.Discord.IpcTimeoutSeconds)
 		var plexServices []*plex.Service
 		for _, user := range cfg.Plex.Users {
 			if !user.Enabled {

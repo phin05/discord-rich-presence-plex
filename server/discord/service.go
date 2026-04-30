@@ -46,16 +46,17 @@ var ipcPipeBase = func() string {
 }()
 
 type Service struct {
-	clientId  string
-	pipes     []string
-	conn      net.Conn
-	connected bool
-	mu        sync.RWMutex
-	rateLimit int
-	calls     []time.Time
+	clientId   string
+	pipes      []string
+	conn       net.Conn
+	connected  bool
+	mu         sync.RWMutex
+	rateLimit  int
+	calls      []time.Time
+	ipcTimeout time.Duration
 }
 
-func NewService(clientId string, pipeNumber int, rateLimit int) *Service {
+func NewService(clientId string, pipeNumber int, rateLimit int, ipcTimeoutSeconds int) *Service {
 	var pipes []string
 	var pipeNumbers []int
 	if pipeNumber == -1 {
@@ -76,13 +77,14 @@ func NewService(clientId string, pipeNumber int, rateLimit int) *Service {
 		}
 	}
 	return &Service{
-		clientId:  clientId,
-		pipes:     pipes,
-		rateLimit: rateLimit,
+		clientId:   clientId,
+		pipes:      pipes,
+		rateLimit:  rateLimit,
+		ipcTimeout: time.Duration(ipcTimeoutSeconds) * time.Second,
 	}
 }
 
-func (s *Service) SetActivity(activity *Activity, timeout time.Duration) error {
+func (s *Service) SetActivity(activity *Activity) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	now := time.Now()
@@ -98,7 +100,7 @@ func (s *Service) SetActivity(activity *Activity, timeout time.Duration) error {
 		return fmt.Errorf("rate limit exceeded, retry after %s", s.calls[0].Add(rateLimitWindow).Sub(now).Round(time.Second))
 	}
 	s.calls = append(s.calls, now)
-	deadline := now.Add(timeout)
+	deadline := now.Add(s.ipcTimeout)
 	if !s.connected {
 		if err := s.connect(deadline); err != nil {
 			return fmt.Errorf("connect: %w", err)

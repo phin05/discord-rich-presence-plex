@@ -30,7 +30,6 @@ type Service struct {
 	imageService   ImageService
 	imagesConfig   config.Images
 	displayRules   config.DisplayRules
-	ipcTimeout     time.Duration
 	stopTimeout    time.Duration
 	idleTimeout    time.Duration
 
@@ -60,7 +59,6 @@ func NewService(
 		imageService:   imageService,
 		imagesConfig:   imagesConfig,
 		displayRules:   discordConfig.DisplayRules,
-		ipcTimeout:     time.Duration(discordConfig.IpcTimeoutSeconds) * time.Second,
 		stopTimeout:    time.Duration(discordConfig.StopTimeoutSeconds) * time.Second,
 		idleTimeout:    time.Duration(discordConfig.IdleTimeoutSeconds) * time.Second,
 	}
@@ -303,11 +301,7 @@ func (s *Service) handlePlexActivity(ctx context.Context, activity *plex.Activit
 			break
 		}
 	}
-	ipcTimeout := s.ipcTimeout
-	if ctx.Err() != nil {
-		ipcTimeout = 2500 * time.Millisecond
-	}
-	if err := s.discordService.SetActivity(discordActivity, ipcTimeout); err != nil {
+	if err := s.discordService.SetActivity(discordActivity); err != nil {
 		logger.Error(err, "Failed to set Discord activity")
 	}
 	s.mu.Lock()
